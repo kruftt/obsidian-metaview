@@ -1,0 +1,11 @@
+{
+	"id": "MetadataView",
+	"name": "Metadata View",
+	"version": "0.0.1",
+	"minAppVersion": "1.5.3",
+	"description": "Demonstrates some of the capabilities of the Obsidian API.",
+	"author": "Kruft",
+	"authorUrl": "https://obsidian.md",
+	"fundingUrl": "https://obsidian.md/pricing",
+	"isDesktopOnly": false
+}
