@@ -58,18 +58,17 @@ export async function initialize(app: App) {
   _store = store = writable(EMPTY_STORE, (set, update) => {
 
     refOpen = app.workspace.on("file-open", (file) => {
-      console.log('workspace  file-open');
       _activeFile = file;
       refresh().then(setData);
     });
 
     // TODO: refChanged = (getAPI()) ? md-change : change;
+    
     if (getAPI(app)) {
       // // @ts-ignore
       // app.metadataCache.on('dataview:index-ready', () => console.log('dataview:index-ready'));
       //@ts-ignore
       refChanged = app.metadataCache.on('dataview:metadata-change', (type, file) => {
-        console.log('dataview:metadata-change', type);
         if (file === _activeFile && !stale) {
           stale = true;
           refresh().then(setData);
@@ -77,7 +76,6 @@ export async function initialize(app: App) {
       });
     } else {
       refChanged = app.metadataCache.on("changed", (file) => {
-        console.log('metadataCache changed');
         if (file === _activeFile && !stale) {
           stale = true;
           refresh().then(setData);
@@ -190,7 +188,6 @@ async function refresh() {
     
     if (mdm) {
       await mdm.api.fileFields(activeFile).then((fileFields: Record<string, IFieldInfo>) => {
-        console.log('filefields', fileFields);
         Object.values(fileFields).forEach((field) => {
           mdmFieldsMap[field.name] = field;
           if (field.name === fileClassAlias) {
@@ -220,7 +217,6 @@ async function refresh() {
     let fileClassField: FieldData | undefined;
     
     // Q: what is the point of checking the page object? A: Inline fields
-    console.log('page', page);
     const keys: string[] = [];
     const usedKeysMap: Record<string, boolean> = { file: true };
     if (page) {
@@ -238,7 +234,6 @@ async function refresh() {
       keys.push(key);
     }); 
 
-    console.log('keys', keys);
     keys.forEach((key) => {
       let value = frontmatter[key];
       if (value === undefined) value = (page ? page[key] : undefined);

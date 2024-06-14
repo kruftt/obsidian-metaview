@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, beforeUpdate } from 'svelte';
   import { updateField } from '../../../store'
-  export let data: FieldData;
+  export let data: MultiFieldData;
 
   let expanded = true;
 

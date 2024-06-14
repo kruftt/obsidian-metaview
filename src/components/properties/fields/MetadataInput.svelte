@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let data: FieldData;
+    export let data: InputFieldData;
 </script>
 
 <template lang="pug">
@@ -8,5 +8,5 @@
         | {data.value}
 </template>
 
-<style>
+<style lang="stylus">
 </style>

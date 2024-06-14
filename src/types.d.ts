@@ -125,7 +125,9 @@ interface SelectFieldData extends FieldDataBase {
 interface MultiFieldData extends FieldDataBase {
     type: 'Multi'
     value: unknown
-    // options: Record<string, unknown> | Array<string>
+    options: {
+        valuesList: Record<string, unknown>
+    }
 }
 
 interface CycleFieldData extends FieldDataBase {
