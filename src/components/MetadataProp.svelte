@@ -3,7 +3,7 @@
 </script>
 
 <template lang="pug">
-  d { data.key }: { data.value }
+  div { data.key }: { data.value || data.default }
 </template>
 
 <style lang="stylus">

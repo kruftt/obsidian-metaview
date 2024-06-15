@@ -136,7 +136,7 @@ function getPropertyInfo(propertyInfos: any, key: string, value: any) {
   const propertyInfo = propertyInfos[key];
   return propertyInfo
     ? propertyInfo.type
-    : (value instanceof Array)
+    : (Array.isArray(value))
       ? "multitext"
       : "text";
 }
@@ -152,38 +152,41 @@ function getPropertyInfo(propertyInfos: any, key: string, value: any) {
 async function refresh() {
   const app = _app;
   const activeFile = _activeFile;
+  console.log('refreshing -1', activeFile);
   if (!activeFile) return EMPTY_STORE;
+  
   const metadataCache = app.metadataCache as MDV_MetadataCache;
   const fileCache = metadataCache.getFileCache(activeFile);
   // @ts-ignore
   const settings: MetadataViewSettings = app.plugins.plugins['MetadataView'].settings;
+  console.log('refreshing 01');
   // @ts-ignore
   const templatesDir: TFolder = app.vault.getFolderByPath(settings.templatesDir);
+  console.log('refreshing 02');
   if (!fileCache || !templatesDir) {
-    warn('MDV: FileCache or templates directory not Found');
+    console.warn('MDV: FileCache or templates directory not Found');
     return EMPTY_STORE;
   }
   
   const frontmatter = fileCache.frontmatter || {};
   const page = getAPI(app)?.page(activeFile.path);
-
   const types: string[] = [];
   const tags: string[] = [];
   const inlineTags: InlineTagData[] = [];
-  const propGroups: MDV_PropGroup[] = [];
-  const propGroupMap: Record<string, MDV_PropGroup> = { '': { props: {} } };
+  const propGroups: MDV_PropGroup[] = [{ name: '', props: {} }];
+  const propGroupMap: Record<string, MDV_PropGroup> = { '': propGroups[0] };
   const propGroupKeyMap: Record<string, MDV_PropGroup> = {};
   const freelinks: LinkCache[] = fileCache.links || [];
   const backlinks: BacklinkData[] = [];
   const embeds: EmbedData[] = [];
-
+  console.log('refreshing 04');
   const propertyInfos = metadataCache.getAllPropertyInfos();
   const frontmatterBacklinksMap: Record<string, BacklinkData[]> = {};
   const embedsMap: Record<string, EmbedData[]> = {};
 
   const templateMap: Record<string, TFile> = getTemplatesMap(templatesDir);
   
-  
+  console.log('refreshing0');
   // @ts-ignore
   Object.entries((metadataCache.getBacklinksForFile(activeFile).data as Record<string, BacklinkData[]>))
     .forEach(([filename, fileData]) => {
@@ -207,29 +210,34 @@ async function refresh() {
     if (usedKeysMap[_k]) return;
     usedKeysMap[_k] = true;
     keys.push(key);
+    console.log('adding key', key);
   };
   
   if (page) Object.keys(page).sort().forEach(registerKey);
   Object.keys(frontmatter).forEach(registerKey);
   
+  console.log('refreshing1');
   
-  if (usedKeysMap[settings.typesProp]) {
+  if (usedKeysMap[settings.typesProp.toLowerCase()]) {
+    console.log('detected types prop');
     let _types: string[] = frontmatter[settings.typesProp];
     // @ts-ignore
-    if (_types !instanceof Array) _types = [_types];
+    if (!Array.isArray(_types)) _types = [_types];
     const typeQueue: string[] = [..._types];
     const visited: Record<string, true> = {};
     
     let _t: string | undefined;
     while ((_t = typeQueue.pop())) {
+      console.log('processing', _t);
       // Get TFILE + cache
       if (visited[_t]) continue;
       visited[_t] = true;
-      let _f : TFile = templateMap[_t];
+      let _f : TFile = templateMap[_t + '.md'];
       if (!_f) continue;  // TODO: Emit Warning
       let _fm = metadataCache.getFileCache(_f)?.frontmatter;
       if (!_fm) continue;  // TODO: Emit Warning
 
+      console.log('found file', _t);
       types.push(_t);
 
       // Initialize propGroup
@@ -251,6 +259,7 @@ async function refresh() {
         } else if (key === "tags") {
           ;(value as string[]).reduce((tags, v) => { tags.push(v); return tags; }, tags);
         } else {
+          console.log('adding to default group', key);
           props[key] = { key, default: value, type: getPropertyInfo(propertyInfos, key, value) };
           propGroupKeyMap[key] = propGroup;
         }
@@ -262,13 +271,15 @@ async function refresh() {
     keys.remove("tags");
   }
   
+  console.log('refreshing2');
   
   keys.forEach((key) => {
     // let value = frontmatter[key];
     // if (value === undefined) value = (page ? page[key] : undefined); // prefer values from frontmatter.
     let value = frontmatter[key] || (page ? page[key] : undefined); // prefer values from frontmatter.
     const _type: FieldValueType = getPropertyInfo(propertyInfos, key, value);
-    const prop = (propGroupMap[key] || propGroupMap['']).props[key];
+    const props = (propGroupMap[key] || propGroupMap['']).props;
+    const prop = props[key] || (props[key] = { key, value, default: '', type: "text" });
     prop.value = value;
     prop.backlinks = frontmatterBacklinksMap[key];
     prop.embeds = embedsMap[key];

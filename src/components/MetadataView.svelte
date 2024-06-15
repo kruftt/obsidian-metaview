@@ -18,6 +18,7 @@
 
 <template lang="pug">
   div(class='metadata-view')
+    div hello
     div { types }
     div { tags }
 
@@ -25,7 +26,7 @@
       div(class="section_header")
         div 
           b { propGroup.name }
-        +each('propGroup.props as prop')
+        +each('Object.values(propGroup.props) as prop')
           MetadataProp(data='{prop}')
       br/
 </template>
