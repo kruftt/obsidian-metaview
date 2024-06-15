@@ -1,12 +1,9 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, WorkspaceLeaf } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TFolder, WorkspaceLeaf } from 'obsidian';
 import { MetadataView, METADATA_VIEW } from "./src/MetadataView"
 
-interface MetadataViewSettings {
-	mySetting: string;
-}
-
 const DEFAULT_SETTINGS: MetadataViewSettings = {
-	mySetting: 'default'
+	templatesDir: '',
+	typesProp: 'types'
 }
 
 export default class MetadataViewPlugin extends Plugin {
@@ -90,7 +87,7 @@ export default class MetadataViewPlugin extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
-
+		
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
 		// this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
@@ -142,17 +139,28 @@ class SampleSettingTab extends PluginSettingTab {
 
 	display(): void {
 		const {containerEl} = this;
-
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
+			.setName('Meta Template Directory')
+			// .setClass(typeof(TFolder)) // ?
+			.setDesc('Search for template type files in this directory.')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('')
+				.setValue(this.plugin.settings.templatesDir)
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.templatesDir = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Types Property Name')
+			.setDesc('Set the name of the property used to track data types.')
+			.addText(text => text
+				.setPlaceholder('types')
+				.setValue(this.plugin.settings.typesProp)
+				.onChange(async (value) => {
+					this.plugin.settings.typesProp = value;
 					await this.plugin.saveSettings();
 				}));
 	}

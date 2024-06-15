@@ -1,62 +1,33 @@
 <script lang="ts">
 	import { DataviewApi } from 'obsidian-dataview';
   import { updateField } from '../store';
-  import {
-    MetadataField,
-    MetadataLink,
-    MetadataEmbed,
-  } from './properties';
+  import MetadataProp from './MetadataProp.svelte';
 
-  export let fileData: FileData;
+  export let fileData: MDV_File;
     
-  let fileClassAlias: string | undefined;
-  let fileClassField: FieldData | undefined;
-  let fields: FieldData[];
-  let classData: FileClassData[];
-  let links: InlineLinkData[];
-  let backlinks: InlineLinkData[];
+  let types: string[];
+  let tags: string[];
+  let inlineTags: InlineTagData[];
+  let propGroups: MDV_PropGroup[];
+  let freelinks: LinkCache[];
+  let backlinks: BacklinkData[];
   let embeds: EmbedData[];
   
-  $: ({ fileClassAlias, fileClassField, fields, classData, links, backlinks, embeds } = fileData);
+  $: ({ types, tags, inlineTags, propGroups, freelinks, backlinks, embeds } = fileData);
 </script>
 
 <template lang="pug">
   div(class='metadata-view')
-    +if('fileClassAlias')
-      div(class='classlist')
-        +if('fileClassField')
-          MetadataField(type='Multi' data="{fileClassField}")
-          +else()
-            div(class='classlist__bar' on:click!="{() => updateField(fileClassAlias, '')}")
-              | Add {fileClassAlias}
-        
-    div(class="section_header")
-      div 
-        b Fields
-      +each('fields as fieldData')
-        MetadataField(data='{fieldData}')
-    br/
+    div { types }
+    div { tags }
 
-    +each('classData as data')
+    +each('propGroups as propGroup')
       div(class="section_header")
         div 
-          b { data.name.replace() }
-        +each('data.fields as fieldData')
-          MetadataField(data='{fieldData}')
+          b { propGroup.name }
+        +each('propGroup.props as prop')
+          MetadataProp(data='{prop}')
       br/
-    
-    div(class="section_header")
-      div 
-        b Links
-      +each('links as link')
-        MetadataLink(data='{link}')
-    br/
-
-    div(class="section_header")
-      div 
-        b Backlinks
-      +each('backlinks as link')
-        MetadataLink( data='{link}' backlink=true)
 </template>
 
 <style lang='stylus'>

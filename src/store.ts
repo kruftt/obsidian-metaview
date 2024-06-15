@@ -1,23 +1,17 @@
 import { warn } from "console";
-import { App, FrontmatterLinkCache, EventRef } from "obsidian";
+import { App, FrontmatterLinkCache, EventRef, LinkCache, TFolder, TFile } from "obsidian";
 import { DataviewApi, getAPI, Link } from "obsidian-dataview";
 import { Subscriber } from "svelte/motion";
 import { Writable, writable } from "svelte/store";
 
-type MetadataViewStore = Writable<FileData>
+type MetadataViewStore = Writable<MDV_File>
 
-const INPUT = 'Input';
-const DATE = 'Date';
-const MULTI = 'Multi';
-const NUMBER = 'Number';
-const BOOLEAN = 'Boolean';
-
-const EMPTY_STORE: FileData = {
-  fileClassAlias: '',
-  fileClassField: undefined,
-  fields: [],
-  classData: [],
-  links: [],
+const EMPTY_STORE: MDV_File = {
+  types: [],
+  tags: [],
+  inlineTags: [],
+  propGroups: [],
+  freelinks: [],
   backlinks: [],
   embeds: []
 };
@@ -43,13 +37,13 @@ let _store: MetadataViewStore;
 export async function initialize(app: App) {
   _app = app;
   _activeFile = app.workspace.getActiveFile();
-  
+
   let stale = true;
-  let store: Writable<FileData>;
+  let store: Writable<MDV_File>;
   let refOpen: EventRef;
   let refChanged: EventRef;
 
-  const setData = (fileData: FileData) => {
+  const setData = (fileData: MDV_File) => {
     store.set(fileData);
     stale = false;
     return fileData;
@@ -63,7 +57,7 @@ export async function initialize(app: App) {
     });
 
     // TODO: refChanged = (getAPI()) ? md-change : change;
-    
+
     if (getAPI(app)) {
       // // @ts-ignore
       // app.metadataCache.on('dataview:index-ready', () => console.log('dataview:index-ready'));
@@ -92,7 +86,7 @@ export async function initialize(app: App) {
   return await refresh().then(setData);
 }
 
-export function subscribe(app: App, run: Subscriber<FileData>) {
+export function subscribe(app: App, run: Subscriber<MDV_File>) {
   return _store.subscribe(run);
 }
 
@@ -105,7 +99,7 @@ export async function updateField(name: string, value: string | string[]) {
 
   // @ts-ignore
   const mdm: IMetadataMenuApi = _app.plugins.plugins["metadata-menu"].api;
-  
+
   if (mdm) {
     await mdm.postNamedFieldsValues(_activeFile.path, [{ name, payload: { value } }]);
   } else {
@@ -122,228 +116,177 @@ function isLink(v?: any): boolean {
   return v[0]?.constructor?.name === 'Link'
 }
 
+function getTemplatesMap(dir: TFolder) {
+  const map: Record<string, TFile> = {};
+  const folderQueue = [dir];
+  let currentDir: TFolder | undefined;
+  while ((currentDir = folderQueue.pop())) {
+    for (let child of currentDir.children) {
+      if (child instanceof TFile) {
+        map[child.name] = child;
+      } else if (child instanceof TFolder) {
+        folderQueue.push(child);
+      }
+    }
+  }
+  return map;
+}
+
+function getPropertyInfo(propertyInfos: any, key: string, value: any) {
+  const propertyInfo = propertyInfos[key];
+  return propertyInfo
+    ? propertyInfo.type
+    : (value instanceof Array)
+      ? "multitext"
+      : "text";
+}
+
+// function (key) => {
+//   const _k = key.toLowerCase();
+//   if (usedKeysMap[_k]) return;
+//   usedKeysMap[_k] = true;
+//   keys.push(key);
+// }
+
 
 async function refresh() {
   const app = _app;
   const activeFile = _activeFile;
   if (!activeFile) return EMPTY_STORE;
-  const metadataCache = app.metadataCache;
+  const metadataCache = app.metadataCache as MDV_MetadataCache;
   const fileCache = metadataCache.getFileCache(activeFile);
-  const frontmatter = fileCache?.frontmatter || {};
-  if (!fileCache) {
-    warn('MDV: FileCache not Found');
+  // @ts-ignore
+  const settings: MetadataViewSettings = app.plugins.plugins['MetadataView'].settings;
+  // @ts-ignore
+  const templatesDir: TFolder = app.vault.getFolderByPath(settings.templatesDir);
+  if (!fileCache || !templatesDir) {
+    warn('MDV: FileCache or templates directory not Found');
     return EMPTY_STORE;
   }
   
-  const dv = getAPI(this.app);
-  const page = dv?.page(activeFile.path);
+  const frontmatter = fileCache.frontmatter || {};
+  const page = getAPI(app)?.page(activeFile.path);
+
+  const types: string[] = [];
+  const tags: string[] = [];
+  const inlineTags: InlineTagData[] = [];
+  const propGroups: MDV_PropGroup[] = [];
+  const propGroupMap: Record<string, MDV_PropGroup> = { '': { props: {} } };
+  const propGroupKeyMap: Record<string, MDV_PropGroup> = {};
+  const freelinks: LinkCache[] = fileCache.links || [];
+  const backlinks: BacklinkData[] = [];
+  const embeds: EmbedData[] = [];
+
+  const propertyInfos = metadataCache.getAllPropertyInfos();
+  const frontmatterBacklinksMap: Record<string, BacklinkData[]> = {};
+  const embedsMap: Record<string, EmbedData[]> = {};
+
+  const templateMap: Record<string, TFile> = getTemplatesMap(templatesDir);
+  
+  
   // @ts-ignore
-  const mdm = app.plugins.plugins["metadata-menu"];
-  
-  const mdmFieldsMap: Record<string, IFieldInfo> = {};
-  const fieldArray: FieldData[] = [];
-  const fileClassArray: FileClassData[] = [];
-  const fileClassMap: Record<string, FileClassData> = {};
-  const fileClassAlias = mdm?.settings.fileClassAlias as string | undefined;
-  
-  const frontmatterLinksMap: Record<string, FrontmatterLinkCache> = (fileCache.frontmatterLinks || []).reduce(
-    (frontmatterLinksMap, link) => {
-      frontmatterLinksMap[link.key] = link;
-      return frontmatterLinksMap;
-    }, {} as Record<string, FrontmatterLinkCache>);
-    
-    // @ts-ignore
-    const propertyInfos: Record<string, PropertyInfo> = metadataCache.getAllPropertyInfos();
-    const inlineLinksArray: InlineLinkData[] = fileCache.links?.map((linkCache) => {
-      return {
-        filename: activeFile.name,
-        displayText: linkCache.displayText || linkCache.original,
-        link: linkCache.link,
-        line: linkCache.position.start.line,
-      }
-    }) || [];
-    
-    const frontmatterBacklinksMap: Record<string, InlineLinkData[]> = {};
-    const inlineBacklinksArray: InlineLinkData[] = [];
-    
-    // @ts-ignore
-    Object.entries((metadataCache.getBacklinksForFile(activeFile).data as Record<string, RawBacklinkData[]>))
+  Object.entries((metadataCache.getBacklinksForFile(activeFile).data as Record<string, BacklinkData[]>))
     .forEach(([filename, fileData]) => {
-      for (let { displayText, key, original, link, position } of fileData) {
-        const backlinkData = {
-          filename,
-          displayText: displayText || original,
-          link: link,
-          line: position.start.line,
-        };
+      for (let backlinkData of fileData) {
+        let key = backlinkData.key;
         if (key) {
           const [k, i] = key.split('.');
           const keyBacklinks = frontmatterBacklinksMap[k] || (frontmatterBacklinksMap[k] = []);
           keyBacklinks.push(backlinkData);
         } else {
-          inlineBacklinksArray.push(backlinkData);
+          backlinks.push(backlinkData);
         }
       }
     });
+
+  // Q: what is the point of checking the page object? A: Inline fields
+  const keys: string[] = [];
+  const usedKeysMap: Record<string, boolean> = { file: true };
+  const registerKey = (key: string) => {
+    const _k = key.toLowerCase();
+    if (usedKeysMap[_k]) return;
+    usedKeysMap[_k] = true;
+    keys.push(key);
+  };
+  
+  if (page) Object.keys(page).sort().forEach(registerKey);
+  Object.keys(frontmatter).forEach(registerKey);
+  
+  
+  if (usedKeysMap[settings.typesProp]) {
+    let _types: string[] = frontmatter[settings.typesProp];
+    // @ts-ignore
+    if (_types !instanceof Array) _types = [_types];
+    const typeQueue: string[] = [..._types];
+    const visited: Record<string, true> = {};
     
-    if (mdm) {
-      await mdm.api.fileFields(activeFile).then((fileFields: Record<string, IFieldInfo>) => {
-        Object.values(fileFields).forEach((field) => {
-          mdmFieldsMap[field.name] = field;
-          if (field.name === fileClassAlias) {
-            const value = frontmatter[field.name] as (string | string[]);
-            if (typeof value === 'string') {
-              if (!value) return; // skip empty string
-              const fileClassData = fileClassMap[value] = {
-                name: value,
-                fields: [],
-              };
-              fileClassArray.push(fileClassData);
-            } else {
-              value.forEach(fileclass => {
-                if (!fileclass) return; // skip empty strings
-                const fileClassData = fileClassMap[fileclass] = {
-                  name: fileclass,
-                  fields: [],
-                };
-                fileClassArray.push(fileClassData);
-              });
-            }
+    let _t: string | undefined;
+    while ((_t = typeQueue.pop())) {
+      // Get TFILE + cache
+      if (visited[_t]) continue;
+      visited[_t] = true;
+      let _f : TFile = templateMap[_t];
+      if (!_f) continue;  // TODO: Emit Warning
+      let _fm = metadataCache.getFileCache(_f)?.frontmatter;
+      if (!_fm) continue;  // TODO: Emit Warning
+
+      types.push(_t);
+
+      // Initialize propGroup
+      const props: Record<string, MDV_Prop> = {};
+      const propGroup : MDV_PropGroup = { name: _t, props };
+      propGroupMap[_t] = propGroup;
+      propGroups.push(propGroup);
+
+      for (let [key, value] of Object.entries(_fm)) {
+        // Either add key to type group or add types to queue
+        if (key === settings.typesProp) {
+          if (Array.isArray(value)) {
+            value.reduce((q, c) => { q.push(c); return q; }, typeQueue);
+          } else if (typeof(value) === "string") {
+            typeQueue.push(value);
           }
-        });
-      });
-    }
-    
-    let fileClassField: FieldData | undefined;
-    
-    // Q: what is the point of checking the page object? A: Inline fields
-    const keys: string[] = [];
-    const usedKeysMap: Record<string, boolean> = { file: true };
-    if (page) {
-      Object.keys(page).sort().forEach((key) => {
-        if (usedKeysMap[key.toLowerCase()]) return;
-        usedKeysMap[key.toLowerCase()] = true;
-
-        keys.push(key);
-      });
-    }
-    
-    Object.keys(frontmatter).forEach((key) => {
-      if (usedKeysMap[key.toLowerCase()]) return;
-      usedKeysMap[key.toLowerCase()] = true;
-      keys.push(key);
-    }); 
-
-    keys.forEach((key) => {
-      let value = frontmatter[key];
-      if (value === undefined) value = (page ? page[key] : undefined);
-      // const value = frontmatter[key] || (page ? page[key] : undefined); // prefer values from frontmatter.
-
-      let { indexedPath, type, fileClassName, options } = mdmFieldsMap[key] || {};
-      let fieldData: FieldData;
-      
-      // Search for type info for non-class fields
-      if (!type) {
-        const propertyInfo = propertyInfos[key];
-        if (propertyInfo) {
-          switch (propertyInfo.type) {
-            case 'text':
-            type = INPUT;
-            break
-            case 'multitext':
-            type = MULTI;
-            break
-            case 'number':
-            type = NUMBER;
-            break
-            case 'checkbox':
-            type = BOOLEAN;
-            break
-            case 'date':
-            type = DATE;
-            break
-            case 'datetime':
-            type = DATE;
-            break
-            default:
-            type = INPUT;
-          }
+        } else if (key === "tag") {
+          tags.push(value);
+        } else if (key === "tags") {
+          ;(value as string[]).reduce((tags, v) => { tags.push(v); return tags; }, tags);
         } else {
-          type = INPUT;
+          props[key] = { key, default: value, type: getPropertyInfo(propertyInfos, key, value) };
+          propGroupKeyMap[key] = propGroup;
         }
       }
-      
-      // @ts-ignore
-      fieldData = { indexedPath, type, key, value, options };
-      
-      if (value instanceof Array) {
-        if (isLink(value[0])) {
-          const links: LinkData[] = fieldData.links = [];
-          (value as Link[]).forEach((v, i) => {
-            value[i] = v.markdown();
-            links.push({
-              displayText: v.display || v.toString(),
-              link: v.obsidianLink(),
-            });
-          });
-        } else {
-          let fml = frontmatterLinksMap[`${key}.0`];
-          if (frontmatterLinksMap[`${key}.0`]) {
-            const links: LinkData[] = fieldData.links = [];
-            value.forEach((v, i) => {
-              fml = frontmatterLinksMap[`${key}.${i}`];
-              // TODO: use obsidian's Reference objects directly?
-              if (fml) {
-                links[i] = {
-                  displayText: fml.displayText || fml.link,
-                  link: fml.link,
-                };
-              }
-            });
-          }
-        }
-      } else if (isLink(value)) {
-        fieldData.links = [{
-          displayText: (value as Link).display || (value as Link).toString(),
-          link: (value as Link).obsidianLink(),
-        }];
-      } else {
-        const fml = frontmatterLinksMap[key];
-        if (fml) {
-          fieldData.links = [{
-            displayText: fml.displayText || fml.link,
-            link: fml.link,
-          }];
-        }
-      }
-      
-      // frontmatterBacklinksMap[key] && (fieldData.backlinks = frontmatterBacklinksMap[key]);
-      fieldData.backlinks = frontmatterBacklinksMap[key];
-      
-      if (key === fileClassAlias) {
-        if (typeof fieldData.value === 'string')
-          fieldData.value = [fieldData.value];
-        fileClassField = fieldData;
-      } else if (fileClassName) {
-        fileClassMap[fileClassName].fields.push(fieldData);
-      } else {
-        fieldArray.push(fieldData);
-      }
-      
-      // fieldMap[key] = fieldData;
-    });
-    
-    const data: FileData = {
-      fileClassAlias,
-      fileClassField,
-      fields: fieldArray,
-      classData: fileClassArray,
-      links: inlineLinksArray,
-      backlinks: inlineBacklinksArray,
-      embeds: [],
-    };
-    
-    console.log('store:', data);
-    return data;
+    }
+
+    keys.remove(settings.typesProp);
+    keys.remove("tag");
+    keys.remove("tags");
   }
   
+  
+  keys.forEach((key) => {
+    // let value = frontmatter[key];
+    // if (value === undefined) value = (page ? page[key] : undefined); // prefer values from frontmatter.
+    let value = frontmatter[key] || (page ? page[key] : undefined); // prefer values from frontmatter.
+    const _type: FieldValueType = getPropertyInfo(propertyInfos, key, value);
+    const prop = (propGroupMap[key] || propGroupMap['']).props[key];
+    prop.value = value;
+    prop.backlinks = frontmatterBacklinksMap[key];
+    prop.embeds = embedsMap[key];
+  });
+  
+  // backlinks?
+  // embeds?
+
+  const data: MDV_File = {
+    types,
+    tags,
+    inlineTags,
+    propGroups,
+    freelinks,
+    backlinks,
+    embeds
+  };
+
+  console.log('store:', data);
+  return data;
+}
