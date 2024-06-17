@@ -2,42 +2,73 @@ type TFile = import('obsidian').TFile
 type LinkCache = import('obsidian').LinkCache
 type MetadataCache = import('obsidian').MetadataCache
 
-interface MetadataViewSettings {
+interface MV_Settings {
     templatesDir: string;
     typesProp: string;
 }
 
-interface MDV_File {
+interface MV_FileData {
     types: string[]
     tags: string[]
+    aliases: string[]
+    cssclasses: string[]
     inlineTags: InlineTagData[]
-    propGroups: MDV_PropGroup[]
+    freeProps: MV_PropData[]
+    boundProps: MV_GroupData[]
     freelinks: LinkCache[]
     backlinks: BacklinkData[]
     embeds: EmbedData[]
 }
 
-interface MDV_Prop {
-    key: string
-    value?: unknown
-    default: unknown
-    type: FieldValueType
-    backlinks?: BacklinkData[]
-    embeds?: EmbedData[]
-}
-
-interface MDV_PropGroup {
-    name?: string
-    props: Record<string, MDV_Prop>
-}
-
-interface MDV_Type {
+interface MV_GroupData {
     name: string
-    deps: string[]
-    fields: MDV_Prop[]
+    props: MV_PropData[]
 }
 
-interface MetadataSelectOption { name: string, selected: boolean }
+interface MV_PropData {
+    value: unknown
+    backlinks: BacklinkData[]
+    def: MV_PropDef | MV_CompositePropDef
+}
+
+type MV_PropDef =
+    | MV_SinglePropDef
+    | MV_MultiPropDef
+    | MV_CompositePropDef
+    | MV_MultiCompositePropDef
+    | MV_FreePropDef
+
+interface MV_PropDefBase {
+    key: string
+    default: unknown
+}
+
+interface MV_FreePropDef extends MV_PropDefBase { type: 'free' }
+interface MV_SinglePropDef extends MV_PropDefBase { type: 'single' }
+interface MV_MultiPropDef extends MV_PropDefBase { type: 'multi' }
+interface MV_CompositePropDef extends MV_PropDefBase { type: 'composite' }
+interface MV_MultiCompositePropDef extends MV_PropDefBase { type: 'multicomposite' }
+
+interface MV_TypeDef {
+    name: string
+    props: Record<string, MV_PropDef | MV_CompositePropDef>
+    types: string[]
+    tags: string[]
+    aliases: string[]
+    cssclasses: string[]
+}
+
+interface MV_TypeCache {
+    byName: { [key: string]: MV_TypeDef }
+    byPath: { [key: string]: MV_TypeDef }
+}
+
+interface MV_SelectOption { name: string, selected: boolean }
+
+// interface MV_MetadataCache extends MetadataCache {
+//     getAllPropertyInfos(): Record<string, PropertyInfo>
+// }
+
 
 interface Position {
     start: PositionBoundary
@@ -71,20 +102,26 @@ interface EmbedData {
     position: Position
 }
 
-interface PropertyInfo {
-    name: string
-    type: FieldValueType
-    count: number
-}
+// interface PropertyInfo {
+//     name: string
+//     type: PropValueType
+//     count: number
+// }
 
-type FieldValueType =
-    | "text"
-    | "multitext"
-    | "number"
-    | "checkbox"
-    | "date"
-    | "datetime"
+// type PropValueType =
+//     | "text"
+//     | "multitext"
+//     | "number"
+//     | "checkbox"
+//     | "date"
+//     | "datetime"
 
-interface MDV_MetadataCache extends MetadataCache {
-    getAllPropertyInfos(): Record<string, PropertyInfo>
-}
+type PropCompositeType =
+    | "composite"
+    | "multicomposite"
+
+type MV_PropType = 
+    | "single"
+    | "multi"
+    | "type"
+    | "multitype"

@@ -1,28 +1,36 @@
 <script lang="ts">
 	import { DataviewApi } from 'obsidian-dataview';
-  import { updateField } from '../store';
+  import { } from '../store';
   import MetadataProp from './MetadataProp.svelte';
 
-  export let fileData: MDV_File;
+  export let fileData: MV_FileData;
     
   let types: string[];
   let tags: string[];
+  let aliases: string[];
+  let cssclasses: string[];
   let inlineTags: InlineTagData[];
-  let propGroups: MDV_PropGroup[];
+  let freeProps: MV_PropData[];
+  let boundProps: MV_GroupData[];
   let freelinks: LinkCache[];
   let backlinks: BacklinkData[];
   let embeds: EmbedData[];
   
-  $: ({ types, tags, inlineTags, propGroups, freelinks, backlinks, embeds } = fileData);
+  $: ({ types, tags, aliases, cssclasses, inlineTags, freeProps, boundProps, freelinks, backlinks, embeds } = fileData);
 </script>
 
 <template lang="pug">
   div(class='metadata-view')
-    div hello
+    h4 MetaView
     div { types }
     div { tags }
 
-    +each('propGroups as propGroup')
+    div(class="section_header")
+      +each('Object.values(freeProps) as prop')
+        MetadataProp(data='{prop}')
+    br/
+
+    +each('boundProps as propGroup')
       div(class="section_header")
         div 
           b { propGroup.name }

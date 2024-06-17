@@ -4,75 +4,69 @@ import { DataviewApi, getAPI, Link } from "obsidian-dataview";
 import { Subscriber } from "svelte/motion";
 import { Writable, writable } from "svelte/store";
 
-type MetadataViewStore = Writable<MDV_File>
+type MV_ActiveFileStore = Writable<MV_FileData>
 
-const EMPTY_STORE: MDV_File = {
+const TYPE_REGEX = /^{{\s*(?:(\w+)|(\w+)\s*\[\]|\[\s*(\w+)\s*\])\s*}}$/;
+const EMPTY_STORE: MV_FileData = {
   types: [],
   tags: [],
+  aliases: [],
+  cssclasses: [],
   inlineTags: [],
-  propGroups: [],
+  freeProps: [],
+  boundProps: [],
   freelinks: [],
   backlinks: [],
   embeds: []
 };
 
-/**
- * Functions
- * refresh()
- * 
- * Exports:
- * subscribe(app) : used by View 
- * updateField(k, v) : used by Component
- * 
- * Variables:
- * _app
- * _activeFile?
- * _store
- */
 
 let _app: App;
+let _typeCache: MV_TypeCache
 let _activeFile: TFile | null;
-let _store: MetadataViewStore;
+let _activeFileStore: MV_ActiveFileStore;
+
 
 export async function initialize(app: App) {
   _app = app;
   _activeFile = app.workspace.getActiveFile();
 
   let stale = true;
-  let store: Writable<MDV_File>;
+  let store: Writable<MV_FileData>;
   let refOpen: EventRef;
   let refChanged: EventRef;
 
-  const setData = (fileData: MDV_File) => {
+  const setData = (fileData: MV_FileData) => {
     store.set(fileData);
     stale = false;
     return fileData;
   };
 
-  _store = store = writable(EMPTY_STORE, (set, update) => {
+  _activeFileStore = store = writable(EMPTY_STORE, (set, update) => {
 
     refOpen = app.workspace.on("file-open", (file) => {
       _activeFile = file;
-      refresh().then(setData);
+      refreshActiveFile().then(setData);
     });
 
-    // TODO: refChanged = (getAPI()) ? md-change : change;
+    // @ts-ignore
+    const settings: MV_Settings = app.plugins.plugins['MetadataView'].settings;
 
     if (getAPI(app)) {
-      // // @ts-ignore
-      // app.metadataCache.on('dataview:index-ready', () => console.log('dataview:index-ready'));
       //@ts-ignore
       refChanged = app.metadataCache.on('dataview:metadata-change', (type, file) => {
+        if (file.path.startsWith(settings.templatesDir)) cacheFile(file);
         if (file === _activeFile && !stale) {
           stale = true;
-          refresh().then(setData);
+          refreshActiveFile().then(setData);
         }
       });
     } else {
       refChanged = app.metadataCache.on("changed", (file) => {
+        if (file.path.startsWith(settings.templatesDir)) cacheFile(file);
         if (file === _activeFile && !stale) {
           stale = true;
-          refresh().then(setData);
+          refreshActiveFile().then(setData);
         }
       });
     }
@@ -83,216 +77,209 @@ export async function initialize(app: App) {
     };
   });
 
-  return await refresh().then(setData);
-}
-
-export function subscribe(app: App, run: Subscriber<MDV_File>) {
-  return _store.subscribe(run);
+  buildTypeCache();
+  return await refreshActiveFile().then(setData);
 }
 
 
-export async function updateField(name: string, value: string | string[]) {
-  if (!_activeFile) {
-    warn('MDV: Attempted to updateField without activeFile');
-    return;
-  }
+export function subscribe(app: App, run: Subscriber<MV_FileData>) {
+  return _activeFileStore.subscribe(run);
+}
 
+
+function buildTypeCache() {
+  const app = _app;
   // @ts-ignore
-  const mdm: IMetadataMenuApi = _app.plugins.plugins["metadata-menu"].api;
+  const settings: MetadataViewSettings = app.plugins.plugins['MetadataView'].settings;
+  // @ts-ignore
+  const templatesDir: TFolder = app.vault.getFolderByPath(settings.templatesDir);
+  const folderQueue = [templatesDir];
+  
+  _typeCache = { byName: {}, byPath: {} };
 
-  if (mdm) {
-    await mdm.postNamedFieldsValues(_activeFile.path, [{ name, payload: { value } }]);
-  } else {
-    await _app.fileManager.processFrontMatter(_activeFile, (fm) => {
-      fm[name] = value;
-    });
-  }
-}
-
-
-
-function isLink(v?: any): boolean {
-  if (!v) return false;
-  return v[0]?.constructor?.name === 'Link'
-}
-
-function getTemplatesMap(dir: TFolder) {
-  const map: Record<string, TFile> = {};
-  const folderQueue = [dir];
-  let currentDir: TFolder | undefined;
-  while ((currentDir = folderQueue.pop())) {
-    for (let child of currentDir.children) {
+  let current: TFolder | undefined;
+  while ((current = folderQueue.pop())) {
+    for (let child of current.children) {
       if (child instanceof TFile) {
-        map[child.name] = child;
+        cacheFile(child);
       } else if (child instanceof TFolder) {
         folderQueue.push(child);
       }
     }
   }
-  return map;
 }
 
-function getPropertyInfo(propertyInfos: any, key: string, value: any) {
-  const propertyInfo = propertyInfos[key];
-  return propertyInfo
-    ? propertyInfo.type
-    : (Array.isArray(value))
-      ? "multitext"
-      : "text";
+
+function cacheFile(file: TFile): void {
+  const app = _app;
+  // @ts-ignore
+  const settings: MV_Settings = app.plugins.plugins['MetadataView'].settings;
+  
+  const metadataCache = app.metadataCache;
+  let _fm = metadataCache.getFileCache(file)?.frontmatter;
+  if (!_fm) return;  // TODO: Emit Warning
+  
+  const props: Record<string, MV_PropDef> = {};
+  const typeDef: MV_TypeDef = {
+    name: file.basename,
+    props,
+    types: [],
+    tags: [],
+    aliases: [],
+    cssclasses: [],
+  };
+  
+  Object.entries(_fm).forEach(([key, value]) => {
+    switch (key) {
+      case settings.typesProp:
+        typeDef.types = arrayWrap(value);
+        break;
+      case 'tags':
+      case 'aliases':
+      case 'cssclasses':
+        typeDef[key] = arrayWrap(value);
+        break;
+      default:
+        if (Array.isArray(value)) {
+          props[key] = { key, default: value, type: 'multi' };
+        } else {
+          const extractedType = TYPE_REGEX.exec(value);
+          if (extractedType) {
+            let _default = extractedType[1];
+            if (_default) {
+              props[key] = { key, default: _default, type: 'composite' };
+            } else {
+              _default = extractedType[2] || extractedType[3];
+              props[key] = { key, default: _default, type: 'multicomposite' };
+            }
+          } else {
+            props[key] = { key, default: value, type: 'single' };
+          }
+        }
+        break;
+    }
+  });
+
+  const typeCache = _typeCache;
+  typeCache.byName[file.basename] = typeDef;
+  typeCache.byPath[file.path] = typeDef;
 }
 
-// function (key) => {
-//   const _k = key.toLowerCase();
-//   if (usedKeysMap[_k]) return;
-//   usedKeysMap[_k] = true;
-//   keys.push(key);
-// }
 
-
-async function refresh() {
+async function refreshActiveFile() {
   const app = _app;
   const activeFile = _activeFile;
-  console.log('refreshing -1', activeFile);
-  if (!activeFile) return EMPTY_STORE;
   
-  const metadataCache = app.metadataCache as MDV_MetadataCache;
+  if (!activeFile) {
+    console.warn('MV: No active file.') 
+    return EMPTY_STORE;
+  }
+  
+  // @ts-ignore
+  const settings: MV_Settings = app.plugins.plugins['MetadataView'].settings;
+  const metadataCache = app.metadataCache;
   const fileCache = metadataCache.getFileCache(activeFile);
-  // @ts-ignore
-  const settings: MetadataViewSettings = app.plugins.plugins['MetadataView'].settings;
-  console.log('refreshing 01');
-  // @ts-ignore
-  const templatesDir: TFolder = app.vault.getFolderByPath(settings.templatesDir);
-  console.log('refreshing 02');
-  if (!fileCache || !templatesDir) {
-    console.warn('MDV: FileCache or templates directory not Found');
+  
+  if (!fileCache) {
+    console.warn('MV: FileCache not found');
     return EMPTY_STORE;
   }
   
   const frontmatter = fileCache.frontmatter || {};
   const page = getAPI(app)?.page(activeFile.path);
+
   const types: string[] = [];
   const tags: string[] = [];
+  const aliases: string[] = [];
+  const cssclasses: string[] = [];
   const inlineTags: InlineTagData[] = [];
-  const propGroups: MDV_PropGroup[] = [{ name: '', props: {} }];
-  const propGroupMap: Record<string, MDV_PropGroup> = { '': propGroups[0] };
-  const propGroupKeyMap: Record<string, MDV_PropGroup> = {};
+  const freeProps: MV_PropData[] = [];
+  const boundProps: MV_GroupData[] = [];
+  const propGroupMap: Record<string, MV_GroupData> = {};
   const freelinks: LinkCache[] = fileCache.links || [];
   const backlinks: BacklinkData[] = [];
+  const backlinksMap: Record<string, BacklinkData[]> = {};
   const embeds: EmbedData[] = [];
-  console.log('refreshing 04');
-  const propertyInfos = metadataCache.getAllPropertyInfos();
-  const frontmatterBacklinksMap: Record<string, BacklinkData[]> = {};
   const embedsMap: Record<string, EmbedData[]> = {};
-
-  const templateMap: Record<string, TFile> = getTemplatesMap(templatesDir);
   
-  console.log('refreshing0');
   // @ts-ignore
   Object.entries((metadataCache.getBacklinksForFile(activeFile).data as Record<string, BacklinkData[]>))
-    .forEach(([filename, fileData]) => {
-      for (let backlinkData of fileData) {
-        let key = backlinkData.key;
-        if (key) {
-          const [k, i] = key.split('.');
-          const keyBacklinks = frontmatterBacklinksMap[k] || (frontmatterBacklinksMap[k] = []);
-          keyBacklinks.push(backlinkData);
-        } else {
-          backlinks.push(backlinkData);
-        }
+  .forEach(([filename, fileData]) => {
+    for (let backlinkData of fileData) {
+      let key = backlinkData.key;
+      if (key) {
+        const [k, i] = key.split('.');
+        const keyBacklinks = backlinksMap[k] || (backlinksMap[k] = []);
+        keyBacklinks.push(backlinkData);
+      } else {
+        backlinks.push(backlinkData);
       }
-    });
-
-  // Q: what is the point of checking the page object? A: Inline fields
-  const keys: string[] = [];
+    }
+  });
+  
+  const props: Record<string, unknown> = {};
   const usedKeysMap: Record<string, boolean> = { file: true };
-  const registerKey = (key: string) => {
+  const registerEntry = ([key, value]: [string, unknown]) => {
     const _k = key.toLowerCase();
     if (usedKeysMap[_k]) return;
     usedKeysMap[_k] = true;
-    keys.push(key);
-    console.log('adding key', key);
+    props[key] = (value);
   };
-  
-  if (page) Object.keys(page).sort().forEach(registerKey);
-  Object.keys(frontmatter).forEach(registerKey);
-  
-  console.log('refreshing1');
+
+  if (page) Object.entries(page).sort().forEach(registerEntry);
+  Object.entries(frontmatter).forEach(registerEntry);
   
   if (usedKeysMap[settings.typesProp.toLowerCase()]) {
-    console.log('detected types prop');
-    let _types: string[] = frontmatter[settings.typesProp];
-    // @ts-ignore
-    if (!Array.isArray(_types)) _types = [_types];
-    const typeQueue: string[] = [..._types];
-    const visited: Record<string, true> = {};
+    const typeQueue: string[] = [...arrayWrap(frontmatter[settings.typesProp])];
+    const visitedType: Record<string, true> = {};
     
     let _t: string | undefined;
     while ((_t = typeQueue.pop())) {
-      console.log('processing', _t);
-      // Get TFILE + cache
-      if (visited[_t]) continue;
-      visited[_t] = true;
-      let _f : TFile = templateMap[_t + '.md'];
-      if (!_f) continue;  // TODO: Emit Warning
-      let _fm = metadataCache.getFileCache(_f)?.frontmatter;
-      if (!_fm) continue;  // TODO: Emit Warning
-
-      console.log('found file', _t);
+      if (visitedType[_t]) continue;
+      visitedType[_t] = true;
       types.push(_t);
+    
+      const typeDef = _typeCache.byName[_t];
+      typeQueue.push(...typeDef.types);
 
-      // Initialize propGroup
-      const props: Record<string, MDV_Prop> = {};
-      const propGroup : MDV_PropGroup = { name: _t, props };
-      propGroupMap[_t] = propGroup;
-      propGroups.push(propGroup);
+      const propGroupProps: MV_PropData[] = [];
+      const propGroup: MV_GroupData = { name: _t, props: propGroupProps };
+      boundProps.push(propGroup);
 
-      for (let [key, value] of Object.entries(_fm)) {
-        // Either add key to type group or add types to queue
-        if (key === settings.typesProp) {
-          if (Array.isArray(value)) {
-            value.reduce((q, c) => { q.push(c); return q; }, typeQueue);
-          } else if (typeof(value) === "string") {
-            typeQueue.push(value);
-          }
-        } else if (key === "tag") {
-          tags.push(value);
-        } else if (key === "tags") {
-          ;(value as string[]).reduce((tags, v) => { tags.push(v); return tags; }, tags);
-        } else {
-          console.log('adding to default group', key);
-          props[key] = { key, default: value, type: getPropertyInfo(propertyInfos, key, value) };
-          propGroupKeyMap[key] = propGroup;
-        }
+      for (let [propName, propDef] of Object.entries(typeDef.props)) {
+        propGroupMap[propName] = propGroup;
+        const propData: MV_PropData = {
+          value: props[propName],
+          def: propDef,
+          backlinks: backlinksMap[propName] || [] 
+        };
+        propGroupProps.push(propData);
+        delete props[propName];
       }
-    }
 
-    keys.remove(settings.typesProp);
-    keys.remove("tag");
-    keys.remove("tags");
+      tags.push(...typeDef.tags);
+      aliases.push(...typeDef.aliases);
+      cssclasses.push(...typeDef.cssclasses);
+    }
   }
   
-  console.log('refreshing2');
-  
-  keys.forEach((key) => {
-    // let value = frontmatter[key];
-    // if (value === undefined) value = (page ? page[key] : undefined); // prefer values from frontmatter.
-    let value = frontmatter[key] || (page ? page[key] : undefined); // prefer values from frontmatter.
-    const _type: FieldValueType = getPropertyInfo(propertyInfos, key, value);
-    const props = (propGroupMap[key] || propGroupMap['']).props;
-    const prop = props[key] || (props[key] = { key, value, default: '', type: "text" });
-    prop.value = value;
-    prop.backlinks = frontmatterBacklinksMap[key];
-    prop.embeds = embedsMap[key];
+  // remaining local props
+  Object.entries(props).forEach(([key, value]) => {
+    freeProps.push({
+      value,
+      def: { key, default: undefined, type: 'free' },
+      backlinks: backlinksMap[key] || []
+    });
   });
   
-  // backlinks?
-  // embeds?
-
-  const data: MDV_File = {
+  const data: MV_FileData = {
     types,
     tags,
+    aliases,
+    cssclasses,
     inlineTags,
-    propGroups,
+    freeProps,
+    boundProps,
     freelinks,
     backlinks,
     embeds
@@ -300,4 +287,22 @@ async function refresh() {
 
   console.log('store:', data);
   return data;
+}
+
+
+function arrayWrap(v: any) {
+  return Array.isArray(v) ? v : (v === undefined) ? [] : [v];
+}
+
+
+function fileInFolder(file: TFile, folder: TFolder | null) {
+  if (!folder) return false;
+  for (let child of folder.children) {
+    if (child instanceof TFile) {
+      if (file === child) return true;
+    } else if (child instanceof TFolder) {
+      if (fileInFolder(file, child)) return true;
+    }
+  }
+  return false;
 }
