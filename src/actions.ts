@@ -1,6 +1,6 @@
 import refs from './refs'
 import { arrayWrap } from './utils'
-import { fileStore } from './manager';
+import fileStore from './fileStore';
 
 export function addType(type: string) {
   refs.fileManager!.processFrontMatter(fileStore.activeFile!, (frontmatter) => {

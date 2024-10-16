@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fileStore } from '../manager';
+  import fileStore from '../fileStore';
   import JsonProp from './JsonProp.svelte';
   
   let data: MVFileData | null;
