@@ -1,6 +1,6 @@
 {
-	"id": "MetadataView",
-	"name": "Metadata View",
+	"id": "Metaview",
+	"name": "Metaview",
 	"version": "0.0.1",
 	"minAppVersion": "1.5.3",
 	"description": "Demonstrates some of the capabilities of the Obsidian API.",

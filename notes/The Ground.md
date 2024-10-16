@@ -1,16 +1,11 @@
+prop cases:
+
+(free|template) (single|multi|object) (primitive|composite) 
+
+composite: (link|data)
+
 ---
-test: How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be? How long can a text property be?
-family:
-  - jp
-  - mania
-  - other
-  - "[[scratch]]"
-  - "[[non-existent]]"
-tests:
-  - "A: one"
-  - "B: two"
-astags: some/tag
----
+
 Spatia (Spa-tia, Latin for Spaces)
 Ordiri (Latin for I begin to weave)
 
