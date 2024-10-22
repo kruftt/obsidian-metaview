@@ -3,7 +3,7 @@ interface MVSettings {
 }
 
 interface MVTemplate {
-  name: string
+  name: string // not used
   types: string[]
   aliases: string[]
   tags: string[]
@@ -18,7 +18,7 @@ interface MVFileData {
   tags: MVMetaData
   cssclasses: MVMetaData
   props: Record<string, unknown>
-  typeData: Record<string, MVTypeData>
+  typeData: Record<string, Record<string, MVPropData>>
 }
 
 interface MVMetaData {
@@ -26,15 +26,12 @@ interface MVMetaData {
   free: string[]
 }
 
-interface MVTypeData {
-  name: string
-  props: Record<string, MVPropData>
-}
-
 interface MVPropData {
-  template: MVPropDef
+  def: MVPropDef
   value: unknown
 }
+
+interface MVBoolData { def: MVBoolDef, value?: boolean }
 
 
 type MVPropDef =
@@ -44,6 +41,9 @@ type MVPropDef =
   | MVStringDef
   | MVDateDef
   | MVDateTimeDef
+  | MVTimeDef
+  | MVMonthDef
+  | MVYearDef
   | MVLinkDef
   | MVSelectDef
   | MVMultiDef
@@ -78,6 +78,21 @@ interface MVDateDef {
 
 interface MVDateTimeDef {
   type: 'datetime'
+  format?: string
+}
+
+interface MVTimeDef {
+  type: 'time'
+  format?: string
+}
+
+interface MVMonthDef {
+  type: 'month'
+  format?: string
+}
+
+interface MVYearDef {
+  type: 'year'
   format?: string
 }
 

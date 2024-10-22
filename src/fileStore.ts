@@ -44,7 +44,7 @@ export default {
     const boundCss: Record<string, boolean> = {};
     const freeCss: string[] = [];
     const props: Record<string, unknown> = {};
-    const typeData: Record<string, MVTypeData> = {};
+    const typeData: Record<string, Record<string, MVPropData>> = {};
 
     const typeQueue: string[] = [...types];
     let type: string | undefined;
@@ -62,13 +62,10 @@ export default {
 
       const props: Record<string, MVPropData> = {};
       for ([k, v] of Object.entries(template.props)) {
-        propMap[k] = props[k] = { template: v, value: null };
+        propMap[k] = props[k] = { def: v, value: null };
       }
 
-      typeData[type] = {
-        name: template.name,
-        props,
-      };
+      typeData[type] = props;
     }
 
     let propData;

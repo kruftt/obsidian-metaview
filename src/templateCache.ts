@@ -1,7 +1,8 @@
 import { TFile, TFolder } from 'obsidian'
 import refs from './refs'
-import { arrayWrap, TYPE_REGEX } from './utils'
+import { arrayWrap } from './utils'
 
+const TYPE_REGEX = /^{\s*([^\[\]\s{}:]+)(?::(.*?))?\s*}$/;
 
 export default {
   templates: <Record<string, MVTemplate>> {},
@@ -97,10 +98,11 @@ function parseString(value: string): MVPropDef {
   const type = extracted[1];
   const arg = extracted[2];
   switch (type) {
-    case 'bool':
+    case 'boolean':
       return {
         type: 'boolean',
-        default: arg ? true : (arg === undefined) ? arg : false,
+        default: arg ? (arg === 'false') ? false : true : false,
+        // default: arg ? true : (arg === undefined) ? arg : false,
       };
     case 'number':
       return {
@@ -125,6 +127,21 @@ function parseString(value: string): MVPropDef {
     case 'datetime':
       return {
         type: 'datetime',
+        format: arg,
+      };
+    case 'time':
+      return {
+        type: 'time',
+        format: arg,
+      };
+    case 'month':
+      return {
+        type: 'month',
+        format: arg,
+      };
+    case 'year':
+      return {
+        type: 'year',
         format: arg,
       };
     default:

@@ -56,7 +56,7 @@ export function removeType(type: string) {
 // To support nested properties
 function getTarget(address: string[], target: Record<string, any>) {
   let key: string | undefined;
-  for (let i = address.length - 1; i > 0; i--) {
+  for (let i = 0; i < address.length - 1; i++) {
     key = address[i];
     target = target[key!];
   }
@@ -64,16 +64,17 @@ function getTarget(address: string[], target: Record<string, any>) {
 }
 
 export function setProperty(address: string[], value: unknown) {
+  console.log('setting prop', address, value);
   fileStore.updating = true;
   refs.fileManager!.processFrontMatter(fileStore.activeFile!, (frontmatter) => {
-    getTarget(address, frontmatter)[address[0]] = value;
+    getTarget(address, frontmatter)[address.at(-1)!] = value;
   });
 }
 
 export function removeProperty(address: string[]) {
   fileStore.updating = true;
   refs.fileManager!.processFrontMatter(fileStore.activeFile!, (frontmatter) => {
-    delete getTarget(address, frontmatter)[address[0]];
+    delete getTarget(address, frontmatter)[address.at(-1)!];
   });
 }
 
@@ -82,7 +83,8 @@ export function setKey(address: string[], key: string) {
   fileStore.updating = true;
   refs.fileManager!.processFrontMatter(fileStore.activeFile!, (frontmatter) => {
     const target = getTarget(address, frontmatter);
-    target[key] = target[address[0]];
-    delete target[address[0]];
+    const target_key = address.at(-1)!;
+    target[key] = target[target_key];
+    delete target[target_key];
   });
 }

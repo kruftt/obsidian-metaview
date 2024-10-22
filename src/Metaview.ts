@@ -1,6 +1,6 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import * as CONST from './constants'
-import Component from './components/MetaView.svelte';
+import Component from './MetaView.svelte';
 
 const UPDATE_EVENTS = ["file-open", "window-open", "editor-change"];
 

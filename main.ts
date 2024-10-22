@@ -1,10 +1,11 @@
 import { App, CachedMetadata, Plugin, PluginSettingTab, Setting, TFolder, TFile, WorkspaceLeaf } from 'obsidian';
 import * as CONST from './src/constants'
 import refs from './src/refs'
-import { FILENAME_REGEX } from './src/utils'
 import MetaView from "./src/MetaView"
-import { templateCache, fileStore } from './src/templateCache'
+import templateCache from './src/templateCache'
+import fileStore from './src/fileStore'
 
+const FILENAME_REGEX = /^(?:.*\/)?(.+).md$/;
 const DEFAULT_SETTINGS: MVSettings = {
 	templatesPath: '',
 }
