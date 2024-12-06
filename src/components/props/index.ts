@@ -12,7 +12,6 @@ import SelectProp from "./SelectProp.svelte";
 import StringProp from "./StringProp.svelte";
 import TimeProp from "./TimeProp.svelte";
 import TupleProp from "./TupleProp.svelte";
-import YearProp from "./YearProp.svelte";
 
 export default {
   array : ArrayProp,
@@ -20,7 +19,6 @@ export default {
   date : DateProp,
   datetime : DatetimeProp,
   month: MonthProp,
-  year: YearProp,
   json : JsonProp,
   link : LinkProp,
   multi : MultiProp,

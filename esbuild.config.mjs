@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import esbuildSvelte from "esbuild-svelte";
-import sveltePreprocess from "svelte-preprocess";
+import { sveltePreprocess } from "svelte-preprocess";
 import process from "process";
 import builtins from "builtin-modules";
 
@@ -39,7 +39,7 @@ const context = await esbuild.context({
 	logLevel: "info",
 	plugins: [
 		esbuildSvelte({
-			compilerOptions: { css: true },
+			compilerOptions: { css: "injected", runes: true },
 			preprocess: sveltePreprocess(),
 		})
 	],

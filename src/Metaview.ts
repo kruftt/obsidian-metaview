@@ -1,6 +1,8 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
-import * as CONST from './constants'
-import Component from './MetaView.svelte';
+import * as CONST from './constants';
+import Component from './components/MetaView.svelte';
+import store from './store.svelte';
+import { mount, unmount } from 'svelte';
 
 const UPDATE_EVENTS = ["file-open", "window-open", "editor-change"];
 
@@ -22,13 +24,13 @@ export default class MetaView extends ItemView {
 
     async onOpen() {
         console.log('View Open');
-        this.component = new Component({
-            target: this.contentEl
-        });
+        // @ts-ignore
+        this.component = mount(Component, { target: this.contentEl });
+        store.set(this.app.workspace.getActiveFile());
     }
     
     async onClose() {
         console.log('View Close');
-        this.component.$destroy();
+        unmount(this.component);
     }
 }

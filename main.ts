@@ -1,13 +1,11 @@
-import { App, CachedMetadata, Plugin, PluginSettingTab, Setting, TFolder, TFile, WorkspaceLeaf } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, TFolder, TFile, WorkspaceLeaf } from 'obsidian';
 import * as CONST from './src/constants'
-import refs from './src/refs'
 import MetaView from "./src/MetaView"
-import templateCache from './src/templateCache'
-import fileStore from './src/fileStore'
+import store from './src/store.svelte'
 
 const FILENAME_REGEX = /^(?:.*\/)?(.+).md$/;
 const DEFAULT_SETTINGS: MVSettings = {
-	templatesPath: '',
+	typesPath: '',
 }
 
 export default class MetaViewPlugin extends Plugin {
@@ -31,81 +29,36 @@ export default class MetaViewPlugin extends Plugin {
 	async onload() {
 		// console.log('Plugin load');
 		await this.loadSettings();
-		this.addSettingTab(new MetaViewSettingTab(this.app, this));		
+		this.addSettingTab(new MetaViewSettingTab(this.app, this));
 		this.registerView(CONST.ID, (leaf) => new MetaView(leaf));
 
 		const ribbonIconEl = this.addRibbonIcon('info', CONST.NAME, (evt: MouseEvent) => { this.activateView(); });
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
 
 		this.app.workspace.onLayoutReady(() => {
-			refs.init(this);
 			const app = this.app;
 			const workspace = app.workspace;
 			const metadataCache = app.metadataCache;
 			
-			templateCache.buildCache();
-			fileStore.set(workspace.getActiveFile());
+			store.plugin = this;
+			store.makeTypeCache();
 			
-			this.registerEvent(workspace.on('file-open', (file) => fileStore.set(file)));
-						
-			this.registerEvent(metadataCache.on('changed',
-				(file: TFile, data: string, cache: CachedMetadata) => {
-					if (fileStore.updating) {
-						fileStore.updating = false;
-						return;
-					}
-					
-					if (file.extension !== 'md') return;
-					const { templatesPath } = this.settings;
-
-					if (file.path.startsWith(templatesPath)) {
-						templateCache.buildTemplate(file);
-					}
-
-					if (file === fileStore.activeFile) {
-						fileStore.set(file);
-					}
-				}
-			));
-						
-			this.registerEvent(metadataCache.on('deleted',
-				(file: TFile, prevCache: CachedMetadata | null) => {
-					if (file.extension !== 'md') return;
-					if (file.path.startsWith(this.settings.templatesPath)) {
-						delete templateCache.templates[file.basename];
-					}
-				}
-			));
-						
-			this.registerEvent(app.vault.on('rename', 
-				(file: TFile, oldPath: string) => {
-					const { templatesPath } = this.settings;
-					const templates = templateCache.templates;
-
-					if (oldPath.startsWith(templatesPath)) {
-						const oldBase = FILENAME_REGEX.exec(oldPath)?.[1];
-						if (oldBase) delete templates[oldBase];
-					}
-
-					if (file.path.startsWith(templatesPath)) {
-						templateCache.buildTemplate(file);
-					}
-				}
-			));
+			this.registerEvent(workspace.on('file-open', store.set));
+			this.registerEvent(metadataCache.on('changed', store.update));
+			this.registerEvent(metadataCache.on('deleted', store.remove));
+			this.registerEvent(app.vault.on('rename', store.rename));
 		});
 	}
 
-	onunload() {
-		refs.clear();
-	}
+	onunload() { }
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
 	async saveSettings() {
-		// TODO: Reload plugin?
 		await this.saveData(this.settings);
+		store.plugin = this;
 	}
 }
 
@@ -122,14 +75,14 @@ class MetaViewSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Meta Template Directory')
+			.setName('Meta Types Directory')
 			// .setClass(typeof(TFolder)) // ? doesnt seem to work
-			.setDesc('Search for template type files in this directory.')
+			.setDesc('Directory in which type definitions are stored.')
 			.addText(text => text
 				.setPlaceholder('')
-				.setValue(this.plugin.settings.templatesPath)
+				.setValue(this.plugin.settings.typesPath)
 				.onChange(async (value) => {
-					this.plugin.settings.templatesPath = value;
+					this.plugin.settings.typesPath = value;
 					await this.plugin.saveSettings();
 				}));
 

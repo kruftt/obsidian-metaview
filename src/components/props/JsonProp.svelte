@@ -1,31 +1,13 @@
 <script lang="ts">
-  import { setProperty } from '../actions'
-  import { createEventDispatcher } from 'svelte'
+  import store from '../../store.svelte'
 
-  // Does an element ever need to know its key by itself?
-  // Yes, to draw the key label
-  // Either each component stores its address array
-  // Or each component has a dispatcher
-
-  // Probably technically cheaper to store address array
-
-  // export let key: string;
-  export let address: string[];
-  export let value: unknown;
-  export let template: MVJsonDef = { type: 'json' };
-
-  const dispatch = createEventDispatcher<{
-    update: { address: string[], value: unknown }
-  }>();
+  let { address, key, value, template = { type: 'json', value: '' }}:
+      { address: string, key: string, value: unknown, template: MVJsonDef } = $props();
 
   function onBlur(e: InputEvent) {
     const target = e.target;
     if (target instanceof HTMLElement) {
-      // dispatch('update', {
-      //   address: [key],
-      //   value: target.innerText,
-      // });
-      setProperty(address, target.innerText);
+      store.setProperty(address, target.innerText);
     }
   }
 
@@ -42,14 +24,22 @@
   //- div.metadata-property
   //-   span.metadata-property-key {key}
   //-   div.metadata-property-value {value}
-  div
+  div.entry
     div
-      b {address[address.length-1]}:
+      b {key}:
     div.value(contentEditable on:keydown="{onKeyDown}" on:blur="{onBlur}") {value}
 </template>
 
 <style lang="sass" scoped>
+  .entry
+    display: flex
+    margin: 0.2em
+
   .value
+    margin-left: 1em
+    background-color: #111
+    flex: 1
+    padding-left: 0.2em
     user-select: text
     -webkit-user-select: text
   // .metadata-property-key 

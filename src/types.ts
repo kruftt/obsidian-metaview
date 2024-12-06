@@ -1,127 +1,175 @@
+/**
+ * dont put meta props in type sections, but use them as a multiselect
+ */
+
 interface MVSettings {
-  templatesPath: string;
+  typesPath: string;
 }
 
-interface MVTemplate {
-  name: string // not used
+interface MVFileDataBase {
   types: string[]
-  aliases: string[]
+  aliases: string[] // Aliases for this type? object/person person
   tags: string[]
   cssclasses: string[]
-  props: Record<string, MVPropDef>
+  // props: Record<string, JSONValue> // in a template these are default values?
 }
 
-interface MVFileData {
-  name: string
-  types: string[]
-  aliases: MVMetaData
-  tags: MVMetaData
-  cssclasses: MVMetaData
-  props: Record<string, unknown>
-  typeData: Record<string, Record<string, MVPropData>>
+// configs stored by path with template and .md removed
+interface MVTypeData extends MVFileDataBase {
+  defs: Record<string, MVPropDef>
 }
 
-interface MVMetaData {
-  bound: Record<string, boolean> 
-  free: string[]
+interface MVNoteData extends MVFileDataBase {
+  props: Record<string, JSONValue>
+  boundAliases: Record<string, Record<string, boolean>> // type: alias: active?
+  boundTags: Record<string, Record<string, boolean>> 
+  boundCss: Record<string, Record<string, boolean>> 
+  boundProps: Record<string, Record<string, MVPropData>> // type: key: data
 }
+
+type MVFileData = MVNoteData | MVTypeData;
+
+// interface MVStoreState {
+//   data: MVFileData | null
+//   isTypeDef: boolean
+// }
 
 interface MVPropData {
+  value: JSONValue
   def: MVPropDef
-  value: unknown
 }
-
-interface MVBoolData { def: MVBoolDef, value?: boolean }
-
 
 type MVPropDef =
   | MVJsonDef
   | MVBoolDef
   | MVNumberDef
-  | MVStringDef
+  | MVTextDef
   | MVDateDef
   | MVDateTimeDef
   | MVTimeDef
   | MVMonthDef
-  | MVYearDef
   | MVLinkDef
   | MVSelectDef
   | MVMultiDef
+  // | MVOptionsDef
   | MVArrayDef
   | MVTupleDef
   | MVRecordDef
 
-interface MVJsonDef {
+interface MVPropDefBase {
+  // key: string
+  // address: string 
+  // Here or provided by component, what about free props?
+  // free props are json props .. 
+  // what about nested property addresses?
+  // The config prop itself must have an address .. so to be uniform it cannot use the def
+}
+
+interface MVJsonDef extends MVPropDefBase {
   type: 'json'
-  default?: string
+  value: JSONValue
 }
 
-interface MVBoolDef {
+interface MVBoolDef extends MVPropDefBase {
   type: 'boolean'
-  default?: boolean
+  checked: boolean | null
 }
 
-interface MVNumberDef {
+interface MVNumberDef extends MVPropDefBase {
   type: 'number'
-  default?: number
+  value: number | null
+  min: number | null
+  max: number | null
+  step: number | null
 }
 
-interface MVStringDef {
-  type: 'string'
-  default?: string
+interface MVTextDef extends MVPropDefBase {
+  type: 'text'
+  value: string | null
+  minlength: number | null
+  maxlength: number | null
+  pattern: string | null
 }
 
-interface MVDateDef {
+// interface MVDateTimeDef extends MVPropDefBase {
+//   type: 'date' | 'datetime' | 'time' | 'month'
+//   value: string | null
+//   min: string | null
+//   max: string | null
+//   step: string | null
+// }
+
+interface MVDateDef extends MVPropDefBase {
   type: 'date'
-  format?: string
+  value: string | null
+  min: string | null
+  max: string | null
+  step: string | null
 }
 
-interface MVDateTimeDef {
+interface MVDateTimeDef extends MVPropDefBase {
   type: 'datetime'
-  format?: string
+  value: string | null
+  min: string | null
+  max: string | null
+  step: string | null
 }
 
-interface MVTimeDef {
+interface MVTimeDef extends MVPropDefBase {
   type: 'time'
-  format?: string
+  value: string | null
+  min: string | null
+  max: string | null
+  step: string | null
 }
 
-interface MVMonthDef {
+interface MVMonthDef extends MVPropDefBase {
   type: 'month'
-  format?: string
+  value: string | null
+  min: string | null
+  max: string | null
+  step: string | null
 }
 
-interface MVYearDef {
-  type: 'year'
-  format?: string
-}
-
-interface MVLinkDef {
+interface MVLinkDef extends MVPropDefBase {
   type: 'link'
-  noteType?: string
+  target: string | null
 }
 
-interface MVSelectDef {
+// interface MVOptionsDef extends MVPropDefBase {
+//   type: 'select' | 'multi'
+//   options: Array<boolean | number | string>
+// }
+
+interface MVSelectDef extends MVPropDefBase {
   type: 'select'
-  values: Array<boolean|number|string>
+  options: Array<boolean | number | string>
 }
 
-interface MVMultiDef {
+interface MVMultiDef extends MVPropDefBase {
   type: 'multi'
-  elementType: MVSelectDef
+  options: Array<boolean | number | string>
 }
 
-interface MVArrayDef {
+interface MVArrayDef extends MVPropDefBase {
   type: 'array'
   elementType: MVPropDef
 }
 
-interface MVTupleDef {
+interface MVTupleDef extends MVPropDefBase {
   type: 'tuple'
   elementTypes: MVPropDef[]
 }
 
-interface MVRecordDef {
+interface MVRecordDef extends MVPropDefBase {
   type: 'record'
   entries: Record<string, MVPropDef>
 }
+
+type JSONValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JSONValue[]
+  | { [key: string]: JSONValue }
