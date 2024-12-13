@@ -3,39 +3,42 @@
  */
 
 interface MVSettings {
-  typesPath: string;
+  templatesPath: string;
 }
 
-interface MVFileDataBase {
-  types: string[]
-  aliases: string[] // Aliases for this type? object/person person
-  tags: string[]
-  cssclasses: string[]
-  // props: Record<string, JSONValue> // in a template these are default values?
+interface MVFileBase {
+  // types: string[] // use set for all these to standardize component
+  // aliases: string[]
+  types: Set<string>
+  aliases: Set<string>
+  tags: Set<string>
+  cssclasses: Set<string>
 }
 
 // configs stored by path with template and .md removed
-interface MVTypeData extends MVFileDataBase {
+interface MVTemplateData extends MVFileBase {  
+  // tags: string[]
+  // cssclasses: string[]
   defs: Record<string, MVPropDef>
 }
 
-interface MVNoteData extends MVFileDataBase {
-  props: Record<string, JSONValue>
-  boundAliases: Record<string, Record<string, boolean>> // type: alias: active?
-  boundTags: Record<string, Record<string, boolean>> 
-  boundCss: Record<string, Record<string, boolean>> 
-  boundProps: Record<string, Record<string, MVPropData>> // type: key: data
+interface MVNoteData extends MVFileBase {
+  // tags: Set<string>
+  // cssclasses: Set<string>
+  props: Record<string, FMValue>
+  
+  // derive these after adding or removing type
+  freeProps: Set<string>
+  typeData: Record<string, MVTemplateData>
 }
 
-type MVFileData = MVNoteData | MVTypeData;
+// what happens when an active note's type is changed in an external app?
+// 
 
-// interface MVStoreState {
-//   data: MVFileData | null
-//   isTypeDef: boolean
-// }
+type MVFileData = MVNoteData | MVTemplateData;
 
 interface MVPropData {
-  value: JSONValue
+  value: FMValue
   def: MVPropDef
 }
 
@@ -56,26 +59,17 @@ type MVPropDef =
   | MVTupleDef
   | MVRecordDef
 
-interface MVPropDefBase {
-  // key: string
-  // address: string 
-  // Here or provided by component, what about free props?
-  // free props are json props .. 
-  // what about nested property addresses?
-  // The config prop itself must have an address .. so to be uniform it cannot use the def
-}
-
-interface MVJsonDef extends MVPropDefBase {
+interface MVJsonDef {
   type: 'json'
-  value: JSONValue
+  value: FMValue
 }
 
-interface MVBoolDef extends MVPropDefBase {
+interface MVBoolDef {
   type: 'boolean'
   checked: boolean | null
 }
 
-interface MVNumberDef extends MVPropDefBase {
+interface MVNumberDef {
   type: 'number'
   value: number | null
   min: number | null
@@ -83,7 +77,7 @@ interface MVNumberDef extends MVPropDefBase {
   step: number | null
 }
 
-interface MVTextDef extends MVPropDefBase {
+interface MVTextDef {
   type: 'text'
   value: string | null
   minlength: number | null
@@ -91,7 +85,7 @@ interface MVTextDef extends MVPropDefBase {
   pattern: string | null
 }
 
-// interface MVDateTimeDef extends MVPropDefBase {
+// interface MVDateTimeDef {
 //   type: 'date' | 'datetime' | 'time' | 'month'
 //   value: string | null
 //   min: string | null
@@ -99,7 +93,7 @@ interface MVTextDef extends MVPropDefBase {
 //   step: string | null
 // }
 
-interface MVDateDef extends MVPropDefBase {
+interface MVDateDef {
   type: 'date'
   value: string | null
   min: string | null
@@ -107,7 +101,7 @@ interface MVDateDef extends MVPropDefBase {
   step: string | null
 }
 
-interface MVDateTimeDef extends MVPropDefBase {
+interface MVDateTimeDef {
   type: 'datetime'
   value: string | null
   min: string | null
@@ -115,7 +109,7 @@ interface MVDateTimeDef extends MVPropDefBase {
   step: string | null
 }
 
-interface MVTimeDef extends MVPropDefBase {
+interface MVTimeDef {
   type: 'time'
   value: string | null
   min: string | null
@@ -123,7 +117,7 @@ interface MVTimeDef extends MVPropDefBase {
   step: string | null
 }
 
-interface MVMonthDef extends MVPropDefBase {
+interface MVMonthDef {
   type: 'month'
   value: string | null
   min: string | null
@@ -131,45 +125,44 @@ interface MVMonthDef extends MVPropDefBase {
   step: string | null
 }
 
-interface MVLinkDef extends MVPropDefBase {
+interface MVLinkDef {
   type: 'link'
   target: string | null
 }
 
-// interface MVOptionsDef extends MVPropDefBase {
+// interface MVOptionsDef {
 //   type: 'select' | 'multi'
 //   options: Array<boolean | number | string>
 // }
 
-interface MVSelectDef extends MVPropDefBase {
+interface MVSelectDef {
   type: 'select'
   options: Array<boolean | number | string>
 }
 
-interface MVMultiDef extends MVPropDefBase {
+interface MVMultiDef {
   type: 'multi'
   options: Array<boolean | number | string>
 }
 
-interface MVArrayDef extends MVPropDefBase {
+interface MVArrayDef {
   type: 'array'
   elementType: MVPropDef
 }
 
-interface MVTupleDef extends MVPropDefBase {
+interface MVTupleDef {
   type: 'tuple'
   elementTypes: MVPropDef[]
 }
 
-interface MVRecordDef extends MVPropDefBase {
+interface MVRecordDef {
   type: 'record'
   entries: Record<string, MVPropDef>
 }
 
-type JSONValue =
+type FMValue =
   | string
   | number
   | boolean
-  | null
-  | JSONValue[]
-  | { [key: string]: JSONValue }
+  | FMValue[]
+  | { [key: string]: FMValue }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import store from '../../store.svelte'
+  import store from '../../oldstore.svelte'
 
   let { address, key, value, template = { type: 'json', value: '' }}:
       { address: string, key: string, value: unknown, template: MVJsonDef } = $props();

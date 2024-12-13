@@ -3,9 +3,9 @@ import * as CONST from './src/constants'
 import MetaView from "./src/MetaView"
 import store from './src/store.svelte'
 
-const FILENAME_REGEX = /^(?:.*\/)?(.+).md$/;
+// const FILENAME_REGEX = /^(?:.*\/)?(.+).md$/;
 const DEFAULT_SETTINGS: MVSettings = {
-	typesPath: '',
+	templatesPath: '',
 }
 
 export default class MetaViewPlugin extends Plugin {
@@ -39,14 +39,18 @@ export default class MetaViewPlugin extends Plugin {
 			const app = this.app;
 			const workspace = app.workspace;
 			const metadataCache = app.metadataCache;
-			
 			store.plugin = this;
-			store.makeTypeCache();
 			
-			this.registerEvent(workspace.on('file-open', store.set));
-			this.registerEvent(metadataCache.on('changed', store.update));
-			this.registerEvent(metadataCache.on('deleted', store.remove));
-			this.registerEvent(app.vault.on('rename', store.rename));
+			this.registerEvent(workspace.on('file-open', (file) => store.file = file));
+			this.registerEvent(metadataCache.on('changed', (file) => store.updateFile(file)));
+			this.registerEvent(metadataCache.on('deleted', (file) => {
+				if (file.extension === 'md' && file.path.startsWith(this.settings.templatesPath)) {
+					store.removeTemplate(file);
+				}
+			}));
+			this.registerEvent(app.vault.on('rename', (file, oldPath) => {
+				if (file instanceof TFile) store.renameFile(file, oldPath);
+			}));
 		});
 	}
 
@@ -80,9 +84,9 @@ class MetaViewSettingTab extends PluginSettingTab {
 			.setDesc('Directory in which type definitions are stored.')
 			.addText(text => text
 				.setPlaceholder('')
-				.setValue(this.plugin.settings.typesPath)
+				.setValue(this.plugin.settings.templatesPath)
 				.onChange(async (value) => {
-					this.plugin.settings.typesPath = value;
+					this.plugin.settings.templatesPath = value;
 					await this.plugin.saveSettings();
 				}));
 

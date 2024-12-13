@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import * as CONST from './constants';
 import Component from './components/MetaView.svelte';
-import store from './store.svelte';
+import store from './oldstore.svelte';
 import { mount, unmount } from 'svelte';
 
 const UPDATE_EVENTS = ["file-open", "window-open", "editor-change"];
@@ -10,7 +10,7 @@ export default class MetaView extends ItemView {
     component: Component;
 
     constructor(leaf: WorkspaceLeaf) {
-    super(leaf);
+        super(leaf);
         this.navigation = false;
     }
 

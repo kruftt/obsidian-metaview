@@ -1,5 +1,5 @@
 <script lang="ts">
-  import store from '../../store.svelte'
+  import store from '../../oldstore.svelte'
 
   let { address, key, config }: {
     address: string,

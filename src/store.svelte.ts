@@ -1,13 +1,246 @@
-// TODO: redo all "startsWith" logic using getTypeName
-
-import { TAbstractFile, TFile, TFolder, type FrontMatterCache } from 'obsidian'
+import { TAbstractFile, TFile, TFolder } from 'obsidian'
+import { SvelteSet } from 'svelte/reactivity'
 import type MetaViewPlugin from '../main'
-// import { KEY_SEPARATOR } from './constants'
 
-const arrayWrap = (v: unknown) => Array.isArray(v) ? v : (v === undefined) ? [] : [v];
-const makeBoolMap = (map: Record<string, boolean>, v: string) => { map[v] = true; return map; };
-// const TYPE_NAME_REGEX = /^(?:.*\/)?(.+).md$/;
-const VALID_TYPES: Record<string, boolean> = {
+class MVStore {
+  public data: MVFileData | null = $state.raw(null);
+  
+  private templateCache: Record<string, MVTemplateData> = $state({});
+  // private templateCache: SvelteMap<string, MVTemplateData> = new SvelteMap();
+  private templateNameRegex: RegExp;
+  private updating: Boolean = false;
+  
+  private _file: TFile | null = null;
+  get file(): TFile | null { return this._file; }
+  set file(file: TFile | null) {
+    this._file = file;
+    if (file === null || file.extension !== '.md') {
+      this.data = null;
+    } else if (file.path.startsWith(this._plugin.settings.templatesPath)) {
+      this.data = this.templateCache[this.getTemplateName(file.path)];
+    } else {
+      this.data = this.makeNoteData(file);
+    }
+  }
+
+  private _plugin: MetaViewPlugin;
+  // get plugin(): MetaViewPlugin { return this._plugin }
+  set plugin(plugin: MetaViewPlugin) {
+    this._plugin = plugin;
+    this.templateNameRegex = new RegExp(
+      '^' + plugin.settings.templatesPath + TEMPLATE_NAME_REGEX
+    );
+    this.makeCache();
+  }
+
+  private getTemplateName(path: string) {
+    return this.templateNameRegex.exec(path)![1];
+  }
+
+  public makeTemplate(file: TFile) {
+    const frontmatter = this._plugin.app.metadataCache.getFileCache(file)?.frontmatter || {};
+    
+    const types: SvelteSet<string> = new SvelteSet();
+    const aliases: SvelteSet<string> = new SvelteSet();
+    const cssclasses: SvelteSet<string> = new SvelteSet();
+    const tags: SvelteSet<string> = new SvelteSet();
+    const defs: Record<string, MVPropDef> = $state({});
+    const data = $state({ aliases, types, cssclasses, tags, defs });
+    
+    for (let [k, v] of Object.entries(frontmatter)) {
+      switch (k) {
+        case 'aliases':
+        case 'types':
+        case 'tags':
+        case 'cssclasses':
+          if (Array.isArray(v)) {
+            const target = data[k];
+            v.forEach((v) => target.add(v));
+          }
+          else data[k].add(v);
+          break;
+        default:
+          defs[k] = extractPropConfig(v);
+          break;
+      }
+    }
+
+    this.removeTemplate(file);    
+
+    const templateCache = this.templateCache;
+    const templateName = this.getTemplateName(file.path);
+
+    for (let alias of aliases) {
+      templateCache[alias] = data;
+    }
+
+    templateCache[templateName] = data;
+    return data;
+  }
+
+  public removeTemplate(file: TFile) {
+    const templateCache = this.templateCache;
+    const templateName = this.getTemplateName(file.path);
+    let template = templateCache[templateName];
+    let alias: string;
+
+    if (template) {
+      for (alias of template.aliases) {
+        delete templateCache[alias];
+      }
+    }
+    
+    delete templateCache[templateName];
+  }
+
+  private makeCache() {
+    const plugin = this._plugin;
+    const { templatesPath } = plugin.settings;
+    this.templateCache = {};
+
+    const typesDir = plugin.app.vault.getFolderByPath(templatesPath);
+    if (typesDir === null) {
+      console.warn("MV: Could not find templates directory: ", templatesPath);
+      return;
+    }
+
+    const directoryQueue: TFolder[] = [typesDir];
+    let currentDirectory: TFolder | undefined;
+
+    while (currentDirectory = directoryQueue.pop()) {
+      for (let entry of currentDirectory.children) {
+        if (entry instanceof TFile) {
+          this.makeTemplate(entry);
+        } else {
+          directoryQueue.push(<TFolder>entry);
+        }
+      }
+    }
+  }
+
+  private makeNoteData(file: TFile): MVNoteData {
+    const frontmatter = this._plugin.app.metadataCache.getFileCache(file)?.frontmatter;
+    // if (!frontmatter) return null;
+    
+    // const types: string[] = $state(arrayWrap(frontmatter!.types));
+    // const aliases: string[] = $state(arrayWrap(frontmatter!.aliases));
+    const types = new SvelteSet(arrayWrap(frontmatter!.types));
+    const aliases = new SvelteSet(arrayWrap(frontmatter!.aliases));
+    
+    const tags = new SvelteSet(arrayWrap(frontmatter!.tags));
+    const cssclasses = new SvelteSet(arrayWrap(frontmatter!.cssclasses));
+
+    const props: Record<string, FMValue> = $state({ ...frontmatter! });
+    delete props['aliases'];
+    delete props['tags'];
+    delete props['cssclasses'];
+
+    const data = <MVNoteData><unknown>$state.raw({
+      types,
+      aliases,
+      tags,
+      cssclasses,
+      props,
+    });
+    
+    const templateCache = this.templateCache;
+
+    $effect(() => {
+      const freeProps: Set<string> = new SvelteSet(Object.keys(props));
+      const typeData: Record<string, MVTemplateData> = $state({});
+
+      const typeQueue: string[] = [...types];  
+      const completedTypes: Record<string, boolean> = {};
+      let type: string | undefined;
+      let templateData: MVTemplateData;
+      
+      while (type = typeQueue.pop()) {
+        if (completedTypes[type]) continue;
+        completedTypes[type] = true;
+        templateData = templateCache[type];
+        if (!templateData) continue;
+        typeData[type] = templateData;
+        for (let propKey of Object.keys(templateData.defs)) {
+          freeProps.delete(propKey);
+        }
+      }
+
+      data.freeProps = freeProps;
+      data.typeData = typeData;
+    });
+
+    // console.log('built note data');
+    return data;
+  }
+
+  public updateFile(file: TFile) {
+    if (file.extension !== 'md') return;
+    if (file === this._file && this.updating) {
+      this.updating = false;
+      return;
+    }
+
+    if (file.path.startsWith(this._plugin.settings.templatesPath)) {
+      this.makeTemplate(file);
+    }
+
+    if (file === this._file) this.file = file; // triggers data update
+  }
+
+  public renameFile(file: TFile, oldPath: string) {
+    const { templatesPath } = this._plugin.settings;
+    const templateCache = this.templateCache;
+
+    if (oldPath.startsWith(templatesPath)) {
+      const oldName = this.getTemplateName(oldPath);
+      if (file.path.startsWith(templatesPath)) {
+        templateCache[this.getTemplateName(file.path)] = templateCache[oldName];
+      }
+      delete templateCache[oldName];
+    } else {
+      if (file.path.startsWith(templatesPath)) {
+        this.makeTemplate(<TFile>file);
+      }
+    }
+  }
+
+  public setProperty(address: string[], key: string, value: FMValue | null = null) {
+    this.updating = true;
+    // const keys = address.split(KEY_SEPARATOR);
+    // const key = <string>keys.pop();
+
+    this._plugin.app.fileManager!.processFrontMatter(this._file!, (frontmatter) => {
+      let target = frontmatter;
+      for (let k of address) target = <Record<string, Record<string, FMValue>>>target[k];
+      if (value === null) delete target[key];
+      else target[key] = value;
+    });
+  }
+
+  public insertMetaValue(prop: string, value: string) {
+    this.updating = true;
+    this._plugin.app.fileManager!.processFrontMatter(this._file!, (frontmatter) => { frontmatter[prop].push(value); });
+    if (prop === 'aliases' && this._file!.path.startsWith(this._plugin.settings.templatesPath)) {
+      this.templateCache[value] = <MVTemplateData>this.data;
+    }
+  }
+
+  public removeMetaValue(prop: string, value: string) {
+    this.updating = true;
+    this._plugin.app.fileManager!.processFrontMatter(this._file!, (frontmatter) => {
+      const arr = frontmatter[prop];
+      const idx = arr.indexOf(prop);
+      if (idx > -1) arr.splice(idx, 1);
+    });
+    if (prop === 'aliases' && this._file!.path.startsWith(this._plugin.settings.templatesPath)) {
+      delete this.templateCache[value];
+    }
+  }
+}
+
+
+const TEMPLATE_NAME_REGEX = "(?:\/)?(.+).md$";
+const VALID_TYPES: Record<string, true> = {
   'boolean': true,
   'number': true,
   'text': true,
@@ -23,70 +256,13 @@ const VALID_TYPES: Record<string, boolean> = {
   'tuple': true,
   'record': true,
   'json': true,
-};
+}
 
-let activeFile: TFile | null;
-let plugin: MetaViewPlugin;
-let updating: boolean = false;
-let typeCache: Record<string, MVTypeData> = $state({});
+const arrayWrap = (v: unknown) => Array.isArray(v) ? v : (v === undefined) ? [] : [v];
+const reduceTrue = (record: Record<string, boolean>, v: string) => { record[v] = true; return record; };
+const makeRecord = (v: undefined | string | string[]) => { return arrayWrap(v).reduce(reduceTrue, {}); }
 
-let typeRegex: RegExp;
-const TYPE_NAME_REGEX = "(?:.*\/)?(.+).md$";
-const getTypeName = (path: string) => typeRegex.exec(path)![1];
-
-
-const subscribers: Array<(data: MVFileData | null) => void> = [];
-
-function subscribe(subscriber: (data: MVFileData | null) => void): () => void {
-  subscribers.push(subscriber);
-  return() => subscribers.remove(subscriber);
-};
-
-function notify(data: MVFileData | null) {
-  for (let subscriber of subscribers) {
-    subscriber(data);
-  }
-  console.log('notify', data);
-};
-
-function makeTypeData(file: TFile) {
-  const frontmatter = plugin.app.metadataCache.getFileCache(file)?.frontmatter || {};
-  const defs: Record<string, MVPropDef> = {};
-  // const props: Record<string, JSONValue> = {};
-  const typeData: MVTypeData = {
-    types: [],
-    aliases: [],
-    tags: [],
-    cssclasses: [],
-    // props,
-    defs,
-  };
-
-  for (let [k, v] of Object.entries(frontmatter)) {
-    switch (k) {
-      case 'aliases':
-      case 'types':
-      case 'tags':
-      case 'cssclasses':
-        if (Array.isArray(v)) typeData[k].push(...v);
-        else typeData[k].push(v);
-        break;
-      default:
-        // Validate type
-        defs[k] = extractPropConfig(v);
-        // const config = extractPropConfig(v);
-        // if (config) configs[k] = config;
-        // else props[k] = v;
-        // else props[k] = { type: 'json', value: v };
-        break;
-    }
-  }
-
-  typeCache[getTypeName(file.path)] = typeData;
-  return typeData;
-};
-
-function extractPropConfig(v: JSONValue): MVPropDef {
+function extractPropConfig(v: FMValue): MVPropDef {
   if (typeof v !== 'object' || v === null || !('type' in v)) return makeJsonProp(v);
   const type = v.type;
   if (typeof type !== 'string' || !VALID_TYPES[type]) return makeJsonProp(v);
@@ -148,6 +324,7 @@ function extractPropConfig(v: JSONValue): MVPropDef {
       return makeJsonProp(v);
     case 'array':
       config = extractPropConfig(v.elementType);
+      // if (config === null) return null;
       if (config === null) return makeJsonProp(v);
       return {
         type,
@@ -155,8 +332,9 @@ function extractPropConfig(v: JSONValue): MVPropDef {
       };
     case 'tuple':
       config = [];
-      for (let t of <Array<JSONValue>>v.elementTypes) {
+      for (let t of <Array<FMValue>>v.elementTypes) {
         let c = extractPropConfig(t);
+        // if (c === null) return null;
         if (c === null) return makeJsonProp(v);
         config.push(c);
       }
@@ -166,10 +344,12 @@ function extractPropConfig(v: JSONValue): MVPropDef {
       };
     case 'record':
       const configs = v.entries;
+      // if (typeof configs !== 'object') return null;
       if (typeof configs !== 'object') return makeJsonProp(v);
       config = <Record<string, MVPropDef>>{};
-      for (let [key, value] of Object.entries(<Record<string, JSONValue>>configs)) {
+      for (let [key, value] of Object.entries(<Record<string, FMValue>>configs)) {
         let c = extractPropConfig(value);
+        // if (c === null) return null;
         if (c === null) return makeJsonProp(v);
         config[key] = c;
       }
@@ -183,6 +363,7 @@ function extractPropConfig(v: JSONValue): MVPropDef {
         value: v,
       };
     default:
+      // return null;
       return makeJsonProp(v);
   }
 }
@@ -202,219 +383,9 @@ function extractString(v: unknown): string | null {
   return null;
 }
 
-function makeJsonProp(v: JSONValue): MVJsonDef {
+function makeJsonProp(v: FMValue): MVJsonDef {
   return { type: 'json', value: v };
 }
 
-function makeTypeCache() {
-  const { typesPath } = plugin.settings;
-  typeCache = {};
 
-  const typesDir = plugin.app.vault.getFolderByPath(typesPath);
-  if (typesDir === null) {
-    console.warn("MV: Could not find templates directory: ", typesPath);
-    return;
-  }
-
-  const directoryQueue: TFolder[] = [typesDir];
-  let currentDirectory: TFolder | undefined;
-
-  while (currentDirectory = directoryQueue.pop()) {
-    for (let entry of currentDirectory.children) {
-      if (entry instanceof TFile) {
-        makeTypeData(entry);
-      } else {
-        directoryQueue.push(<TFolder>entry);
-      }
-    }
-  }
-};
-
-function makeNoteData(file: TFile) {
-  const frontmatter = plugin.app.metadataCache.getFileCache(file)?.frontmatter;
-  if (!frontmatter) return null;
-  const types = arrayWrap(frontmatter.types);
-
-  const props: Record<string, JSONValue> = { ...frontmatter };
-  const aliases: Record<string, boolean> = arrayWrap(props.aliases).reduce(makeBoolMap, {});
-  const tags: Record<string, boolean> = arrayWrap(props.tags).reduce(makeBoolMap, {});
-  const cssclasses: Record<string, boolean> = arrayWrap(props.cssclasses).reduce(makeBoolMap, {});
-
-  delete props['aliases'];
-  delete props['tags'];
-  delete props['cssclasses'];
-
-  const boundAliases: Record<string, Record<string, boolean>> = {};
-  const boundTags: Record<string, Record<string, boolean>> = {};
-  const boundCss: Record<string, Record<string, boolean>> = {};
-  const boundProps: Record<string, Record<string, MVPropData>> = {};
-
-  const aliasUsed: Record<string, boolean> = { ...aliases };
-  const tagUsed: Record<string, boolean> = { ...tags };
-  const cssUsed: Record<string, boolean> = { ...cssclasses };
-
-  const typeQueue: string[] = [...types];
-  const completedTypes: Record<string, boolean> = {};
-  let type: string | undefined;
-  let typeData: MVTypeData;
-
-  while (type = typeQueue.pop()) {
-    if (completedTypes[type]) continue;
-    completedTypes[type] = true;
-    typeData = typeCache[type];
-    if (!typeData) continue;
-
-    const typeAliases: Record<string, boolean> = boundAliases[type] = {};
-    const typeTags: Record<string, boolean> = boundTags[type] = {};
-    const typeCss: Record<string, boolean> = boundCss[type] = {};
-
-    let key, def;
-    for (key of typeData.aliases) { typeAliases[key] = aliasUsed[key]; delete aliases[key]; }
-    for (key of typeData.tags) { typeTags[key] = tagUsed[key]; delete tags[key]; }
-    for (key of typeData.cssclasses) { typeCss[key] = cssUsed[key]; delete cssclasses[key]; }
-
-    const typeProps: Record<string, MVPropData> = boundProps[type] = {};
-
-    for ([key, def] of Object.entries(typeData.defs)) {
-      typeProps[key] = {
-        def,
-        value: props[key]
-      };
-      delete props[key];
-    }
-  }
-
-  const data: MVNoteData = {
-    types,
-    aliases: Object.keys(aliases),
-    tags: Object.keys(tags),
-    cssclasses: Object.keys(cssclasses),
-    props,
-    boundAliases,
-    boundTags,
-    boundCss,
-    boundProps,
-  };
-
-  // console.log('built note data');
-  return data;
-}
-
-function setProperty(address: string[], key: string, value: JSONValue = null) {
-  updating = true;
-  // const keys = address.split(KEY_SEPARATOR);
-  // const key = <string>keys.pop();
-
-  plugin.app.fileManager!.processFrontMatter(activeFile!, (frontmatter) => {
-    let target = frontmatter;
-    for (let k of address) target = <Record<string, Record<string, JSONValue>>>target[k];
-    if (value === null) delete target[key];
-    else target[key] = value;
-  });
-}
-
-function insertMetaValue(prop: string, value: string) {
-  updating = true;
-  plugin.app.fileManager!.processFrontMatter(activeFile!, (frontmatter) => { frontmatter[prop].push(value); }
-  );
-}
-
-function removeMetaValue(prop: string, value: string) {
-  updating = true;
-  plugin.app.fileManager!.processFrontMatter(activeFile!, (frontmatter) => {
-    const arr = frontmatter[prop];
-    const idx = arr.indexOf(prop);
-    if (idx > -1) arr.splice(idx, 1);
-  });
-}
-
-function update(file: TFile) {
-  if (file.extension !== 'md') return;
-
-  if (updating) {
-    updating = false;
-    return;
-  }
-
-  if (file.path.startsWith(plugin.settings.typesPath)) {
-    const data = makeTypeData(file);
-    if (file === activeFile) {
-      notify(data);
-    }
-  } else if (file === activeFile) {
-    notify(makeNoteData(file));
-  }
-}
-
-function set(file: TFile | null) {
-  activeFile = file;
-
-  if (file === null || file.extension !== 'md') {
-    notify(null);
-  } else if (file.path.startsWith(plugin.settings.typesPath)) {
-    notify(typeCache[getTypeName(file.path)]) // Is this guarantted?
-  } else {
-    notify(makeNoteData(file));
-  }
-
-  // if (file === null || file.extension !== 'md') {
-  //   notify({ data: null, isTypeDef: false });
-  // } else if (file.path.startsWith(plugin.settings.typesPath)) {
-  //   notify({ data: typeCache[getTypeName(file.path)], isTypeDef: true }) // Is this guarantted?
-  // } else {
-  //   notify({ data: makeNoteData(file), isTypeDef: false });
-  // }
-
-  // notify((file === null || file.extension !== 'md')
-  //   ? { data: null, isTypeDef: false}
-  //   : file.path.startsWith(plugin.settings.typesPath)
-  //     ? { data: makeTypeData(file), isTypeDef: true } // Check cache!
-  //     : { data: makeNoteData(file), isTypeDef: false }
-  // );
-}
-
-function remove(file: TFile) {
-  if (file.extension !== 'md') return;
-  if (file.path.startsWith(plugin.settings.typesPath)) {
-    delete typeCache[getTypeName(file.path)];
-  }
-}
-
-function rename(file: TAbstractFile, oldPath: string) {
-  if (file instanceof TFolder) return;
-  const { typesPath } = plugin.settings;
-  
-  if (oldPath.startsWith(typesPath)) {
-    const oldName = getTypeName(oldPath);
-    if (file.path.startsWith(plugin.settings.typesPath)) {
-      typeCache[getTypeName(file.path)] = typeCache[oldName];
-    }
-    delete typeCache[oldName];
-  } else {
-    if (file.path.startsWith(typesPath)) {
-      makeTypeData(<TFile>file);
-    }
-  }
-}
-
-
-export default {
-  get plugin() { return plugin; },
-  set plugin(p: MetaViewPlugin) {
-    plugin = p;
-    typeRegex = new RegExp('^' + p.settings.typesPath + TYPE_NAME_REGEX);
-  },
-
-  subscribe,
-  makeTypeData,
-  makeTypeCache,
-  
-  update,
-  set,
-  remove,
-  rename,
-
-  setProperty,
-  insertMetaValue,
-  removeMetaValue,
-};
+export default new MVStore();
