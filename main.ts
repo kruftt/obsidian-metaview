@@ -39,13 +39,13 @@ export default class MetaViewPlugin extends Plugin {
 			const app = this.app;
 			const workspace = app.workspace;
 			const metadataCache = app.metadataCache;
-			store.plugin = this;
-			store.file = workspace.getActiveFile();
+			store.init(this);
+			store.open(workspace.getActiveFile());
 			
-			this.registerEvent(workspace.on('file-open', (file) => store.file = file));
-			this.registerEvent(metadataCache.on('changed', (file) => store.updateFile(file)));
-			this.registerEvent(metadataCache.on('deleted', (file) => store.deleteFile(file)));
-			this.registerEvent(app.vault.on('rename', (file, oldPath) => store.renameFile(file, oldPath)));
+			this.registerEvent(workspace.on('file-open', store.open));
+			this.registerEvent(metadataCache.on('changed', store.changed));
+			this.registerEvent(metadataCache.on('deleted', store.deleted));
+			this.registerEvent(app.vault.on('rename', store.rename));
 		});
 	}
 
@@ -57,7 +57,7 @@ export default class MetaViewPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		store.plugin = this;
+		store.init(this);
 	}
 }
 

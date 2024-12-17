@@ -4,24 +4,24 @@ interface MVSettings {
 
 type MVFilePropType = 'types' | 'aliases' | 'cssclasses'
 
-interface MVFileBase {
-  types: Set<string>
-  aliases: Set<string>
-  tags: Set<string>
-  cssclasses: Set<string>
-}
+// interface MVFileBase {
+//   types: Set<string>
+//   aliases: Set<string>
+//   tags: Set<string>
+//   cssclasses: Set<string>
+// }
 
-interface MVTemplateData extends MVFileBase {
-  props: Record<string, MVPropDef>
-}
+// interface MVTemplateData extends MVFileBase {
+//   props: Record<string, MVPropDef>
+// }
 
-interface MVNoteData extends MVFileBase {
-  props: Record<string, FMValue>
-  freeProps: Set<string>
-  typeData: Record<string, MVTemplateData>
-}
+// interface MVNoteData extends MVFileBase {
+//   props: Record<string, FrontMatterValue>
+//   freeProps: Set<string>
+//   typeData: Record<string, MVTemplateData>
+// }
 
-type MVFileData = MVNoteData | MVTemplateData;
+// type MVFileData = MVNoteData | MVTemplateData;
 
 type MVPropDef =
   | MVJsonDef
@@ -42,7 +42,7 @@ type MVPropDef =
 
 interface MVJsonDef {
   type: 'json'
-  default: FMValue
+  default: FrontMatterValue
 }
 
 interface MVBoolDef {
@@ -141,9 +141,12 @@ interface MVRecordDef {
   entries: Record<string, MVPropDef>
 }
 
-type FMValue =
+type FrontMatterValue =
+  | null
   | string
   | number
   | boolean
-  | FMValue[]
-  | { [key: string]: FMValue }
+  | FrontMatterValue[]
+  | { [key: string]: FrontMatterValue }
+
+type FrontMatter = Record<string, FrontMatterValue>

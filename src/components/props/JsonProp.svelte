@@ -4,7 +4,7 @@
   let { address, key, state, template = { type: 'json', default: '' }}: {
     address: string[],
     key: string,
-    state: Record<string, FMValue>,
+    state: Record<string, FrontMatterValue>,
     template: MVJsonDef
   } = $props();
 
