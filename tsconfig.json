@@ -14,7 +14,8 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "noImplicitAny": true,
-    "target": "ES6",
+    "target": "ES2022",
+    // "target": "ES6",
     "strictNullChecks": true,
     "strictPropertyInitialization": false,
     "types": [
@@ -22,6 +23,7 @@
       "node",
       "moment",
     ],
+    // "useDefineForClassFields": true,
   },
   "include": [
     "**/*.ts",

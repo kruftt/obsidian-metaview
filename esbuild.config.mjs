@@ -19,6 +19,7 @@ const context = await esbuild.context({
 	},
 	entryPoints: ["main.ts"],
 	bundle: true,
+	conditions: [ "development"	],
 	external: [
 		"obsidian",
 		"electron",
@@ -35,12 +36,21 @@ const context = await esbuild.context({
 		"@lezer/lr",
 		...builtins],
 	format: "cjs",
-	target: "es2018",
+	target: "es2022",
+	// target: "es2018",
 	logLevel: "info",
+	// logOverride: {
+		// "attribute-quoted": "silent",
+		// "esbuild-svelte": "silent",
+	// },
 	plugins: [
 		esbuildSvelte({
 			compilerOptions: { css: "injected", runes: true },
-			preprocess: sveltePreprocess(),
+			preprocess: [
+				sveltePreprocess({
+					// replace: [[/\"\{.+?\}\"/g, (s) => s.substring(1, s.length-1)]]
+				})
+			],
 		})
 	],
 	sourcemap: prod ? false : "inline",

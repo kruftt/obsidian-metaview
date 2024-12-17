@@ -3,10 +3,9 @@ import { SvelteSet } from 'svelte/reactivity'
 import type MetaViewPlugin from '../main'
 
 class MVStore {
-  public data: MVFileData | null = $state.raw(null);
+  public data = $state.raw <MVFileData | null>(null);
   
-  private templateCache: Record<string, MVTemplateData> = $state({});
-  // private templateCache: SvelteMap<string, MVTemplateData> = new SvelteMap();
+  private templateCache = $state<Record<string, MVTemplateData>>({});  
   private templateNameRegex: RegExp;
   private updating: Boolean = false;
   
@@ -14,7 +13,7 @@ class MVStore {
   get file(): TFile | null { return this._file; }
   set file(file: TFile | null) {
     this._file = file;
-    if (file === null || file.extension !== '.md') {
+    if (file === null || file.extension !== 'md') {
       this.data = null;
     } else if (file.path.startsWith(this._plugin.settings.templatesPath)) {
       this.data = this.templateCache[this.getTemplateName(file.path)];
@@ -44,8 +43,8 @@ class MVStore {
     const aliases: SvelteSet<string> = new SvelteSet();
     const cssclasses: SvelteSet<string> = new SvelteSet();
     const tags: SvelteSet<string> = new SvelteSet();
-    const defs: Record<string, MVPropDef> = $state({});
-    const data = $state({ aliases, types, cssclasses, tags, defs });
+    const props: Record<string, MVPropDef> = $state({});
+    const data = $state({ aliases, types, cssclasses, tags, props });
     
     for (let [k, v] of Object.entries(frontmatter)) {
       switch (k) {
@@ -55,42 +54,39 @@ class MVStore {
         case 'cssclasses':
           if (Array.isArray(v)) {
             const target = data[k];
-            v.forEach((v) => target.add(v));
+            v.forEach((v) => v && target.add(v));
           }
           else data[k].add(v);
           break;
         default:
-          defs[k] = extractPropConfig(v);
+          props[k] = extractPropConfig(v);
           break;
       }
     }
 
-    this.removeTemplate(file);    
-
-    const templateCache = this.templateCache;
     const templateName = this.getTemplateName(file.path);
-
-    for (let alias of aliases) {
-      templateCache[alias] = data;
-    }
-
-    templateCache[templateName] = data;
+    this.removeTemplate(templateName);   
+    this.addTemplate(templateName, data);
     return data;
   }
 
-  public removeTemplate(file: TFile) {
+  private removeTemplate(name: string) {
     const templateCache = this.templateCache;
-    const templateName = this.getTemplateName(file.path);
-    let template = templateCache[templateName];
-    let alias: string;
-
-    if (template) {
-      for (alias of template.aliases) {
-        delete templateCache[alias];
-      }
-    }
+    let template = templateCache[name];
+    if (!template) return;
     
-    delete templateCache[templateName];
+    delete templateCache[name];
+    for (let alias of template.aliases) {
+      delete templateCache[alias];
+    }
+  }
+
+  private addTemplate(name: string, template: MVTemplateData) {
+    const templateCache = this.templateCache;
+    templateCache[name] = template;
+    for (let alias of template.aliases) {
+      templateCache[alias] = template;
+    }
   }
 
   private makeCache() {
@@ -119,58 +115,54 @@ class MVStore {
   }
 
   private makeNoteData(file: TFile): MVNoteData {
-    const frontmatter = this._plugin.app.metadataCache.getFileCache(file)?.frontmatter;
+    const frontmatter = this._plugin.app.metadataCache.getFileCache(file)?.frontmatter || {};
     // if (!frontmatter) return null;
-    
-    // const types: string[] = $state(arrayWrap(frontmatter!.types));
-    // const aliases: string[] = $state(arrayWrap(frontmatter!.aliases));
-    const types = new SvelteSet(arrayWrap(frontmatter!.types));
-    const aliases = new SvelteSet(arrayWrap(frontmatter!.aliases));
-    
-    const tags = new SvelteSet(arrayWrap(frontmatter!.tags));
-    const cssclasses = new SvelteSet(arrayWrap(frontmatter!.cssclasses));
+    const types = new SvelteSet(arrayWrap(frontmatter.types).filter(truthy));
+    const aliases = new SvelteSet(arrayWrap(frontmatter.aliases).filter(truthy));
+    const tags = new SvelteSet(arrayWrap(frontmatter.tags).filter(truthy));
+    const cssclasses = new SvelteSet(arrayWrap(frontmatter.cssclasses).filter(truthy));
 
-    const props: Record<string, FMValue> = $state({ ...frontmatter! });
+    const props: Record<string, FMValue> = $state({ ...frontmatter });
     delete props['aliases'];
     delete props['tags'];
     delete props['cssclasses'];
+    delete props['types'];
 
-    const data = <MVNoteData><unknown>$state.raw({
+    const data = <MVNoteData><unknown>{
       types,
       aliases,
       tags,
       cssclasses,
       props,
-    });
+    };
     
-    const templateCache = this.templateCache;
-
-    $effect(() => {
-      const freeProps: Set<string> = new SvelteSet(Object.keys(props));
-      const typeData: Record<string, MVTemplateData> = $state({});
-
-      const typeQueue: string[] = [...types];  
-      const completedTypes: Record<string, boolean> = {};
-      let type: string | undefined;
-      let templateData: MVTemplateData;
-      
-      while (type = typeQueue.pop()) {
-        if (completedTypes[type]) continue;
-        completedTypes[type] = true;
-        templateData = templateCache[type];
-        if (!templateData) continue;
-        typeData[type] = templateData;
-        for (let propKey of Object.keys(templateData.defs)) {
-          freeProps.delete(propKey);
-        }
-      }
-
-      data.freeProps = freeProps;
-      data.typeData = typeData;
-    });
-
-    // console.log('built note data');
+    this.updateTypeData(data);
     return data;
+  }
+
+  private updateTypeData(data: MVNoteData = <MVNoteData>this.data) {
+    const templateCache = this.templateCache;
+    const freeProps: Set<string> = new SvelteSet(Object.keys(data.props));
+    const typeData: Record<string, MVTemplateData> = $state({});
+
+    const typeQueue: string[] = [...data.types];
+    const completedTypes: Record<string, boolean> = {};
+    let type: string | undefined;
+    let templateData: MVTemplateData;
+
+    while (type = typeQueue.pop()) {
+      if (completedTypes[type]) continue;
+      completedTypes[type] = true;
+      templateData = templateCache[type];
+      if (!templateData) continue;
+      typeData[type] = templateData;
+      for (let propKey of Object.keys(templateData.props)) {
+        freeProps.delete(propKey);
+      }
+    }
+
+    data.freeProps = freeProps;
+    data.typeData = typeData;
   }
 
   public updateFile(file: TFile) {
@@ -182,12 +174,16 @@ class MVStore {
 
     if (file.path.startsWith(this._plugin.settings.templatesPath)) {
       this.makeTemplate(file);
+      if (this.data && (<MVNoteData>this.data).typeData) {
+        this.updateTypeData();
+      }
     }
 
     if (file === this._file) this.file = file; // triggers data update
   }
 
-  public renameFile(file: TFile, oldPath: string) {
+  public renameFile(file: TAbstractFile, oldPath: string) {
+    if (!(file instanceof TFile)) return;
     const { templatesPath } = this._plugin.settings;
     const templateCache = this.templateCache;
 
@@ -195,46 +191,79 @@ class MVStore {
       const oldName = this.getTemplateName(oldPath);
       if (file.path.startsWith(templatesPath)) {
         templateCache[this.getTemplateName(file.path)] = templateCache[oldName];
+        delete templateCache[oldName];
+      } else {
+        this.removeTemplate(oldName);
       }
-      delete templateCache[oldName];
     } else {
       if (file.path.startsWith(templatesPath)) {
         this.makeTemplate(<TFile>file);
       }
     }
+
+    if (this.data && (<MVNoteData>this.data).typeData) {
+      this.updateTypeData();
+    }
   }
 
-  public setProperty(address: string[], key: string, value: FMValue | null = null) {
+  public deleteFile(file: TFile) {
+    if (file.extension === 'md' && file.path.startsWith(this._plugin.settings.templatesPath)) {
+      this.removeTemplate(this.getTemplateName(file.path));
+    }
+  }
+
+  public setProperty(key: string, value: FMValue | null, address: string[] = []) {
     this.updating = true;
-    // const keys = address.split(KEY_SEPARATOR);
-    // const key = <string>keys.pop();
 
     this._plugin.app.fileManager!.processFrontMatter(this._file!, (frontmatter) => {
       let target = frontmatter;
       for (let k of address) target = <Record<string, Record<string, FMValue>>>target[k];
-      if (value === null) delete target[key];
-      else target[key] = value;
+      if (value !== null) {
+        target[key] = value;
+      } else {
+        delete target[key];
+        if (address.length == 0) {
+          const freeProps = (<MVNoteData>this.data!).freeProps;
+          if (freeProps) freeProps.delete(key);
+        }
+      }
     });
   }
 
-  public insertMetaValue(prop: string, value: string) {
-    this.updating = true;
-    this._plugin.app.fileManager!.processFrontMatter(this._file!, (frontmatter) => { frontmatter[prop].push(value); });
-    if (prop === 'aliases' && this._file!.path.startsWith(this._plugin.settings.templatesPath)) {
-      this.templateCache[value] = <MVTemplateData>this.data;
+  public insertFilePropValue(prop: MVFilePropType, value: string) {
+    if (prop === 'aliases') {
+      if (this._file!.path.startsWith(this._plugin.settings.templatesPath)) {
+        this.templateCache[value] = <MVTemplateData>this.data;
+      }
+    } else if (prop === 'types') {
+      if (!this._file!.path.startsWith(this._plugin.settings.templatesPath)) {
+        this.updateTypeData();
+      }
     }
-  }
 
-  public removeMetaValue(prop: string, value: string) {
     this.updating = true;
     this._plugin.app.fileManager!.processFrontMatter(this._file!, (frontmatter) => {
-      const arr = frontmatter[prop];
-      const idx = arr.indexOf(prop);
-      if (idx > -1) arr.splice(idx, 1);
+      frontmatter[prop] = Array.from((this.data!)[prop]);
     });
-    if (prop === 'aliases' && this._file!.path.startsWith(this._plugin.settings.templatesPath)) {
-      delete this.templateCache[value];
+  }
+
+  public removeFilePropValue(prop: MVFilePropType, value: string) {
+    if (prop === 'aliases') {
+      if (this._file!.path.startsWith(this._plugin.settings.templatesPath)) {
+        delete this.templateCache[value];
+      }
+    } else if (prop === 'types') {
+      if (!this._file!.path.startsWith(this._plugin.settings.templatesPath)) {
+        this.updateTypeData();
+      }
     }
+
+    this.updating = true;
+    this._plugin.app.fileManager!.processFrontMatter(this._file!, (frontmatter) => {
+      const valueArray = Array.from((this.data!)[prop]);
+      if (valueArray.length > 0) frontmatter[prop] = Array.from((this.data!)[prop]);
+      else delete frontmatter[prop];
+    });
   }
 }
 
@@ -259,8 +288,7 @@ const VALID_TYPES: Record<string, true> = {
 }
 
 const arrayWrap = (v: unknown) => Array.isArray(v) ? v : (v === undefined) ? [] : [v];
-const reduceTrue = (record: Record<string, boolean>, v: string) => { record[v] = true; return record; };
-const makeRecord = (v: undefined | string | string[]) => { return arrayWrap(v).reduce(reduceTrue, {}); }
+const truthy = (v: any) => v;
 
 function extractPropConfig(v: FMValue): MVPropDef {
   if (typeof v !== 'object' || v === null || !('type' in v)) return makeJsonProp(v);
@@ -272,12 +300,12 @@ function extractPropConfig(v: FMValue): MVPropDef {
     case 'boolean':
       return {
         type,
-        checked: extractBool(v.checked),
+        default: extractBool(v.checked),
       };
     case 'text':
       return {
         type,
-        value: extractString(v.value),
+        default: extractString(v.value),
         minlength: extractNumber(v.minlength),
         maxlength: extractNumber(v.maxlength),
         pattern: extractString(v.pattern),
@@ -285,7 +313,7 @@ function extractPropConfig(v: FMValue): MVPropDef {
     case 'number':
       return {
         type,
-        value: extractNumber(v.value),
+        default: extractNumber(v.value),
         min: extractNumber(v.min),
         max: extractNumber(v.max),
         step: extractNumber(v.step),
@@ -296,7 +324,7 @@ function extractPropConfig(v: FMValue): MVPropDef {
     case 'month':
       return {
         type,
-        value: extractString(v.value),
+        default: extractString(v.value),
         min: extractString(v.min),
         max: extractString(v.max),
         step: extractString(v.step),
@@ -360,7 +388,7 @@ function extractPropConfig(v: FMValue): MVPropDef {
     case 'json':
       return {
         type,
-        value: v,
+        default: v,
       };
     default:
       // return null;
@@ -384,7 +412,7 @@ function extractString(v: unknown): string | null {
 }
 
 function makeJsonProp(v: FMValue): MVJsonDef {
-  return { type: 'json', value: v };
+  return { type: 'json', default: v };
 }
 
 

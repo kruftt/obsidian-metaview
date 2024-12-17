@@ -1,30 +1,27 @@
 <script lang="ts">
   import store from '../store.svelte';
-  import ConfigPanel from './ConfigPanel.svelte';
-  import NotePanel from './NotePanel.svelte';
-  
-  let data: MVFileData | null = $state.raw(null);
-  store.subscribe((d) => data = d);
+  import FileProp from './FileProp.svelte';
+  import JsonProp from './props/JsonProp.svelte';
 </script>
 
 <template lang='pug'>
   div.meta-view
     div meta-view
-    +if ('data === null')
-      div no file
+    
+    +if ('store.data === null')
+      div no active file
+
       +else
-        //- 
-        +if ('data.defs')
-          //- ConfigPanel({data})
+        FileProp(key="aliases", entries="{store.data.aliases}")
+        FileProp(key="tags", entries="{store.data.tags}")
+        FileProp(key="types", entries="{store.data.types}")
+
+        +if ('store.data.defs')
           span config panel
-          //- +each ("Object.entries(data.defs) as [key, def]")
-            //- ConfigProp(address="{key}", {key}, {def})
+          
           +else
-            //- NotePanel({data})
-            div
-              span note panel
-              //- +each('Object.entries(data.props) as [key, value]')
-              //-   JsonProp(address="{key}", {key}, {value})
+            +each('store.data.freeProps as key')
+              JsonProp({key}, state="{store.data.props}")
 </template>
 
 <style lang='sass' scoped>

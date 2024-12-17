@@ -1,46 +1,27 @@
-/**
- * dont put meta props in type sections, but use them as a multiselect
- */
-
 interface MVSettings {
   templatesPath: string;
 }
 
+type MVFilePropType = 'types' | 'aliases' | 'cssclasses'
+
 interface MVFileBase {
-  // types: string[] // use set for all these to standardize component
-  // aliases: string[]
   types: Set<string>
   aliases: Set<string>
   tags: Set<string>
   cssclasses: Set<string>
 }
 
-// configs stored by path with template and .md removed
-interface MVTemplateData extends MVFileBase {  
-  // tags: string[]
-  // cssclasses: string[]
-  defs: Record<string, MVPropDef>
+interface MVTemplateData extends MVFileBase {
+  props: Record<string, MVPropDef>
 }
 
 interface MVNoteData extends MVFileBase {
-  // tags: Set<string>
-  // cssclasses: Set<string>
   props: Record<string, FMValue>
-  
-  // derive these after adding or removing type
   freeProps: Set<string>
   typeData: Record<string, MVTemplateData>
 }
 
-// what happens when an active note's type is changed in an external app?
-// 
-
 type MVFileData = MVNoteData | MVTemplateData;
-
-interface MVPropData {
-  value: FMValue
-  def: MVPropDef
-}
 
 type MVPropDef =
   | MVJsonDef
@@ -61,17 +42,17 @@ type MVPropDef =
 
 interface MVJsonDef {
   type: 'json'
-  value: FMValue
+  default: FMValue
 }
 
 interface MVBoolDef {
   type: 'boolean'
-  checked: boolean | null
+  default: boolean | null
 }
 
 interface MVNumberDef {
   type: 'number'
-  value: number | null
+  default: number | null
   min: number | null
   max: number | null
   step: number | null
@@ -79,7 +60,7 @@ interface MVNumberDef {
 
 interface MVTextDef {
   type: 'text'
-  value: string | null
+  default: string | null
   minlength: number | null
   maxlength: number | null
   pattern: string | null
@@ -87,7 +68,7 @@ interface MVTextDef {
 
 // interface MVDateTimeDef {
 //   type: 'date' | 'datetime' | 'time' | 'month'
-//   value: string | null
+//   default: string | null
 //   min: string | null
 //   max: string | null
 //   step: string | null
@@ -95,7 +76,7 @@ interface MVTextDef {
 
 interface MVDateDef {
   type: 'date'
-  value: string | null
+  default: string | null
   min: string | null
   max: string | null
   step: string | null
@@ -103,7 +84,7 @@ interface MVDateDef {
 
 interface MVDateTimeDef {
   type: 'datetime'
-  value: string | null
+  default: string | null
   min: string | null
   max: string | null
   step: string | null
@@ -111,7 +92,7 @@ interface MVDateTimeDef {
 
 interface MVTimeDef {
   type: 'time'
-  value: string | null
+  default: string | null
   min: string | null
   max: string | null
   step: string | null
@@ -119,7 +100,7 @@ interface MVTimeDef {
 
 interface MVMonthDef {
   type: 'month'
-  value: string | null
+  default: string | null
   min: string | null
   max: string | null
   step: string | null
