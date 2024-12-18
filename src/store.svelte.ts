@@ -148,8 +148,4 @@ class MVStore {
   }
 }
 
-
-const store = new MVStore();
-//@ts-ignore
-window.store = store;
-export default store;
+export default new MVStore();

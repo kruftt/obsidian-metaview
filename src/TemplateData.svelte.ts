@@ -1,50 +1,27 @@
 import { SvelteSet } from 'svelte/reactivity'
+import { arrayWrap, truthy } from './utils';
+import { VALID_TYPES } from './constants';
 
 export default class TemplateData {
-  public types: SvelteSet<string> = new SvelteSet();
-  public aliases: SvelteSet<string> = new SvelteSet();
-  public cssclasses: SvelteSet<string> = new SvelteSet();
-  public tags: SvelteSet<string> = new SvelteSet();
+  public types: SvelteSet<string>;
+  public aliases: SvelteSet<string>;
+  public cssclasses: SvelteSet<string>;
+  public tags: SvelteSet<string>;
   public props: Record<string, MVPropDef> = $state({});
 
   constructor(frontmatter: FrontMatter) {
-    for (let [k, v] of Object.entries(frontmatter)) {
-      switch (k) {
-        case 'aliases':
-        case 'types':
-        case 'tags':
-        case 'cssclasses':
-          if (Array.isArray(v)) {
-            const target = this[k];
-            ;(<string[]>v).forEach((v) => v && target.add(v));
-          }
-          else this[k].add(<string>v);
-          break;
-        default:
-          this.props[k] = extractPropConfig(v);
-          break;
-      }
-    }
-    console.log($state.snapshot(this.props));
-  }
-}
+    const { types, aliases, tags, cssclasses, ...props } = frontmatter;
 
-const VALID_TYPES: Record<string, true> = {
-  'boolean': true,
-  'number': true,
-  'text': true,
-  'date': true,
-  'datetime': true,
-  'time': true,
-  'month': true,
-  'year': true,
-  'link': true,
-  'select': true,
-  'multi': true,
-  'array': true,
-  'tuple': true,
-  'record': true,
-  'json': true,
+    this.types = new SvelteSet(arrayWrap(types).filter(truthy));
+    this.aliases = new SvelteSet(arrayWrap(aliases).filter(truthy));
+    this.tags = new SvelteSet(arrayWrap(tags).filter(truthy));
+    this.cssclasses = new SvelteSet(arrayWrap(cssclasses).filter(truthy));
+
+    const p = this.props;
+    for (let [k,v] of Object.entries(props)) {
+      p[k] = extractPropConfig(v);
+    }
+  }
 }
 
 function extractPropConfig(v: FrontMatterValue): MVPropDef {
