@@ -1,4 +1,4 @@
-import { TAbstractFile, TFile, TFolder } from 'obsidian';
+import { TAbstractFile, TFile } from 'obsidian';
 import type MetaViewPlugin from '../main';
 import TemplateCache from './TemplateCache.svelte';
 import TemplateData from './TemplateData.svelte';
@@ -72,8 +72,9 @@ class MVStore {
       }
     }
 
-    if (cacheUpdated && this.data instanceof NoteData) {
-      this.data.updateTypeData(this.cache);
+    const data = this.data;
+    if (cacheUpdated && data instanceof NoteData) {
+      data.updateTypeData(cache);
     }
   }
 
@@ -94,8 +95,9 @@ class MVStore {
         target[key] = value;
       } else {
         delete target[key];
-        if (this.data instanceof NoteData && address.length == 0) {
-          this.data.freeProps.delete(key);
+        const data = this.data;
+        if (data instanceof NoteData && address.length == 0) {
+          data.freeProps.delete(key);
         }
       }
     });
@@ -147,4 +149,7 @@ class MVStore {
 }
 
 
-export default new MVStore();
+const store = new MVStore();
+//@ts-ignore
+window.store = store;
+export default store;

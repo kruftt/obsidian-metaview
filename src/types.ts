@@ -4,25 +4,6 @@ interface MVSettings {
 
 type MVFilePropType = 'types' | 'aliases' | 'cssclasses'
 
-// interface MVFileBase {
-//   types: Set<string>
-//   aliases: Set<string>
-//   tags: Set<string>
-//   cssclasses: Set<string>
-// }
-
-// interface MVTemplateData extends MVFileBase {
-//   props: Record<string, MVPropDef>
-// }
-
-// interface MVNoteData extends MVFileBase {
-//   props: Record<string, FrontMatterValue>
-//   freeProps: Set<string>
-//   typeData: Record<string, MVTemplateData>
-// }
-
-// type MVFileData = MVNoteData | MVTemplateData;
-
 type MVPropDef =
   | MVJsonDef
   | MVBoolDef

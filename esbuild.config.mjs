@@ -3,6 +3,7 @@ import esbuildSvelte from "esbuild-svelte";
 import { sveltePreprocess } from "svelte-preprocess";
 import process from "process";
 import builtins from "builtin-modules";
+import pugMixins from "./pug-mixins.mjs";
 
 const banner =
 `/*
@@ -48,6 +49,9 @@ const context = await esbuild.context({
 			compilerOptions: { css: "injected", runes: true },
 			preprocess: [
 				sveltePreprocess({
+					pug: {
+						prependData: pugMixins,
+					},
 					// replace: [[/\"\{.+?\}\"/g, (s) => s.substring(1, s.length-1)]]
 				})
 			],

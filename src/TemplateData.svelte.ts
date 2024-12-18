@@ -25,6 +25,7 @@ export default class TemplateData {
           break;
       }
     }
+    console.log($state.snapshot(this.props));
   }
 }
 
@@ -144,7 +145,7 @@ function extractPropConfig(v: FrontMatterValue): MVPropDef {
     case 'json':
       return {
         type,
-        default: v,
+        default: v.default,
       };
     default:
       // return null;

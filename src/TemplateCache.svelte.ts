@@ -1,4 +1,4 @@
-import { TFile, TFolder } from 'obsidian'
+import { TAbstractFile, TFile, TFolder, Vault } from 'obsidian'
 import type MetaViewPlugin from "main";
 import TemplateData from "./TemplateData.svelte";
 
@@ -22,23 +22,19 @@ export default class TemplateCache {
 
     const templates = this.templates;
     const metadataCache = app.metadataCache;
-    const directoryQueue: TFolder[] = [typesDir];
-    let currentDirectory: TFolder | undefined;
 
-    while (currentDirectory = directoryQueue.pop()) {
-      for (let entry of currentDirectory.children) {
-        if (entry instanceof TFile) {
-          const frontmatter = metadataCache.getFileCache(entry)?.frontmatter || {};
-          const template = new TemplateData(frontmatter);
-          templates[this.getTemplateName(entry.path)] = template;
-          for (let alias of template.aliases) {
-            templates[alias] = template;
-          }
-        } else {
-          directoryQueue.push(<TFolder>entry);
+    Vault.recurseChildren(typesDir, (file: TAbstractFile) => {
+      if (file instanceof TFile) {
+        const frontmatter = metadataCache.getFileCache(file)?.frontmatter || {};
+        const template = new TemplateData(frontmatter);
+        templates[this.getTemplateName(file.path)] = template;
+        for (let alias of template.aliases) {
+          templates[alias] = template;
         }
       }
-    }
+    });
+
+    console.log($state.snapshot(this.templates));
   }
 
   private getTemplateName(path: string) {
