@@ -1,5 +1,5 @@
 <script lang="ts">
-  import store from '../store.svelte'
+  import store from 'src/store.svelte'
 	let { key, entries }: { key: MVFilePropType, entries: Set<string> } = $props();
   let input: HTMLDivElement;
 

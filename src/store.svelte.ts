@@ -3,6 +3,7 @@ import type MetaViewPlugin from '../main';
 import TemplateCache from './TemplateCache.svelte';
 import TemplateData from './TemplateData.svelte';
 import NoteData from './NoteData.svelte';
+import { FILE_PROPS } from './constants';
 
 class MVStore {
   public data = $state.raw<null|TemplateData|NoteData>(null);
@@ -85,20 +86,59 @@ class MVStore {
     }
   }
 
-  public setProperty(key: string, value: FrontMatterValue | null, address: string[] = []) {
-    this.updating = true;
+  // public moveKey(address: string[], oldKey: string, newKey: string) {
+  //   this.updating = true;
+  //   this.plugin.app.fileManager!.processFrontMatter(this.file!, (frontmatter) => {
+  //     let target = getTarget(frontmatter, address);  
+  //     target[newKey] = target[oldKey];
+  //     delete target[oldKey];
+  //   });
+  // }
 
+  // public setProperty(address: string[], key: string, value: MVPropDef | FrontMatterValue) {
+  //   this.updating = true;
+  //   this.plugin.app.fileManager!.processFrontMatter(this.file!, (frontmatter) => {
+  //     let target = getTarget(frontmatter, address);
+  //     target[key] = <FrontMatterValue>value;
+  //   });
+  // }
+
+  // public removeProperty(address: string[], key: string) {
+  //   this.updating = true;
+  //   this.plugin.app.fileManager!.processFrontMatter(this.file!, (frontmatter) => {
+  //     let target = getTarget(frontmatter, address);
+  //     delete target[key];
+  //     const data = this.data;
+  //     if (data instanceof NoteData && address.length == 0) {
+  //       data.freeProps.delete(key);
+  //     }
+  //   });
+  // }
+
+  public sync = () => {
+    this.updating = true;
     this.plugin.app.fileManager!.processFrontMatter(this.file!, (frontmatter) => {
-      let target = frontmatter;
-      for (let k of address) target = <Record<string, FrontMatter>>target[k];
-      if (value !== null) {
-        target[key] = value;
-      } else {
-        delete target[key];
-        const data = this.data;
-        if (data instanceof NoteData && address.length == 0) {
-          data.freeProps.delete(key);
+      const data = this.data!;
+      const isNote = data instanceof NoteData;
+      const props = $state.snapshot(data.props);
+      let k;
+      
+      for (k of Object.keys(frontmatter)) {
+        if (props[k] === undefined && !FILE_PROPS[k]) {
+          delete frontmatter[k];
+          if (isNote) data.freeProps.delete(k);
         }
+      }
+
+      if (isNote) {
+        for (k of Object.keys(props)) {
+          if (!frontmatter[k] && !data.boundProps.has(k)) {
+              data.freeProps.add(k);
+          }
+          frontmatter[k] = props[k];
+        }
+      } else {
+        Object.assign(frontmatter, props);
       }
     });
   }
@@ -146,6 +186,12 @@ class MVStore {
   private getFrontMatter(file: TFile) {
     return this.plugin.app.metadataCache.getFileCache(file)?.frontmatter || {};
   }
+}
+
+function getTarget(frontmatter: FrontMatter, address: string[]): FrontMatter {
+  let target = frontmatter;
+  for (let k of address) target = <Record<string, FrontMatter>>target[k];
+  return target;
 }
 
 export default new MVStore();

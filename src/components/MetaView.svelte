@@ -1,38 +1,61 @@
 <script lang="ts">
   import TemplateData from 'src/TemplateData.svelte';
   import store from '../store.svelte';
+  import { blurOnEnter } from './events';
   import FileProp from './FileProp.svelte';
-  import JsonProp from './props/JsonProp.svelte';
+  // import MetaProp from './MetaProp.svelte';
+  import TemplateValue from './TemplateValue.svelte';
+
+  let data = $derived(store.data);
+  let props = $derived(data ? data.props : null);
+
+  const freeTemplate = { type: 'json', default: '' };
+
+  function updateKey(e: FocusEvent) {
+    const target = <HTMLInputElement>e.target;
+    const key = target.dataset.key!;
+    const newKey = target.value;
+    if (newKey in props!) {
+      target.value = key;
+    } else {
+      props![newKey] = props![key];
+      delete props![key];
+      store.sync();
+    }
+  }
 </script>
 
 <template lang='pug'>
-  div.meta-view
-    div meta-view
-    
-    +startif('store.data === null')
-      div no active file
+  div.meta-view      
+    +startif('data === null')
+      div (No file)
 
     +else
-      FileProp(key="aliases", entries="{store.data.aliases}")
-      FileProp(key="tags", entries="{store.data.tags}")
-      FileProp(key="types", entries="{store.data.types}")
+      FileProp(key="aliases", entries="{data.aliases}")
+      FileProp(key="tags", entries="{data.tags}")
+      FileProp(key="types", entries="{data.types}")
 
-      +startif('store.data instanceof TemplateData')
-        div config panel
+      +startif("data instanceof TemplateData")
+        +each("Object.keys(props) as key (key)")
+          div.metadata-property
+            div.metadata-property-key
+              input.metadata-property-key-input(
+                value="{key}"
+                data-key="{key}"
+                onkeypress="{blurOnEnter}"
+                onblur="{updateKey}"
+              )
+            TemplateValue(bind:template="{props[key]}")
         
-      +else
-        +each('store.data.freeProps as key')
-          JsonProp({key}, state="{store.data.props}")
+      //- +else
+      //-   +each("data.freeProps as key")
+      //-     MetaProp({key} {props} template="{freeTemplate}")
 
-        //- +each('store.data.typeData.entries() as [type, data]')
-        //-   div {type}
-        //-   +each('Object.entries(data.props) as [key, def]')
-        //-     JsonProp({key}, state="{store.data.props}" template="{def}")
+      //-   +each("Object.entries(data.typeData) as [name, typeData]")
+      //-     div.type-header {name}
 
-        +each('Object.entries(store.data.typeData) as [name, data]')
-          div {name}
-          +each('Object.entries(data.props) as [key, def]')
-            JsonProp({key}, state="{store.data.props}" template="{def}")
+      //-     +each("Object.entries(typeData.props) as [key, template]")
+      //-       MetaProp({key} {props} {template})
 
       +endif
     +endif
@@ -44,4 +67,8 @@
 
   .meta-view 
     padding: 0.2em 0.2em 0.2em 0.4em
+
+  .type-header
+    margin-top: 0.8em
+    font-weight: 600 
 </style>

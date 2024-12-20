@@ -33,15 +33,12 @@ export default class TemplateCache {
         }
       }
     });
-
-    console.log($state.snapshot(this.templates));
   }
 
   private getTemplateName(path: string) {
     return this.templateNameRegex.exec(path)![1];
   }
 
-  // public get(path: string): TemplateData
   public get(name: string): TemplateData
   public get(file: TFile): TemplateData
   public get(nameOrFile: string | TFile) {
@@ -49,10 +46,6 @@ export default class TemplateCache {
       const name = this.getTemplateName(nameOrFile.path);
       return this.templates[name];
     }
-
-    // const result = this.templateNameRegex.exec(nameOrFile);
-    // if (result) return this.cache[result[1]];
-
     return this.templates[nameOrFile];
   }
 

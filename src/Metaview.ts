@@ -26,7 +26,7 @@ export default class MetaView extends ItemView {
         console.log('View Open');
         // @ts-ignore
         this.component = mount(Component, { target: this.contentEl });
-        store.file = this.app.workspace.getActiveFile();
+        store.open(this.app.workspace.getActiveFile());
     }
     
     async onClose() {

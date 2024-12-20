@@ -11,6 +11,7 @@ export default class NoteData {
   props: FrontMatter = $state({});
   typeData: Record<string, TemplateData> = $state.raw({});
   freeProps: SvelteSet<string>;
+  boundProps: Set<string>
 
   constructor(frontmatter: FrontMatter, cache: TemplateCache) {
     const { types, aliases, tags, cssclasses, ...props } = frontmatter;
@@ -20,12 +21,14 @@ export default class NoteData {
     this.cssclasses = new SvelteSet(arrayWrap(cssclasses).filter(truthy));
     this.props = props;
     this.freeProps = new SvelteSet();
+    this.boundProps = new Set();
     this.updateTypeData(cache);
   }
 
   public updateTypeData(cache: TemplateCache) {
     const typeData: Record<string, TemplateData> = {};
     this.freeProps.clear();
+    this.boundProps.clear();
     const freeProps = { ...this.props };
     const typeQueue: string[] = [...this.types].reverse();
     const completedTypes: Record<string, boolean> = {};
@@ -41,6 +44,7 @@ export default class NoteData {
       typeQueue.push(...[...templateData.types].reverse());
       for (let propKey of Object.keys(templateData.props)) {
         delete freeProps[propKey];
+        this.boundProps.add(propKey);
       }
     }
 

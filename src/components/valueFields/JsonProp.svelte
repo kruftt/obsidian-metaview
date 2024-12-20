@@ -1,5 +1,5 @@
 <script lang="ts">
-  import store from '../../store.svelte'
+  import store from 'src/store.svelte'
 
   let { address, key, state, template = { type: 'json', default: '' }}: {
     address: string[],

@@ -1,8 +1,5 @@
 export const ID = "metaview";
 export const NAME = "MetaView";
-// export const KEY_SEPARATOR = "‗‗";
-// export const KEY_SEPARATOR = "$MV$";
-
 export const VALID_TYPES: Record<string, true> = {
   'boolean': true,
   'number': true,
@@ -20,3 +17,8 @@ export const VALID_TYPES: Record<string, true> = {
   'record': true,
   'json': true,
 };
+export const FILE_PROPS: Record<string, true> = {
+  'types': true,
+  'aliases': true,
+  'cssclasses': true,
+}
