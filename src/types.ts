@@ -1,7 +1,10 @@
 interface MVSettings {
-  templatesPath: string;
+  templatesPath: string
+  // templatesPrefix: string
+  typesProperty: string
 }
 
+type MVContainerType = "free" | "record" | "array"
 type MVFilePropType = 'types' | 'aliases' | 'cssclasses'
 
 type MVPropDef =
@@ -23,73 +26,65 @@ type MVPropDef =
 
 interface MVJsonDef {
   type: 'json'
-  default: FrontMatterValue
+  default?: FrontMatterValue | null
 }
 
 interface MVBoolDef {
   type: 'boolean'
-  default: boolean | null
+  default?: boolean | null
 }
 
 interface MVNumberDef {
   type: 'number'
-  default: number | null
-  min: number | null
-  max: number | null
-  step: number | null
+  default?: number | null
+  min?: number | null
+  max?: number | null
+  step?: number | null
 }
 
 interface MVTextDef {
   type: 'text'
-  default: string | null
-  minlength: number | null
-  maxlength: number | null
-  pattern: string | null
+  default?: string | null
+  minlength?: number | null
+  maxlength?: number | null
+  pattern?: string | null
 }
-
-// interface MVDateTimeDef {
-//   type: 'date' | 'datetime' | 'time' | 'month'
-//   default: string | null
-//   min: string | null
-//   max: string | null
-//   step: string | null
-// }
 
 interface MVDateDef {
   type: 'date'
-  default: string | null
-  min: string | null
-  max: string | null
-  step: string | null
+  default?: string | null
+  min?: string | null
+  max?: string | null
+  step?: string | null
 }
 
 interface MVDateTimeDef {
-  type: 'datetime'
-  default: string | null
-  min: string | null
-  max: string | null
-  step: string | null
+  type: 'datetime-local'
+  default?: string | null
+  min?: string | null
+  max?: string | null
+  step?: string | null
 }
 
 interface MVTimeDef {
   type: 'time'
-  default: string | null
-  min: string | null
-  max: string | null
-  step: string | null
+  default?: string | null
+  min?: string | null
+  max?: string | null
+  step?: string | null
 }
 
 interface MVMonthDef {
   type: 'month'
-  default: string | null
-  min: string | null
-  max: string | null
-  step: string | null
+  default?: string | null
+  min?: string | null
+  max?: string | null
+  step?: string | null
 }
 
 interface MVLinkDef {
   type: 'link'
-  target: string | null
+  target?: string | null
 }
 
 // interface MVOptionsDef {

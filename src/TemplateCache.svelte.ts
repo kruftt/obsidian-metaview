@@ -1,8 +1,7 @@
 import { TAbstractFile, TFile, TFolder, Vault } from 'obsidian'
 import type MetaViewPlugin from "main";
 import TemplateData from "./TemplateData.svelte";
-
-const TEMPLATE_NAME_REGEX = "(?:\/)?(.+).md$";
+import { TEMPLATE_NAME_REGEX } from './constants';
 
 export default class TemplateCache {
   private templateNameRegex: RegExp;

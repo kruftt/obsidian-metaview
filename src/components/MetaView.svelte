@@ -1,74 +1,101 @@
 <script lang="ts">
-  import TemplateData from 'src/TemplateData.svelte';
   import store from '../store.svelte';
-  import { blurOnEnter } from './events';
-  import FileProp from './FileProp.svelte';
-  // import MetaProp from './MetaProp.svelte';
-  import TemplateValue from './TemplateValue.svelte';
+  import TemplateData from 'src/TemplateData.svelte';
+  import NoteData from 'src/NoteData.svelte';
+  // import FileProp from './FileProp.svelte';
+  // import TemplateProp from './TemplateProp.svelte';
+  import NoteProp from './NoteProp.svelte';
 
   let data = $derived(store.data);
   let props = $derived(data ? data.props : null);
+  let filename = $derived(store.file ? store.file.name : '');
 
   const freeTemplate = { type: 'json', default: '' };
 
-  function updateKey(e: FocusEvent) {
-    const target = <HTMLInputElement>e.target;
-    const key = target.dataset.key!;
-    const newKey = target.value;
-    if (newKey in props!) {
-      target.value = key;
-    } else {
-      props![newKey] = props![key];
-      delete props![key];
+  // $derived(data && store.sync());
+
+  $effect(() => {
+    console.log('change');
+    if (data !== null) {
+      console.log('sync');
       store.sync();
     }
-  }
+  });
+
+  // split into EmptyView, NoteView, TemplateView
+  // each with their own sync effect?
 </script>
 
 <template lang='pug'>
-  div.meta-view      
+  div.metadata-container 
     +startif('data === null')
       div (No file)
 
     +else
-      FileProp(key="aliases", entries="{data.aliases}")
-      FileProp(key="tags", entries="{data.tags}")
-      FileProp(key="types", entries="{data.types}")
+      div { filename }
 
-      +startif("data instanceof TemplateData")
-        +each("Object.keys(props) as key (key)")
-          div.metadata-property
-            div.metadata-property-key
-              input.metadata-property-key-input(
-                value="{key}"
-                data-key="{key}"
-                onkeypress="{blurOnEnter}"
-                onblur="{updateKey}"
-              )
-            TemplateValue(bind:template="{props[key]}")
-        
-      //- +else
-      //-   +each("data.freeProps as key")
-      //-     MetaProp({key} {props} template="{freeTemplate}")
+      div.metadata-content
+        div.metadata-file-props
+          //-     FileProp(key="aliases", entries="{data.aliases}")
+          //-     FileProp(key="tags", entries="{data.tags}")
+          //-     FileProp(key="types", entries="{data.types}")
+            
+          //- +startif("data instanceof TemplateData")
+          //-     +each("Object.keys(props) as key (key)")
+          //-       TemplateProp({key} context="{props}")
+          //-     TemplateProp(context="{props}")
+          div template
+          //- +else
+          
+        +startif("data instanceof NoteData")
+          +each("data.freeProps as key")
+            NoteProp({key} context="{props}")
+            //-     +each("Object.entries(data.typeData) as [name, typeData]")
+            //-       div.metadata-properties-title {name}
 
-      //-   +each("Object.entries(data.typeData) as [name, typeData]")
-      //-     div.type-header {name}
-
-      //-     +each("Object.entries(typeData.props) as [key, template]")
-      //-       MetaProp({key} {props} {template})
-
-      +endif
+            //-       +each("Object.entries(typeData.props) as [key, template]")
+            //-         NoteProp({key} {template} context="{props}")
+        +endif
     +endif
 </template>
 
 <style lang='sass' scoped>
-  // :global(.view-content:has(> div.meta-view))
-  //   padding: 0
+  * :global
+    .metadata-properties-title
+      margin: 1.0em 0 0 0.5em
 
-  .meta-view 
-    padding: 0.2em 0.2em 0.2em 0.4em
+    .metadata-property
+      div
+        border: none
 
-  .type-header
-    margin-top: 0.8em
-    font-weight: 600 
+    .metadata-property-key
+      min-width: var(--size-4-3)
+      flex: 0 1.2 auto
+        //- padding-bottom: 1px
+  
+    .mv-options-container
+      display: flex
+      flex-direction: column
+
+    .mv-metadata-property-option
+      display: flex
+      margin-top: var(--size-4-1)
+      font-size: var(--metadata-label-font-size)
+      align-items: center
+      gap: var(--size-4-2)
+
+      label
+        //- width: calc(var(--metadata-label-width) * 0.8)
+        width: var(--size-4-16)
+        text-align: right
+        flex: 0 0 auto
+      input
+        flex: 1 1 auto
+        min-width: 0
+
+    .mv-metadata-options-spacer
+      flex: 0 2 var(--size-4-4)
+
+  .metadata-file-props
+    margin-bottom: 4px
 </style>

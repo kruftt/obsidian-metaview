@@ -1,5 +1,5 @@
 <script lang="ts">
-  import store from '../../store.svelte'
+  import store from '../../old_store.svelte'
   
   let { state, address = [], key, def }: {
     state: { [key:string]: boolean }

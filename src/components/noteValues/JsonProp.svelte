@@ -13,18 +13,18 @@
   function toggleProp() {
     if (state[key]) {
       delete state[key];
-      store.setProperty(key, null, address);
+      // store.setProperty(key, null, address);
     } else {
       const value = template.default;
       state[key] = value;
-      store.setProperty(key, value, address);
+      // store.setProperty(key, value, address);
     }
   }
 
   function changeProp() {
     const value = input.textContent || '';
     state[key] = value;
-    store.setProperty(key, value, address);
+    // store.setProperty(key, value, address);
   }
 
   function submitOnEnter(e: KeyboardEvent) {
