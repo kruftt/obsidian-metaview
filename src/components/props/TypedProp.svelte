@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Menu, setIcon } from 'obsidian';
   // import values from './noteValues';
-  import { TYPE_ICONS } from 'src/constants';
-  import { blurOnEnter } from './events';
+  import { TYPE_ICONS } from 'const';
+  import { blurOnEnter } from '../events';
 
   let { context, key, template = { type: "text" }, container = "free" } : {
     context: FrontMatter,

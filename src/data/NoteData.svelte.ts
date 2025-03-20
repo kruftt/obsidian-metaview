@@ -1,19 +1,25 @@
 import type TemplateData from "./TemplateData.svelte";
 import store from './store.svelte';
-import { arrayWrap, truthy } from "./utils";
+import { arrayWrap, truthy } from "../utils";
 
 export default class NoteData {
   props: FrontMatter = $state({});
+  fileProps: Record<string, string[]> = $state({});
   types: string[] = $state([]);
   
   freeProps: Array<string> = $state([]);
   typeData: Record<string, TemplateData> = $state.raw({});
   
   constructor(frontmatter: FrontMatter, typesProperty: string) {
-    const { [typesProperty]: types, ...props } = frontmatter;
-    this.types.push(...arrayWrap(types).filter(truthy));
+    const { [typesProperty]: types, aliases, cssclasses, tags, ...props } = frontmatter;
+    
+    this.types = arrayWrap(types).filter(truthy);
+    const fileProps = this.fileProps;
+    fileProps.aliases = arrayWrap(aliases).filter(truthy);
+    fileProps.cssclasses = arrayWrap(cssclasses).filter(truthy);
+    fileProps.tags = arrayWrap(tags).filter(truthy);
     this.props = props;
-    this.updateTypeData();
+    this.updateTypeData(typesProperty);
   }
 
   // Add / Remove Prop?
@@ -24,9 +30,13 @@ export default class NoteData {
   // - it removes duplicate values
   // - more simple add/remove
 
-  public updateTypeData() {
+  public updateTypeData(typesProperty: string) {
     const typeData: Record<string, TemplateData> = this.typeData = {};
     const freeProps = { ...this.props };
+
+    delete freeProps.aliases;
+    delete freeProps.cssclasses;
+    delete freeProps.tags;
     
     let type: string | undefined;
     let templateData: TemplateData;

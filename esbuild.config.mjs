@@ -18,7 +18,7 @@ const context = await esbuild.context({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ["main.ts"],
+	entryPoints: ["src/MetaViewPlugin.ts"],
 	bundle: true,
 	conditions: [ "development"	],
 	external: [

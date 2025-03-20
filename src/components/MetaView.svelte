@@ -1,61 +1,30 @@
 <script lang="ts">
-  import store from '../store.svelte';
-  import TemplateData from 'src/TemplateData.svelte';
-  import NoteData from 'src/NoteData.svelte';
-  // import FileProp from './FileProp.svelte';
-  // import TemplateProp from './TemplateProp.svelte';
-  import NoteProp from './NoteProp.svelte';
+  import store from '../data/store.svelte';
+  import TemplateData from 'data/TemplateData.svelte';
+  import NoteData from 'data/NoteData.svelte';
+  import NullView from './NullView.svelte';
+  import NoteView from './NoteView.svelte';
+  import TemplateView from './TemplateView.svelte';
 
   let data = $derived(store.data);
-  let props = $derived(data ? data.props : null);
   let filename = $derived(store.file ? store.file.name : '');
-
   const freeTemplate = { type: 'json', default: '' };
 
-  // $derived(data && store.sync());
-
-  $effect(() => {
-    console.log('change');
-    if (data !== null) {
-      console.log('sync');
-      store.sync();
-    }
-  });
-
-  // split into EmptyView, NoteView, TemplateView
-  // each with their own sync effect?
+  $effect(() => store.sync());
 </script>
 
 <template lang='pug'>
   div.metadata-container 
     +startif('data === null')
-      div (No file)
+      NullView
 
     +else
       div { filename }
-
-      div.metadata-content
-        div.metadata-file-props
-          //-     FileProp(key="aliases", entries="{data.aliases}")
-          //-     FileProp(key="tags", entries="{data.tags}")
-          //-     FileProp(key="types", entries="{data.types}")
-            
-          //- +startif("data instanceof TemplateData")
-          //-     +each("Object.keys(props) as key (key)")
-          //-       TemplateProp({key} context="{props}")
-          //-     TemplateProp(context="{props}")
-          div template
-          //- +else
-          
-        +startif("data instanceof NoteData")
-          +each("data.freeProps as key")
-            NoteProp({key} context="{props}")
-            //-     +each("Object.entries(data.typeData) as [name, typeData]")
-            //-       div.metadata-properties-title {name}
-
-            //-       +each("Object.entries(typeData.props) as [key, template]")
-            //-         NoteProp({key} {template} context="{props}")
-        +endif
+      +startif("data instanceof NoteData")
+        NoteView({data})
+      +else
+        TemplateView({data})
+      +endif
     +endif
 </template>
 
@@ -96,6 +65,6 @@
     .mv-metadata-options-spacer
       flex: 0 2 var(--size-4-4)
 
-  .metadata-file-props
+  .mv-metadata-file-props
     margin-bottom: 4px
 </style>

@@ -1,4 +1,4 @@
-import { VALID_TYPES } from './constants';
+import { VALID_TYPES } from './const';
 
 export const arrayWrap = (v: unknown) => Array.isArray(v) ? v : (v === undefined) ? [] : [v];
 export const truthy = (v: any) => v;

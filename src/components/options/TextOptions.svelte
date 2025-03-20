@@ -1,5 +1,4 @@
 <script lang="ts">
-  import store from 'src/old_store.svelte'
   let { template }: { template: MVTextDef } = $props();
 </script>
 
@@ -12,7 +11,6 @@
         name="default"
         type="text"
         bind:value="{template.default}"
-        on:change="{store.sync}"
       )
     div.mv-metadata-property-option
       div.mv-metadata-options-spacer
@@ -21,7 +19,6 @@
         name="minlength"
         type="text"
         bind:value="{template.minlength}"
-        on:change="{store.sync}"
       )
     div.mv-metadata-property-option
       div.mv-metadata-options-spacer
@@ -30,7 +27,6 @@
         name="maxlength"
         type="text"
         bind:value="{template.maxlength}"
-        on:change="{store.sync}"
       )
     div.mv-metadata-property-option
       div.mv-metadata-options-spacer
@@ -39,6 +35,5 @@
         name="pattern"
         type="text"
         bind:value="{template.pattern}"
-        on:change="{store.sync}"
       )
 </template>

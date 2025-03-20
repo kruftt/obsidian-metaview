@@ -1,5 +1,4 @@
 <script lang="ts">
-  import store from 'src/old_store.svelte'
   let { template }: { template: MVBoolDef } = $props();
 </script>
 
@@ -12,7 +11,6 @@
         name="default"
         type="checkbox"
         bind:checked="{template.default}"
-        on:change="{store.sync}"
         style="flex: 0 0 auto"
       )
 </template>

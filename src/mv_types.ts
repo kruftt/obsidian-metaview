@@ -5,7 +5,7 @@ interface MVSettings {
 }
 
 type MVContainerType = "free" | "record" | "array"
-type MVFilePropType = 'types' | 'aliases' | 'cssclasses'
+type MVFilePropType = 'types' | 'aliases' | 'cssclasses' | 'tags'
 
 type MVPropDef =
   | MVJsonDef
@@ -22,6 +22,7 @@ type MVPropDef =
   // | MVOptionsDef
   | MVArrayDef
   | MVTupleDef
+  | MVMapDef
   | MVRecordDef
 
 interface MVJsonDef {
@@ -110,6 +111,11 @@ interface MVArrayDef {
 interface MVTupleDef {
   type: 'tuple'
   elementTypes: MVPropDef[]
+}
+
+interface MVMapDef {
+  type: 'map'
+  elementType: MVPropDef
 }
 
 interface MVRecordDef {

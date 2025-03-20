@@ -1,22 +1,19 @@
 <script lang="ts">
   import { setIcon } from 'obsidian';
-  import store from 'src/store.svelte'
-	let { key, entries }: { key: MVFilePropType, entries: Set<string> } = $props();
+	let { key, entries }: { key: MVFilePropType, entries: string[] } = $props();
   let input!: HTMLDivElement;
 
   function removeEntry(this: HTMLElement, e: InputEvent) {
     const entry = this.dataset.entry!;
-    entries.delete(entry);
-    store.removeFilePropValue(key, entry);
+    entries.remove(entry);
     e.stopPropagation();
   }
 
   function addEntry() {
     const entry = (input.textContent || '').trim();
-    input.textContent = "";
-    if (!entry || entries.has(entry)) return;
-    entries.add(entry);
-    store.insertFilePropValue(key, entry);
+    input.textContent = '';
+    if (!entry || entries.includes(entry)) return;
+    entries.push(entry);
   }
 
   function submitOnEnter(e: KeyboardEvent) {
@@ -43,9 +40,7 @@
   div.metadata-property
     div.metadata-property-key {key}
     div.metadata-property-value
-      div.multi-select-container(
-        onclick="{focusLast}"
-      )
+      div.multi-select-container(onclick="{focusLast}")
         +each("entries as entry (entry)")
           div.multi-select-pill(tabindex="0" onclick="{focus}")
             div.multi-select-pill-content {entry}

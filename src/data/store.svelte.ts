@@ -1,10 +1,9 @@
 import { type FrontMatterCache, TFile, Vault } from 'obsidian'
-import { tick } from 'svelte'
-import TemplateData from "./TemplateData.svelte";
-import NoteData from './NoteData.svelte';
-import type MetaViewPlugin from 'main';
-import * as CONST from './constants'
-import { arrayWrap } from './utils';
+import TemplateData from "./TemplateData.svelte"
+import NoteData from './NoteData.svelte'
+import type MetaViewPlugin from 'MetaViewPlugin';
+import * as CONST from 'const' 
+import { arrayWrap } from 'utils'
 
 class MVStore {
   public notes: Record<string, Array<TFile>>;
@@ -26,7 +25,6 @@ class MVStore {
     this.templates = {};
 
     Vault.recurseChildren(plugin.app.vault.getRoot(), (file) => {
-      // console.log('loading', file.name);
       if (file instanceof TFile) {
         if (file.path.startsWith(templatesPath)) {
           this.addTemplate(file);
@@ -35,8 +33,6 @@ class MVStore {
         }
       }
     });
-
-    // console.log(this);
   }
 
   public addNote(file: TFile) {
@@ -86,24 +82,32 @@ class MVStore {
   }
 
   public sync() {
+    console.log('sync');
     const data = this.data;
     if (data === null) return;
 
+    const types = $state.snapshot(data.types);
+    const fileProps = $state.snapshot(data.fileProps);
     const props = $state.snapshot(data.props);
     this.updating = !this.updating;
+    console.log('updating', this.updating);
 
     if (this.updating) {
       if (data instanceof NoteData) {
-        data.updateTypeData();
+        data.updateTypeData(this.plugin.settings.typesProperty);
       }
 
       this.plugin.app.fileManager!.processFrontMatter(this.file!, (frontmatter) => {
-        frontmatter[this.plugin.settings.typesProperty] = [...data.types];
-        let k;
+        let k, v;
         for (k of Object.keys(frontmatter)) {
           if (props[k] === undefined) {
             delete frontmatter[k];
           }
+        }
+
+        if (types.length > 0) frontmatter[this.plugin.settings.typesProperty] = types;
+        for ([k, v] of Object.entries(fileProps)) {
+          if (v.length > 0) frontmatter[k] = v;
         }
         Object.assign(frontmatter, props);
       });

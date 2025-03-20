@@ -1,10 +1,9 @@
 import { App, Plugin, PluginSettingTab, Setting, TFolder, TFile, WorkspaceLeaf, MetadataCache, type FrontMatterCache, Vault } from 'obsidian';
-import * as CONST from './src/constants'
-import MetaView from "./src/MetaView"
-import store from './src/store.svelte'
-import TemplateData from 'src/TemplateData.svelte';
-import NoteData from 'src/NoteData.svelte';
-import { arrayWrap } from './src/utils'
+import * as CONST from './const'
+import MetaView from "./MetaView"
+import store from './data/store.svelte'
+import NoteData from 'data/NoteData.svelte';
+import { arrayWrap } from './utils'
 
 // const FILENAME_REGEX = /^(?:.*\/)?(.+).md$/;
 const DEFAULT_SETTINGS: MVSettings = {
@@ -72,7 +71,7 @@ export default class MetaViewPlugin extends Plugin {
 				} else {
 					if (this.isTemplate(file.path)) {
 						store.addTemplate(file);
-						if (storeData instanceof NoteData) storeData.updateTypeData();
+						if (storeData instanceof NoteData) storeData.updateTypeData(this.settings.typesProperty);
 					} else {
 						store.removeNote(file, store.getTypes(cache));
 						store.addNote(file);

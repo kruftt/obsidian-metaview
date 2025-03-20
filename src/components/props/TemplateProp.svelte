@@ -1,10 +1,9 @@
 <script lang="ts">
   import { Menu, setIcon } from 'obsidian';
-  import store from 'src/old_store.svelte'
-  import options from './templateOptions';
-  import { blurOnEnter } from './events';
-  import { makePropTemplate } from 'src/utils';
-  import { TYPE_ICONS } from 'src/constants';
+  import options from '../options';
+  import { blurOnEnter } from '../events';
+  import { makePropTemplate } from 'utils';
+  import { TYPE_ICONS } from 'const';
   import TemplateSelector from './TemplateSelector.svelte';
 
   let { context, key = "", container = "free" } : {
@@ -21,13 +20,13 @@
   let typeIcon!: HTMLElement;
   $effect(() => typeIcon && setIcon(typeIcon, TYPE_ICONS[template.type]));
   
-  let expanded = $state(true);
-
   let contextIcon!: HTMLElement;
+  let expanded = $state(true);
   $effect(() => setIcon(contextIcon, key ? expanded ? 'chevron-down' : 'chevron-right' : 'plus'));
   
   function openContextMenu(e: MouseEvent) {
     const menu = new Menu();
+    
     // menu.addItem((item) => { item
     //     .setTitle('Property type')
     //     // .setIcon(TYPE_ICONS[template.type])
@@ -46,6 +45,7 @@
     //   }
     // })
     // menu.addSeparator();
+
     menu.addItem((item) => item
         .setTitle('Remove')
         .setIcon('trash-2')
@@ -53,7 +53,6 @@
         .setWarning(true)
         .onClick(() => {
           delete context[key];
-          store.sync();
         })
       )
       .showAtMouseEvent(e);
@@ -69,14 +68,12 @@
       context[newKey] = template || makePropTemplate({ type: 'text' });
       target.value = '';
       delete context[key];
-      store.sync();
     }
   }
 
   function changeTemplate(e: Event) {
     const type = (<HTMLSelectElement>e.target).value;
     context[key] = makePropTemplate({ type })!;
-    store.sync();
   }
 
   function onContext(e: Event) {

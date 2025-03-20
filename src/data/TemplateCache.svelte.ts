@@ -1,15 +1,14 @@
 import { TAbstractFile, TFile, TFolder, Vault } from 'obsidian'
-import type MetaViewPlugin from "main";
-import TemplateData from "./TemplateData.svelte";
-import { TEMPLATE_NAME_REGEX } from './constants';
-
+import type MetaViewPlugin from "MetaViewPlugin";
+import TemplateData from './TemplateData.svelte'
+import { TEMPLATE_NAME_REGEX } from 'const'
 export default class TemplateCache {
   private templateNameRegex: RegExp;
   public templates = $state<Record<string, TemplateData>>({});
 
   constructor(plugin: MetaViewPlugin) {
     const { app, settings } = plugin;
-    const { templatesPath } = settings;
+    const { templatesPath, typesProperty } = settings;
     
     this.templateNameRegex = new RegExp('^' + templatesPath + TEMPLATE_NAME_REGEX);
     
@@ -25,11 +24,11 @@ export default class TemplateCache {
     Vault.recurseChildren(typesDir, (file: TAbstractFile) => {
       if (file instanceof TFile) {
         const frontmatter = metadataCache.getFileCache(file)?.frontmatter || {};
-        const template = new TemplateData(frontmatter);
+        const template = new TemplateData(frontmatter, typesProperty);
         templates[this.getTemplateName(file.path)] = template;
-        for (let alias of template.aliases) {
-          templates[alias] = template;
-        }
+        // for (let alias of template.aliases) {
+        //   templates[alias] = template;
+        // }
       }
     });
   }
@@ -51,9 +50,9 @@ export default class TemplateCache {
   public add(path: string, template: TemplateData) {
     const templates = this.templates;
     templates[this.getTemplateName(path)] = template;
-    for (let alias of template.aliases) {
-      templates[alias] = template;
-    }
+    // for (let alias of template.aliases) {
+    //   templates[alias] = template;
+    // }
   }
 
   public rename(oldPath: string, path: string) {
@@ -70,8 +69,8 @@ export default class TemplateCache {
     const template = templates[name];
     if (!template) return;
     delete templates[name];
-    for (let alias of template.aliases) {
-      delete templates[alias];
-    }
+    // for (let alias of template.aliases) {
+    //   delete templates[alias];
+    // }
   }
 }

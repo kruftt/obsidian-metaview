@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { makePropTemplate } from 'src/utils';
-  import store from 'src/old_store.svelte'
+  import { makePropTemplate } from 'utils';
+  import store from 'data/store.svelte'
 
   let { template = $bindable() }: { template: MVPropDef } = $props();
 
