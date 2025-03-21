@@ -62,7 +62,7 @@ export default class MetaViewPlugin extends Plugin {
 			this.registerEvent(workspace.on('file-open', loadFile));
 
 			this.registerEvent(metadataCache.on('changed', (file, data, cache) => {
-				console.log('metadata changed');
+				console.log('metadata changed', store.updating);
 				if (file.extension !== 'md') return;
 				const storeData = store.data;
 
@@ -70,12 +70,15 @@ export default class MetaViewPlugin extends Plugin {
 					store.updating = false;
 				} else {
 					if (this.isTemplate(file.path)) {
-						store.addTemplate(file);
+						store.addTemplate(file); // updates template
+						// check if current note is a template
+						if (file === store.file) store.getTemplate
 						if (storeData instanceof NoteData) storeData.updateTypeData(this.settings.typesProperty);
 					} else {
 						store.removeNote(file, store.getTypes(cache));
 						store.addNote(file);
 					}
+					if (file === store.file) loadFile(file);
 				}				
 			}));
 

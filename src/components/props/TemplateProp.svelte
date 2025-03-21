@@ -4,12 +4,10 @@
   import { blurOnEnter } from '../events';
   import { makePropTemplate } from 'utils';
   import { TYPE_ICONS } from 'const';
-  import TemplateSelector from './TemplateSelector.svelte';
-
-  let { context, key = "", container = "free" } : {
+  
+  let { context, key = "" } : {
     context: Record<string, MVPropDef>,
     key: string,
-    container: MVContainerType,
   } = $props();
 
   let template = $derived(context[key]);
@@ -74,6 +72,8 @@
   function changeTemplate(e: Event) {
     const type = (<HTMLSelectElement>e.target).value;
     context[key] = makePropTemplate({ type })!;
+    // console.log(template);
+    // store.sync();
   }
 
   function onContext(e: Event) {
@@ -89,12 +89,15 @@
         span.metadata-property-icon(
           bind:this="{contextIcon}"
           onclick="{onContext}"
-          oncontextmenu="{openContextMenu}"
         )
         +if("key")
-          span.metadata-property-icon(bind:this="{typeIcon}" oncontextmenu="{openContextMenu}")
+          span.metadata-property-icon(
+            bind:this="{typeIcon}"
+            onclick="{openContextMenu}"
+            oncontextmenu="{openContextMenu}"
+          )
       
-        input.metadata-property-key-input(
+        input.metadata-property-key-input.mv-property-key-input(
           value="{key}"
           bind:this="{keyInput}"
           onkeypress="{blurOnEnter}"
@@ -104,7 +107,21 @@
       
       div.metadata-property-value
         +if("key")
-          TemplateSelector(bind:template="{context[key]}")
+          select.dropdown(value="{template.type}" onchange="{changeTemplate}")
+            option(value="json") json
+            option(value="boolean") checkbox
+            option(value="date") date
+            option(value="datetime-local") datetime
+            option(value="month") month
+            option(value="link") link
+            option(value="multi") multi
+            option(value="number") number
+            option(value="array") array
+            option(value="record") record
+            option(value="select") select
+            option(value="text") text
+            option(value="time") time
+            option(value="tuple") tuple
         
     +if('key && expanded')
       +if('Options') 
@@ -118,5 +135,14 @@
 <style lang="sass">
   .metadata-template-property
     padding: var(--size-4-1) 0
-    border-top: 1px solid var(--metadata-divider-color)
+    border-top: var(--border-width) solid var(--metadata-divider-color)
+
+  .mv-property-key-input
+    margin-left: 4px
+
+  select
+    flex-grow: 1
+    border: none
+    &:focus
+      box-shadow: none
 </style>

@@ -10,10 +10,12 @@
   }
 
   function addEntry() {
-    const entry = (input.textContent || '').trim();
+    const _entries = (input.textContent || '').trim().split(' ');
     input.textContent = '';
-    if (!entry || entries.includes(entry)) return;
-    entries.push(entry);
+    for (let entry of _entries) {
+      if (!entry || entries.includes(entry)) continue;
+      entries.push(entry);
+    }
   }
 
   function submitOnEnter(e: KeyboardEvent) {
@@ -37,8 +39,8 @@
 </script>
 
 <template lang="pug">
-  div.metadata-property
-    div.metadata-property-key {key}
+  div.metadata-property.mv-property
+    div.metadata-property-key.mv-file-key {key}
     div.metadata-property-value
       div.multi-select-container(onclick="{focusLast}")
         +each("entries as entry (entry)")
@@ -58,22 +60,24 @@
 </template>
 
 <style scoped lang="sass">
-  .metadata-property-key
-    border: none
-    background-color: transparent
+  .mv-file-key
+    // background-color: transparent
     align-items: center
-    width: calc(var(--metadata-label-width) / 2)
-    min-width: calc(var(--metadata-label-width) / 2)
+    // width: calc(var(--metadata-label-width) * 0.6)
+    min-width: calc(var(--metadata-label-width) * 0.6)
     color: var(--metadata-label-text-color)
     font-size: var(--metadata-label-font-size)
     font-weight: var(--metadata-label-font-weight)
     height: var(--input-height)
-    flex: 0 0 auto
-
-  .metadata-property
-    div
-      border: none
+    flex: 0 0 min-content !important
+    padding-left: 0.5em
+    // border-bottom: var(--metadata-divider-width) solid var(--metadata-divider-color)
   
   .multi-select-container
     flex: 1 1 auto
+    &:hover
+      background-color: var(--metadata-input-background-active)
+  
+  .multi-select-input
+    background-color: transparent
 </style>

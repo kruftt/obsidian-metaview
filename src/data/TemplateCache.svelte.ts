@@ -1,5 +1,5 @@
 import { TAbstractFile, TFile, TFolder, Vault } from 'obsidian'
-import type MetaViewPlugin from "MetaViewPlugin";
+import type MetaViewPlugin from "Plugin";
 import TemplateData from './TemplateData.svelte'
 import { TEMPLATE_NAME_REGEX } from 'const'
 export default class TemplateCache {

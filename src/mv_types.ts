@@ -4,7 +4,6 @@ interface MVSettings {
   typesProperty: string
 }
 
-type MVContainerType = "free" | "record" | "array"
 type MVFilePropType = 'types' | 'aliases' | 'cssclasses' | 'tags'
 
 type MVPropDef =

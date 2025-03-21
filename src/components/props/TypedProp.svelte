@@ -1,15 +1,14 @@
 <script lang="ts">
   import { Menu, setIcon } from 'obsidian';
-  // import values from './noteValues';
   import { TYPE_ICONS } from 'const';
   import { blurOnEnter } from '../events';
 
-  let { context, key, template = { type: "text" }, container = "free" } : {
+  let { context, key, template = { type: "text" } } : {
     context: FrontMatter,
     key: string,
     template: MVPropDef,
-    container: MVContainerType,
   } = $props();
+
 
   // let Value = $derived(values[template.type as keyof typeof values] || null);
   

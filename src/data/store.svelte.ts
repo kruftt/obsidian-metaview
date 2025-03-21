@@ -1,7 +1,7 @@
 import { type FrontMatterCache, TFile, Vault } from 'obsidian'
 import TemplateData from "./TemplateData.svelte"
 import NoteData from './NoteData.svelte'
-import type MetaViewPlugin from 'MetaViewPlugin';
+import type MetaViewPlugin from 'Plugin';
 import * as CONST from 'const' 
 import { arrayWrap } from 'utils'
 

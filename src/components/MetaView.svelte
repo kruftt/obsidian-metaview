@@ -1,30 +1,68 @@
 <script lang="ts">
+  import { setIcon } from 'obsidian';
+  import { onMount } from 'svelte'
+
   import store from '../data/store.svelte';
   import TemplateData from 'data/TemplateData.svelte';
   import NoteData from 'data/NoteData.svelte';
-  import NullView from './NullView.svelte';
-  import NoteView from './NoteView.svelte';
-  import TemplateView from './TemplateView.svelte';
+
+  import FileProp from "./props/FileProp.svelte";
+  import FreeProp from './props/FreeProp.svelte';
+  import TypedProp from './props/TypedProp.svelte';
+  import TemplateProp from './props/TemplateProp.svelte';
 
   let data = $derived(store.data);
-  let filename = $derived(store.file ? store.file.name : '');
+  let filename = $derived(store.file ? store.file.name : 'Awaiting file...');
   const freeTemplate = { type: 'json', default: '' };
 
   $effect(() => store.sync());
+
+  let expanded = $state(true);
+  let expandedIcon!: HTMLElement;
+  
+
+  console.log('initializing', expandedIcon);
+
+  onMount(() => {
+    console.log('mounted', expandedIcon);
+
+    $effect(() => {
+      console.log(expandedIcon);
+      setIcon(expandedIcon, expanded ? 'chevron-down' : 'chevron-right')
+    });
+  });
 </script>
 
 <template lang='pug'>
   div.metadata-container 
-    +startif('data === null')
-      NullView
+    div.mv-metadata-filename(onclick!="{() => { expanded = !expanded; console.log(expandedIcon); }}")
+      span.metadata-property-icon(bind:this="{expandedIcon}")
+      | { filename }
 
-    +else
-      div { filename }
-      +startif("data instanceof NoteData")
-        NoteView({data})
-      +else
-        TemplateView({data})
+    +startif("data !== null")
+      +startif("expanded")
+        div.mv-metadata-file-props
+          FileProp(key="aliases", entries="{data.fileProps.aliases}")
+          FileProp(key="tags", entries="{data.fileProps.tags}")
+          FileProp(key="cssclasses", entries="{data.fileProps.cssclasses}")
+          +startif("data instanceof NoteData")
+            FileProp(key="types", entries="{data.types}")
+          +endif
       +endif
+
+      div.metadata-content
+        +startif("data instanceof NoteData")
+          div note
+          +each("data.freeProps as key")
+            FreeProp({key} context="{data.props}")
+            +each("Object.entries(data.typeData) as [name, typeData]")
+              div.metadata-properties-title {name}
+              +each("Object.entries(typeData.props) as [key, template]")
+                TypedProp({key} {template} context="{data.props}")
+        +else
+          +each("Object.keys(data.props) as key (key)")
+            TemplateProp({key} context="{data.props}")
+        +endif
     +endif
 </template>
 
@@ -32,10 +70,17 @@
   * :global
     .metadata-properties-title
       margin: 1.0em 0 0 0.5em
+    
+    .mv-metadata-filename
+      display: flex
+      align-items: center
+      gap: 4px
 
-    .metadata-property
-      div
-        border: none
+      &:hover
+        color: var(--text-normal)
+
+    .metadata-property > div
+      border: none
 
     .metadata-property-key
       min-width: var(--size-4-3)
@@ -66,5 +111,7 @@
       flex: 0 2 var(--size-4-4)
 
   .mv-metadata-file-props
-    margin-bottom: 4px
+    padding-bottom: 0.4em
+    margin-bottom: 0.6em
+    // border-bottom: var(--border-width) solid var(--background-modifier-border)
 </style>
