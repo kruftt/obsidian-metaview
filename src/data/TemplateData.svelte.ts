@@ -1,5 +1,4 @@
-import { arrayWrap, truthy } from '../utils';
-import { makePropTemplate } from '../utils';
+import { arrayWrap, truthy, makePropTemplate } from '../utils';
 
 export default class TemplateData {
   public props: Record<string, MVPropDef> = $state({});

@@ -1,14 +1,13 @@
 <script lang="ts">
   import { Menu } from 'obsidian';
   import { blurOnEnter } from '../events';
+  import JsonValue from '../values/JsonValue.svelte';
 
   let { context, key } : {
     context: FrontMatter,
     key: string,
   } = $props();
 
-  let stringifiedValue = $derived(JSON.stringify(context[key]).replace(/^"|"$/g, ''));
-  
   function openContextMenu(e: MouseEvent) {
     const menu = new Menu();
     menu.addItem((item) => item
@@ -36,20 +35,6 @@
     }
   }
 
-  function updateValue(e: FocusEvent) {
-    console.log("updating value");
-    const target = <HTMLInputElement>e.target;
-    try {
-      const newValue = JSON.parse(target.value);
-      context[key] = newValue;
-    } catch (e) {
-      if (e instanceof SyntaxError) {
-        console.log('mv: caught json syntax error')
-        context[key] = target.value;
-      } else throw(e);
-    }
-    target.value = stringifiedValue;
-  }
 </script>
 
 <template lang="pug">
@@ -60,13 +45,7 @@
         onkeypress="{blurOnEnter}"
         onblur="{updateKey}"
       )
-    //- div.metadata-property-value
-      //- div { context[key] }
-    input.metadata-property-value-input(
-      value="{stringifiedValue}"
-      onkeypress="{blurOnEnter}"
-      onblur="{updateValue}"
-    )
+    JsonValue(bind:value!="{context[key]}")
 </template>
 
 <style lang="sass">

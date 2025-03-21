@@ -2,6 +2,7 @@
   import { Menu, setIcon } from 'obsidian';
   import { TYPE_ICONS } from 'const';
   import { blurOnEnter } from '../events';
+  import containers from 'components/containers';
 
   let { context, key, template = { type: "text" } } : {
     context: FrontMatter,
@@ -9,8 +10,26 @@
     template: MVPropDef,
   } = $props();
 
-
   // let Value = $derived(values[template.type as keyof typeof values] || null);
+
+  let containerType = $derived.by(() => {
+    switch (template.type) {
+      case 'record':
+      case 'map':
+      case 'array':
+      case 'tuple':
+        return template.type;
+      case 'json':
+        const v = context[key];
+        return v instanceof Array ? 'array'
+          : v instanceof Object ? 'map'
+          : null;
+      default:
+        return null;
+    }
+  });
+  
+  let Container = $derived(containers[containerType as keyof typeof containers] || null);
   
   let icon!: HTMLElement;
   $effect(() => setIcon(icon, TYPE_ICONS[template.type]));
@@ -46,8 +65,8 @@
     const target = <HTMLInputElement>e.target;
     const newKey = target.value;
     if (newKey in context) {
-      // temporary red outline / shake
       target.value = key;
+      // temporary red outline / shake
     } else {
       context[newKey] = context[key];
       delete context[key];
@@ -71,13 +90,20 @@
         onkeypress="{blurOnEnter}"
         onblur="{updateKey}"
       )
-    //- div.metadata-property-value
+      //- div.metadata-property-value
       //- div { context[key] }
     input.metadata-property-value-input(
       value="{context[key]}"
       onkeypress="{blurOnEnter}"
       onblur="{updateValue}"
     )
+  
+  +startif('containerType === "array" || containerType === "map"')
+    Container(container="{context[key]}")
+  +elseif('containerType === "record" || containerType === "tuple"')
+    Container(container="{context[key]}" template="{template.props[key]}")
+  +endif()
+
 </template>
 
 <style lang="sass">

@@ -1,31 +1,31 @@
-// import ArrayField from "./ArrayField.svelte";
-// import BoolField from "./BoolField.svelte";
-// import DateField from "./DateField.svelte";
-// import DatetimeField from "./DatetimeField.svelte";
-import JsonField from "./JsonField.svelte";
-// import LinkField from "./LinkField.svelte";
-// import MonthField from "./MonthField.svelte";
-// import MultiField from "./MultiField.svelte";
-// import NumberField from "./NumberField.svelte";
-// import RecordField from "./RecordField.svelte";
-// import SelectField from "./SelectField.svelte";
-// import StringField from "./StringField.svelte";
-// import TimeField from "./TimeField.svelte";
-// import TupleField from "./TupleField.svelte";
+// import ArrayValue from "./ArrayValue.svelte";
+import BoolValue from "./BoolValue.svelte";
+// import DateValue from "./DateValue.svelte";
+// import DatetimeValue from "./DatetimeValue.svelte";
+import JsonValue from "./JsonValue.svelte";
+// import LinkValue from "./LinkValue.svelte";
+// import MonthValue from "./MonthValue.svelte";
+// import MultiValue from "./MultiValue.svelte";
+// import NumberValue from "./NumberValue.svelte";
+// import RecordValue from "./RecordValue.svelte";
+// import SelectValue from "./SelectValue.svelte";
+// import StringValue from "./StringValue.svelte";
+// import TimeValue from "./TimeValue.svelte";
+// import TupleValue from "./TupleValue.svelte";
 
 export default {
-  // array : ArrayField,
-  // boolean : BoolField,
-  // date : DateField,
-  // datetime : DatetimeField,
-  // month: MonthField,
-  json : JsonField,
-  // link : LinkField,
-  // multi : MultiField,
-  // number : NumberField,
-  // record : RecordField,
-  // select : SelectField,
-  // string : StringField,
-  // time: TimeField,
-  // tuple : TupleField,
+  // array : ArrayValue,
+  boolean : BoolValue,
+  // date : DateValue,
+  // datetime : DatetimeValue,
+  // month: MonthValue,
+  json : JsonValue,
+  // link : LinkValue,
+  // multi : MultiValue,
+  // number : NumberValue,
+  // record : RecordValue,
+  // select : SelectValue,
+  // string : StringValue,
+  // time: TimeValue,
+  // tuple : TupleValue,
 }

@@ -1,68 +1,44 @@
 <script lang="ts">
-  import store from 'data/store.svelte'
+  import { blurOnEnter } from '../events';
 
-  let { address, key, state, template = { type: 'json', default: '' }}: {
-    address: string[],
-    key: string,
-    state: Record<string, FrontMatterValue>,
-    template: MVJsonDef
-  } = $props();
-
-  let input: HTMLDivElement;
+  let { value = $bindable() } : { value: any } = $props();
   
-  function toggleProp() {
-    if (state[key]) {
-      delete state[key];
-      // store.setProperty(key, null, address);
-    } else {
-      const value = template.default;
-      state[key] = value;
-      // store.setProperty(key, value, address);
+  let stringifiedValue = $derived(JSON.stringify(value).replace(/^"|"$/g, ''));
+  
+  function updateValue(e: FocusEvent) {
+    console.log("updating value");
+    const target = <HTMLInputElement>e.target;
+    const innerText = target.innerText;
+    
+    try {
+      const newValue = JSON.parse(innerText);
+      value = newValue;
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        value = innerText;
+      } else throw(e);
     }
-  }
-
-  function changeProp() {
-    const value = input.textContent || '';
-    state[key] = value;
-    // store.setProperty(key, value, address);
-  }
-
-  function submitOnEnter(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      ;(<HTMLDivElement>e.target).blur();
-    }
+    target.innerText = stringifiedValue;
   }
 </script>
 
+
 <template lang="pug">
-  div.container
-    div.label {key}
-    div.value(
-      contentEditable
-      bind:this="{input}"
-      onkeypress="{submitOnEnter}"
-      onblur="{changeProp}"
-    ) {state[key]}
-    div.addOrRemove(onclick="{toggleProp}") { state[key] ? '-' : '+' }
+  input.metadata-property-value-input(
+    value="{stringifiedValue}"
+    onkeypress="{blurOnEnter}"
+    onblur="{updateValue}"
+  )
+
+  //- bind:this="{input}"
+  //- div.metadata-property-value-input(
+  //-   contentEditable
+  //-   onkeypress="{blurOnEnter}"
+  //-   onblur="{updateValue}"
+  //- ) { stringifiedValue }
+    
 </template>
 
 <style lang="sass" scoped>
-  .container
-    display: flex
 
-  .label
-    color: #AAA
-    min-width: 5em
-
-  .value
-    margin-left: 1em
-    background-color: #222
-    flex: 1
-    padding-left: 0.2em
-    user-select: text
-    -webkit-user-select: text
-
-  .addOrRemove
-    margin: 0 0.6em
 </style>

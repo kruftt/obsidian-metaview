@@ -52,7 +52,7 @@ export default class MetaViewPlugin extends Plugin {
 				} else {
 					console.log('loading file', file.name);
 					store.file = file;
-					const fm = store.getFrontMatter(file);
+					const fm = this.getFrontMatter(file);
 					store.data = (this.isTemplate(file.path))
 						? store.getTemplate(file.path)
 						: new NoteData(fm, this.settings.typesProperty);
@@ -75,7 +75,7 @@ export default class MetaViewPlugin extends Plugin {
 						if (file === store.file) store.getTemplate
 						if (storeData instanceof NoteData) storeData.updateTypeData(this.settings.typesProperty);
 					} else {
-						store.removeNote(file, store.getTypes(cache));
+						store.removeNote(file, this.getTypes(cache));
 						store.addNote(file);
 					}
 					if (file === store.file) loadFile(file);
@@ -86,7 +86,7 @@ export default class MetaViewPlugin extends Plugin {
 				if (this.isTemplate(file.path)) {
 					store.removeTemplate(file.path);
 				} else {
-					store.removeNote(file, store.getTypes(prevCache?.frontmatter || {}))
+					store.removeNote(file, this.getTypes(prevCache?.frontmatter || {}))
 				}
 			}));
 
@@ -94,7 +94,7 @@ export default class MetaViewPlugin extends Plugin {
 				if (file instanceof TFile) {
 					if (oldPath.endsWith('.md')) {
 						if (this.isTemplate(oldPath)) store.removeTemplate(oldPath);
-						else store.removeNote(file, store.getTypes(store.getFrontMatter(file)));
+						else store.removeNote(file, this.getTypes(this.getFrontMatter(file)));
 					}
 					if (file.path.endsWith('.md')) {
 						if (this.isTemplate(file.path)) store.addTemplate(file);
@@ -116,6 +116,14 @@ export default class MetaViewPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		store.init(this);
+	}
+
+	public getFrontMatter(file: TFile) {
+		return this.app.metadataCache.getFileCache(file)?.frontmatter || {};
+	}
+
+	public getTypes(fm: FrontMatterCache) {
+		return arrayWrap(fm[this.settings.typesProperty]);
 	}
 
 	private isTemplate(path: string) {

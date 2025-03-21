@@ -39,16 +39,14 @@
       span.metadata-property-icon(bind:this="{expandedIcon}")
       | { filename }
 
-    +startif("data !== null")
-      +startif("expanded")
+    +if("data !== null")
+      +if("expanded")
         div.mv-metadata-file-props
           FileProp(key="aliases", entries="{data.fileProps.aliases}")
           FileProp(key="tags", entries="{data.fileProps.tags}")
           FileProp(key="cssclasses", entries="{data.fileProps.cssclasses}")
-          +startif("data instanceof NoteData")
+          +if("data instanceof NoteData")
             FileProp(key="types", entries="{data.types}")
-          +endif
-      +endif
 
       div.metadata-content
         +startif("data instanceof NoteData")
@@ -63,7 +61,6 @@
           +each("Object.keys(data.props) as key (key)")
             TemplateProp({key} context="{data.props}")
         +endif
-    +endif
 </template>
 
 <style lang='sass' scoped>

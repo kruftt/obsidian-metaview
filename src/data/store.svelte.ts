@@ -37,7 +37,8 @@ class MVStore {
 
   public addNote(file: TFile) {
     const notes = this.notes;
-    const types = this.getTypes(this.getFrontMatter(file));
+    const plugin = this.plugin;
+    const types = plugin.getTypes(plugin.getFrontMatter(file));
     let noteArray, t;
     for (t of types) {
       noteArray = notes[t] || (notes[t] = []);
@@ -58,7 +59,7 @@ class MVStore {
   }
 
   public addTemplate(file: TFile) {
-    this.templates[this.getTemplateName(file.path)] = new TemplateData(this.getFrontMatter(file), this.plugin.settings.typesProperty);
+    this.templates[this.getTemplateName(file.path)] = new TemplateData(this.plugin.getFrontMatter(file), this.plugin.settings.typesProperty);
   }
 
   public getTemplate(path: string) {
@@ -71,14 +72,6 @@ class MVStore {
 
   private getTemplateName(path: string) {
     return this.templateNameRegex.exec(path)![1];
-  }
-
-  public getFrontMatter(file: TFile) {
-    return this.plugin.app.metadataCache.getFileCache(file)?.frontmatter || {};
-  }
-
-  public getTypes(fm: FrontMatterCache) {
-    return arrayWrap(fm[this.plugin.settings.typesProperty]);
   }
 
   public sync() {
