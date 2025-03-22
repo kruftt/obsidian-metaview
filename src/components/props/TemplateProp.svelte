@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Menu, setIcon } from 'obsidian';
+  import { onMount } from 'svelte';
   import options from '../options';
   import { blurOnEnter } from '../events';
   import { makePropTemplate } from 'utils';
@@ -11,16 +12,20 @@
   } = $props();
 
   let template = $derived(context[key]);
-  let Options = $derived(options[template.type as keyof typeof options] || null);
+  let Options = $derived(template && options[template.type as keyof typeof options] || null);
   
   let keyInput!: HTMLInputElement;
 
   let typeIcon!: HTMLElement;
-  $effect(() => typeIcon && setIcon(typeIcon, TYPE_ICONS[template.type]));
+  $effect(() => typeIcon && template && setIcon(typeIcon, TYPE_ICONS[template.type]));
   
   let contextIcon!: HTMLElement;
-  let expanded = $state(true);
-  $effect(() => setIcon(contextIcon, key ? expanded ? 'chevron-down' : 'chevron-right' : 'plus'));
+  let expanded = $state(false);
+  $effect(() => setIcon(contextIcon, (key && expanded) ? 'chevron-down' : 'chevron-right'));
+
+  let plusIcon!: HTMLElement;
+  onMount(() => { setIcon(plusIcon, 'plus'); });
+  // $effect(() => (key.length > 0 && plusIcon) ? undefined : setIcon(plusIcon, 'plus'));
   
   function openContextMenu(e: MouseEvent) {
     const menu = new Menu();
@@ -80,22 +85,32 @@
     if (key) expanded = !expanded
     else keyInput.focus();
   }
+
+
 </script>
 
 <template lang="pug">
   div.metadata-template-property
     div.metadata-property
       div.metadata-property-key
-        span.metadata-property-icon(
+        div.metadata-property-icon(
           bind:this="{contextIcon}"
+          style:display="{Options ? 'flex' : 'none'}"
           onclick="{onContext}"
         )
-        +if("key")
-          span.metadata-property-icon(
-            bind:this="{typeIcon}"
-            onclick="{openContextMenu}"
-            oncontextmenu="{openContextMenu}"
-          )
+
+        div.metadata-property-icon(
+          bind:this="{typeIcon}"
+          style:display="{key ? 'flex' : 'none'}"
+          onclick="{openContextMenu}"
+          oncontextmenu="{openContextMenu}"
+        )
+
+        div.metadata-property-icon(
+          bind:this="{plusIcon}"
+          style:display="{key ? 'none' : 'flex'}"
+          onclick!="{() => keyInput.focus()}"
+        )
       
         input.metadata-property-key-input.mv-property-key-input(
           value="{key}"
@@ -108,26 +123,30 @@
       div.metadata-property-value
         +if("key")
           select.dropdown(value="{template.type}" onchange="{changeTemplate}")
-            option(value="json") json
-            option(value="boolean") checkbox
+            option(value="text") text
+            option(value="boolean") boolean
+            option(value="number") number
+            option(value="select") select
+            option(value="multi") multi-select
+            option(value="link") link
+            option(disabled) ------------
             option(value="date") date
+            option(value="time") time
             option(value="datetime-local") datetime
             option(value="month") month
-            option(value="link") link
-            option(value="multi") multi
-            option(value="number") number
+            option(disabled) ------------
+            option(value="tuple") tuple
             option(value="array") array
             option(value="record") record
-            option(value="select") select
-            option(value="text") text
-            option(value="time") time
-            option(value="tuple") tuple
+            option(value="map") map
+            option(value="json") json
         
     +if('key && expanded')
-      +if('Options') 
+      +startif('Options') 
         Options({template} this="{options[template.type]}")
-        +else 
-          div ((options))
+      +else 
+        div ((options))
+      +endif
 
         //- remove If once options implemented
 </template>
@@ -135,7 +154,7 @@
 <style lang="sass">
   .metadata-template-property
     padding: var(--size-4-1) 0
-    border-top: var(--border-width) solid var(--metadata-divider-color)
+    // border-top: var(--border-width) solid var(--metadata-divider-color)
 
   .mv-property-key-input
     margin-left: 4px

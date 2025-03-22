@@ -23,14 +23,7 @@
 
   console.log('initializing', expandedIcon);
 
-  onMount(() => {
-    console.log('mounted', expandedIcon);
-
-    $effect(() => {
-      console.log(expandedIcon);
-      setIcon(expandedIcon, expanded ? 'chevron-down' : 'chevron-right')
-    });
-  });
+  $effect(() => setIcon(expandedIcon, expanded ? 'chevron-down' : 'chevron-right'));
 </script>
 
 <template lang='pug'>
@@ -40,33 +33,34 @@
       | { filename }
 
     +if("data !== null")
-      +if("expanded")
-        div.mv-metadata-file-props
+      div.mv-metadata-file-props
+        +if("expanded")
           FileProp(key="aliases", entries="{data.fileProps.aliases}")
           FileProp(key="tags", entries="{data.fileProps.tags}")
           FileProp(key="cssclasses", entries="{data.fileProps.cssclasses}")
-          +if("data instanceof NoteData")
-            FileProp(key="types", entries="{data.types}")
+        +if("data instanceof NoteData")
+          FileProp(key="types", entries="{data.types}")
 
       div.metadata-content
         +startif("data instanceof NoteData")
-          div note
           +each("data.freeProps as key")
             FreeProp({key} context="{data.props}")
-            +each("Object.entries(data.typeData) as [name, typeData]")
-              div.metadata-properties-title {name}
-              +each("Object.entries(typeData.props) as [key, template]")
-                TypedProp({key} {template} context="{data.props}")
+          +each("Object.entries(data.typeData) as [name, typeData]")
+            div.metadata-properties-title {name}
+            +each("Object.entries(typeData.props) as [key, template]")
+              TypedProp({key} {template} context="{data.props}")
         +else
           +each("Object.keys(data.props) as key (key)")
             TemplateProp({key} context="{data.props}")
+          TemplateProp(context="{data.props}")
+
         +endif
 </template>
 
 <style lang='sass' scoped>
   * :global
     .metadata-properties-title
-      margin: 1.0em 0 0 0.5em
+      margin: 1.0em 0 0.4em 0.5em
     
     .mv-metadata-filename
       display: flex
@@ -106,9 +100,22 @@
 
     .mv-metadata-options-spacer
       flex: 0 2 var(--size-4-4)
+    
+    .mv-value-wrapper
+      display: flex
+      align-items: center
+      flex: 1 1 auto
+      padding-left: var(--size-4-1)
+
+  // .mv-types-prop
+  //   border-top: var(--border-width) solid var(--metadata-divider-color)
 
   .mv-metadata-file-props
     padding-bottom: 0.4em
     margin-bottom: 0.6em
-    // border-bottom: var(--border-width) solid var(--background-modifier-border)
+    border-bottom: var(--border-width) solid var(--metadata-divider-color)
+    // background-color: var(--metadata-label-background-active)
+    // box-shadow: -0.1em -0.2em #0006 inset
+    // border-bottom-left-radius: 0.5em
+    // border-bottom-right-radius: 0.5em
 </style>

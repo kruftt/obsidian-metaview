@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { blurOnEnter } from '../events';
   let { template }: { template: MVTextDef } = $props();
 </script>
 
@@ -17,7 +18,7 @@
       label(for="minlength") minlength:
       input(
         name="minlength"
-        type="text"
+        type="number"
         bind:value="{template.minlength}"
       )
     div.mv-metadata-property-option
@@ -25,7 +26,7 @@
       label(for="maxlength") maxlength:
       input(
         name="maxlength"
-        type="text"
+        type="number"
         bind:value="{template.maxlength}"
       )
     div.mv-metadata-property-option

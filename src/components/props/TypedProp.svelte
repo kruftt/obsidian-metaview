@@ -2,7 +2,8 @@
   import { Menu, setIcon } from 'obsidian';
   import { TYPE_ICONS } from 'const';
   import { blurOnEnter } from '../events';
-  import containers from 'components/containers';
+  import Containers from 'components/containers';
+  import Values from 'components/values';
 
   let { context, key, template = { type: "text" } } : {
     context: FrontMatter,
@@ -29,7 +30,8 @@
     }
   });
   
-  let Container = $derived(containers[containerType as keyof typeof containers] || null);
+  let Container = $derived(Containers[containerType as keyof typeof Containers] || null);
+  let Value = $derived(Values[template.type as keyof typeof Values] || null);
   
   let icon!: HTMLElement;
   $effect(() => setIcon(icon, TYPE_ICONS[template.type]));
@@ -92,11 +94,18 @@
       )
       //- div.metadata-property-value
       //- div { context[key] }
-    input.metadata-property-value-input(
-      value="{context[key]}"
-      onkeypress="{blurOnEnter}"
-      onblur="{updateValue}"
-    )
+    
+    //- delegate to value component
+    div.metadata-property-value
+      +startif('Value')
+        Value(bind:value="{context[key]}")
+      +else
+        input.metadata-property-value-input(
+          value="{context[key] || ''}"
+          onkeypress="{blurOnEnter}"
+          onblur="{updateValue}"
+        )
+      +endif
   
   +startif('containerType === "array" || containerType === "map"')
     Container(container="{context[key]}")
@@ -107,10 +116,6 @@
 </template>
 
 <style lang="sass">
-  .context
-    background-color: #fff
-    width: 1em
-    height: 1em
-    
-
+  .metadata-property-key-input
+    padding-left: 0.5em
 </style>

@@ -39,7 +39,7 @@
 </script>
 
 <template lang="pug">
-  div.metadata-property.mv-property
+  div.metadata-property
     div.metadata-property-key.mv-file-key {key}
     div.metadata-property-value
       div.multi-select-container(onclick="{focusLast}")

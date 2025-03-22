@@ -3,10 +3,11 @@
 </script>
 
 <template lang="pug">
-  input(
-    type="checkbox"
-    bind:checked="{ value }"
-  )
+  div.mv-value-wrapper
+    input(
+      type="checkbox"
+      bind:checked="{ value }"
+    )
 </template>
 
 <style scoped lang="sass">

@@ -2,7 +2,6 @@
   import { blurOnEnter } from '../events';
 
   let { value = $bindable() } : { value: any } = $props();
-  
   let stringifiedValue = $derived(JSON.stringify(value).replace(/^"|"$/g, ''));
   
   function updateValue(e: FocusEvent) {
@@ -22,7 +21,6 @@
   }
 </script>
 
-
 <template lang="pug">
   input.metadata-property-value-input(
     value="{stringifiedValue}"
@@ -40,5 +38,4 @@
 </template>
 
 <style lang="sass" scoped>
-
 </style>

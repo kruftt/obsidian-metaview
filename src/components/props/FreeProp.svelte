@@ -49,11 +49,6 @@
 </template>
 
 <style lang="sass">
-  .context
-    background-color: #fff
-    width: 1em
-    height: 1em
-    
   .mv-free-key
     align-items: center
     min-width: calc(var(--metadata-label-width) * 0.8)
