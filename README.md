@@ -13,9 +13,9 @@ Work-in-progress Obsidian plugin to support structured metadata. Uses Svelte 5.
 
 #### Roadmap
 
--[x] Complete data backend for the plugin.
--[ ] Complete prop interface elements.
--[ ] Add initial version to Obsidian plugin store.
+- [x] Complete data backend for the plugin.
+- [ ] Complete prop interface elements.
+- [ ] Add initial version to Obsidian plugin store.
 
 
 #### Future
