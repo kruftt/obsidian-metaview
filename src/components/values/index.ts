@@ -1,8 +1,8 @@
 // import ArrayValue from "./ArrayValue.svelte";
-import BoolValue from "./BoolValue.svelte";
+// import BoolValue from "./BoolValue.svelte";
 // import DateValue from "./DateValue.svelte";
 // import DatetimeValue from "./DatetimeValue.svelte";
-import JsonValue from "./JsonValue.svelte";
+import JsonValue from "./StructuredValue.svelte";
 // import LinkValue from "./LinkValue.svelte";
 // import MonthValue from "./MonthValue.svelte";
 // import MultiValue from "./MultiValue.svelte";
@@ -15,7 +15,7 @@ import JsonValue from "./JsonValue.svelte";
 
 export default {
   // array : ArrayValue,
-  boolean : BoolValue,
+  // boolean : BoolValue,
   // date : DateValue,
   // datetime : DatetimeValue,
   // month: MonthValue,

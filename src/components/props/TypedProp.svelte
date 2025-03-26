@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Menu, setIcon } from 'obsidian';
   import { TYPE_ICONS } from 'const';
-  import { blurOnEnter } from '../events';
+  import { blurOnEnter, getContextMenuCallback } from '../events';
   import Containers from 'components/containers';
   import Values from 'components/values';
 
@@ -13,6 +13,8 @@
 
   // let Value = $derived(values[template.type as keyof typeof values] || null);
 
+  let input!: HTMLElement;
+
   let containerType = $derived.by(() => {
     switch (template.type) {
       case 'record':
@@ -22,9 +24,7 @@
         return template.type;
       case 'json':
         const v = context[key];
-        return v instanceof Array ? 'array'
-          : v instanceof Object ? 'map'
-          : null;
+        return v instanceof Object ? v instanceof Array ? 'array' : 'map' : null;
       default:
         return null;
     }
@@ -36,47 +36,9 @@
   let icon!: HTMLElement;
   $effect(() => setIcon(icon, TYPE_ICONS[template.type]));
   
-  function openContextMenu(e: MouseEvent) {
-    const menu = new Menu();
-
-    if ('default' in template) {
-      menu.addItem((item) => item
-        .setTitle('Default')
-        .setIcon('rotate-ccw')
-        .setSection('danger')
-        .setWarning(true)
-        .onClick(() => context[key] = template.default!)
-      );
-    }
-
-    menu.addItem((item) => item
-      .setTitle('Remove')
-      .setIcon('trash-2')
-      .setSection('danger')
-      .setWarning(true)
-      .onClick(() => {
-        delete context[key];
-      })
-    );
-
-    menu.showAtMouseEvent(e);
-  }
-
-  function updateKey(e: FocusEvent) {
-    console.log("updating key");
-    const target = <HTMLInputElement>e.target;
-    const newKey = target.value;
-    if (newKey in context) {
-      target.value = key;
-      // temporary red outline / shake
-    } else {
-      context[newKey] = context[key];
-      delete context[key];
-    }
-  }
+  const openContextMenu = getContextMenuCallback(context, key, template);
 
   function updateValue(e: FocusEvent) {
-    console.log("updating value");
     const target = <HTMLInputElement>e.target;
     const newValue = target.value;
     context[key] = newValue;
@@ -85,25 +47,26 @@
 
 <template lang="pug">
   div.metadata-property
-    div.metadata-property-key
+    div.metadata-property-key.mv-typed-key(onclick!="{ () => input.focus() }")
       span.metadata-property-icon(bind:this="{icon}" onclick="{openContextMenu}")
-      input.metadata-property-key-input(
-        value="{key}"
-        onkeypress="{blurOnEnter}"
-        onblur="{updateKey}"
-      )
+      div.metadata-property-key-input { key } 
       //- div.metadata-property-value
       //- div { context[key] }
     
     //- delegate to value component
     div.metadata-property-value
       +startif('Value')
-        Value(bind:value="{context[key]}")
+        Value(
+          bind:this="{input}"
+          bind:value="{context[key]}"
+          )
       +else
         input.metadata-property-value-input(
+          bind:this="{input}"
           value="{context[key] || ''}"
           onkeypress="{blurOnEnter}"
           onblur="{updateValue}"
+          type="text"
         )
       +endif
   
@@ -115,7 +78,9 @@
 
 </template>
 
-<style lang="sass">
-  .metadata-property-key-input
-    padding-left: 0.5em
+<style scoped lang="sass">
+  .mv-typed-key
+    padding-left: 0.1em
+    align-items: center
+    flex: 0 0 auto
 </style>

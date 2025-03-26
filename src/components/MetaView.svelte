@@ -11,24 +11,20 @@
   import TypedProp from './props/TypedProp.svelte';
   import TemplateProp from './props/TemplateProp.svelte';
 
+  $effect(() => store.sync());
+
   let data = $derived(store.data);
   let filename = $derived(store.file ? store.file.name : 'Awaiting file...');
   const freeTemplate = { type: 'json', default: '' };
 
-  $effect(() => store.sync());
-
   let expanded = $state(true);
   let expandedIcon!: HTMLElement;
-  
-
-  console.log('initializing', expandedIcon);
-
   $effect(() => setIcon(expandedIcon, expanded ? 'chevron-down' : 'chevron-right'));
 </script>
 
 <template lang='pug'>
   div.metadata-container 
-    div.mv-metadata-filename(onclick!="{() => { expanded = !expanded; console.log(expandedIcon); }}")
+    div.mv-filename(onclick!="{() => { expanded = !expanded; console.log(expandedIcon); }}")
       span.metadata-property-icon(bind:this="{expandedIcon}")
       | { filename }
 
@@ -46,67 +42,26 @@
           +each("data.freeProps as key")
             FreeProp({key} context="{data.props}")
           +each("Object.entries(data.typeData) as [name, typeData]")
-            div.metadata-properties-title {name}
+            div.mv-properties-title {name}
             +each("Object.entries(typeData.props) as [key, template]")
               TypedProp({key} {template} context="{data.props}")
         +else
           +each("Object.keys(data.props) as key (key)")
             TemplateProp({key} context="{data.props}")
           TemplateProp(context="{data.props}")
-
         +endif
 </template>
 
 <style lang='sass' scoped>
-  * :global
-    .metadata-properties-title
-      margin: 1.0em 0 0.4em 0.5em
-    
-    .mv-metadata-filename
-      display: flex
-      align-items: center
-      gap: 4px
+  .mv-filename
+    display: flex
+    align-items: center
+    gap: 4px
 
-      &:hover
-        color: var(--text-normal)
+    &:hover
+      color: var(--text-normal)
 
-    .metadata-property > div
-      border: none
-
-    .metadata-property-key
-      min-width: var(--size-4-3)
-      flex: 0 1.2 auto
-        //- padding-bottom: 1px
   
-    .mv-options-container
-      display: flex
-      flex-direction: column
-
-    .mv-metadata-property-option
-      display: flex
-      margin-top: var(--size-4-1)
-      font-size: var(--metadata-label-font-size)
-      align-items: center
-      gap: var(--size-4-2)
-
-      label
-        //- width: calc(var(--metadata-label-width) * 0.8)
-        width: var(--size-4-16)
-        text-align: right
-        flex: 0 0 auto
-      input
-        flex: 1 1 auto
-        min-width: 0
-
-    .mv-metadata-options-spacer
-      flex: 0 2 var(--size-4-4)
-    
-    .mv-value-wrapper
-      display: flex
-      align-items: center
-      flex: 1 1 auto
-      padding-left: var(--size-4-1)
-
   // .mv-types-prop
   //   border-top: var(--border-width) solid var(--metadata-divider-color)
 
@@ -118,4 +73,47 @@
     // box-shadow: -0.1em -0.2em #0006 inset
     // border-bottom-left-radius: 0.5em
     // border-bottom-right-radius: 0.5em
+
+  * :global
+          
+    select
+      flex-grow: 1
+      border: none
+      &:focus
+        box-shadow: none
+
+    .metadata-property
+      // padding: var(--size-4-1) 0
+      margin: var(--size-4-1) 0
+      border: none
+    
+    .metadata-property-key
+      border: none
+      font-size: var(--metadata-label-font-size)
+      font-weight: var(--metadata-label-font-weight)
+      // background-color: #522
+    
+    .metadata-property-key-input
+      margin: 0 var(--size-4-1)
+  
+    .metadata-property-value
+      border: none
+      // background-color: #255
+
+    .metadata-property-value-input
+      // border: none
+      width: 100%
+
+    .mv-properties-title
+      margin: 1.0em 0 0.4em 0.5em
+
+    .mv-value-wrapper
+      display: flex
+      align-items: center
+      flex: 1 1 auto
+      padding-left: var(--size-4-1)
+
+    input.metadata-property-value-input
+      border-radius: var(--input-radius)
+
 </style>

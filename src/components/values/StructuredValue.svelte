@@ -26,6 +26,7 @@
     value="{stringifiedValue}"
     onkeypress="{blurOnEnter}"
     onblur="{updateValue}"
+    type="text"
   )
 
   //- bind:this="{input}"

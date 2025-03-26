@@ -2,7 +2,7 @@
   import { Menu, setIcon } from 'obsidian';
   import { onMount } from 'svelte';
   import options from '../options';
-  import { blurOnEnter } from '../events';
+  import { blurOnEnter, getContextMenuCallback, getSetKeyCallback } from '../events';
   import { makePropTemplate } from 'utils';
   import { TYPE_ICONS } from 'const';
   
@@ -19,74 +19,20 @@
   let typeIcon!: HTMLElement;
   $effect(() => typeIcon && template && setIcon(typeIcon, TYPE_ICONS[template.type]));
   
-  let contextIcon!: HTMLElement;
+  let expandedIcon!: HTMLElement;
   let expanded = $state(false);
-  $effect(() => setIcon(contextIcon, (key && expanded) ? 'chevron-down' : 'chevron-right'));
+  $effect(() => setIcon(expandedIcon, (key && expanded) ? 'chevron-down' : 'chevron-right'));
 
-  let plusIcon!: HTMLElement;
-  onMount(() => { setIcon(plusIcon, 'plus'); });
-  // $effect(() => (key.length > 0 && plusIcon) ? undefined : setIcon(plusIcon, 'plus'));
+  let newIcon!: HTMLElement;
+  onMount(() => { setIcon(newIcon, 'plus'); });
   
-  function openContextMenu(e: MouseEvent) {
-    const menu = new Menu();
-    
-    // menu.addItem((item) => { item
-    //     .setTitle('Property type')
-    //     // .setIcon(TYPE_ICONS[template.type])
-    //     .setIcon('menu')
-    //     .setSection('type');
-    //   const submenu: Menu = item.setSubmenu();
-    //   for (let type of Object.keys(options)) {
-    //     submenu.addItem((i) => i
-    //       .setTitle(type)
-    //       .setIcon(TYPE_ICONS[type])
-    //       .onClick(() => {
-    //         context[key] = makePropTemplate({ type });
-    //         store.sync();
-    //       })
-    //     );
-    //   }
-    // })
-    // menu.addSeparator();
-
-    menu.addItem((item) => item
-        .setTitle('Remove')
-        .setIcon('trash-2')
-        .setSection('danger')
-        .setWarning(true)
-        .onClick(() => {
-          delete context[key];
-        })
-      )
-      .showAtMouseEvent(e);
-  }
-
-  function updateKey(e: FocusEvent) {
-    const target = <HTMLInputElement>e.target;
-    const newKey = target.value;
-    if (newKey in context) {
-      // temporary red outline / shake
-      target.value = key;
-    } else {
-      context[newKey] = template || makePropTemplate({ type: 'text' });
-      target.value = '';
-      delete context[key];
-    }
-  }
+  const openContextMenu = getContextMenuCallback(context, key);
+  const setKey = getSetKeyCallback(context, key);
 
   function changeTemplate(e: Event) {
     const type = (<HTMLSelectElement>e.target).value;
     context[key] = makePropTemplate({ type })!;
-    // console.log(template);
-    // store.sync();
   }
-
-  function onContext(e: Event) {
-    if (key) expanded = !expanded
-    else keyInput.focus();
-  }
-
-
 </script>
 
 <template lang="pug">
@@ -94,9 +40,9 @@
     div.metadata-property
       div.metadata-property-key
         div.metadata-property-icon(
-          bind:this="{contextIcon}"
+          bind:this="{expandedIcon}"
           style:display="{Options ? 'flex' : 'none'}"
-          onclick="{onContext}"
+          onclick="{() => expanded = !expanded}"
         )
 
         div.metadata-property-icon(
@@ -107,16 +53,16 @@
         )
 
         div.metadata-property-icon(
-          bind:this="{plusIcon}"
+          bind:this="{newIcon}"
           style:display="{key ? 'none' : 'flex'}"
           onclick!="{() => keyInput.focus()}"
         )
       
-        input.metadata-property-key-input.mv-property-key-input(
+        input.metadata-property-key-input(
           value="{key}"
           bind:this="{keyInput}"
           onkeypress="{blurOnEnter}"
-          onblur="{updateKey}"
+          onblur="{setKey}"
           placeholder="Add Property"
         )
       
@@ -151,17 +97,28 @@
         //- remove If once options implemented
 </template>
 
-<style lang="sass">
-  .metadata-template-property
-    padding: var(--size-4-1) 0
-    // border-top: var(--border-width) solid var(--metadata-divider-color)
+<style scoped lang="sass">
+  .mv-metadata-options-spacer
+    flex: 0 2 var(--size-4-4)
 
-  .mv-property-key-input
-    margin-left: 4px
+  * :global
+    .mv-options-container
+      display: flex
+      flex-direction: column
 
-  select
-    flex-grow: 1
-    border: none
-    &:focus
-      box-shadow: none
+    .mv-metadata-property-option
+      display: flex
+      margin-top: var(--size-4-1)
+      font-size: var(--metadata-label-font-size)
+      align-items: center
+      gap: var(--size-4-2)
+
+      label
+        width: var(--size-4-16)
+        text-align: right
+        flex: 0 0 auto
+      
+      input
+        flex: 1 1 auto
+        min-width: 0    
 </style>

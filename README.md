@@ -1,6 +1,7 @@
 # Obsidian - Metadata View
 
-Work-in-progress Obsidian plugin to support structured metadata. Uses Svelte 5.
+Work-in-progress Obsidian plugin to support structured metadata.  
+Uses Svelte 5, Typescript, Pug, Sass.
 
 #### Features
 

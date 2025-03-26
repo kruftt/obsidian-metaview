@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { setValue } from "components/events";
   let { template }: { template: MVTextDef } = $props();
 </script>
 
@@ -10,7 +11,7 @@
       input(
         name="default"
         type="{template.type}"
-        bind:value="{template.default}"
+        onblur!="{(e) => setValue(e.target, template, 'default')}"
       )
     div.mv-metadata-property-option
       div.mv-metadata-options-spacer
