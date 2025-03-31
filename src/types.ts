@@ -6,23 +6,28 @@ interface MVSettings {
 
 type MVFilePropType = 'types' | 'aliases' | 'cssclasses' | 'tags'
 
-type MVPropDef =
-  | MVJsonDef
-  | MVBoolDef
-  | MVNumberDef
-  | MVTextDef
-  | MVDateDef
-  | MVDateTimeDef
-  | MVTimeDef
-  | MVMonthDef
-  | MVLinkDef
-  | MVSelectDef
-  | MVMultiDef
-  // | MVOptionsDef
-  | MVArrayDef
-  | MVTupleDef
-  | MVMapDef
-  | MVRecordDef
+type MVInputDef =
+| MVBoolDef
+| MVNumberDef
+| MVTextDef
+| MVDateDef
+| MVDateTimeDef
+| MVTimeDef
+| MVMonthDef
+
+type MVSelectDef =
+| MVSelectSingle
+| MVSelectMulti
+
+type MVCollectionDef =
+| MVArrayDef
+| MVTupleDef
+| MVMapDef
+| MVRecordDef
+
+
+type MVPropDef = MVInputDef | MVLinkDef | MVSelectDef | MVCollectionDef | MVJsonDef
+
 
 interface MVJsonDef {
   type: 'json'
@@ -87,19 +92,14 @@ interface MVLinkDef {
   target?: string | null
 }
 
-// interface MVOptionsDef {
-//   type: 'select' | 'multi'
-//   options: Array<boolean | number | string>
-// }
-
-interface MVSelectDef {
+interface MVSelectSingle {
   type: 'select'
-  options: Array<boolean | number | string>
+  options: Array<string>
 }
 
-interface MVMultiDef {
+interface MVSelectMulti {
   type: 'multi'
-  options: Array<boolean | number | string>
+  options: Array<string>
 }
 
 interface MVArrayDef {
@@ -123,11 +123,11 @@ interface MVRecordDef {
 }
 
 type FrontMatterValue =
-  | null
-  | string
-  | number
-  | boolean
-  | FrontMatterValue[]
-  | { [key: string]: FrontMatterValue }
+| null
+| string
+| number
+| boolean
+| FrontMatterValue[]
+| { [key: string]: FrontMatterValue }
 
 type FrontMatter = Record<string, FrontMatterValue>

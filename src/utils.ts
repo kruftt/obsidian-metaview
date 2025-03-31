@@ -4,21 +4,14 @@ export const arrayWrap = (v: unknown) => Array.isArray(v) ? v : (v === undefined
 export const truthy = (v: any) => v;
 
 export function makePropTemplate(v: FrontMatterValue): MVPropDef | null {
-  switch(typeof v) {
+  let t = typeof v;
+  switch(t) {
     case 'boolean':
-      return {
-        type: 'boolean',
-        default: v,
-      };
     case 'number':
-      return {
-        type: 'number',
-        default: v,
-      };
     case 'string':
       return {
-        type: 'text',
-        default: v,
+        type: (t === 'string') ? 'text' : t,
+        default: <any>v,
       };
     
     case 'object':
@@ -44,10 +37,10 @@ function parseObject(v: Record<string, FrontMatterValue>): MVPropDef | null {
         return {
           type,
           options: v.options.reduce(
-            (opts: Array<boolean | number | string>, v) => {
+            (opts: Array<string>, v) => {
               const t = typeof v;
-              if (t === 'boolean' || t === 'number' || t === 'string')
-                opts.push(<boolean | number | string>v);
+              if (t === 'string')
+                opts.push(<string>v);
               return opts;
             }, []
           ),
@@ -100,6 +93,46 @@ function parseObject(v: Record<string, FrontMatterValue>): MVPropDef | null {
       return <MVPropDef><unknown>v;
   }
 }
+
+
+export function createValue(template: MVPropDef = { type: 'json' }) {
+  switch (template.type) {
+    case 'boolean':
+      return template.default || false;
+    case 'number':
+      return template.default || 0;
+    case 'text':
+      return template.default || '';
+    case 'date':
+      return template.default || '';
+    case 'datetime-local':
+      return template.default || '';
+    case 'time':
+      return template.default || '';
+    case 'month':
+      return template.default || '';
+    case 'select':
+      return '';
+    case 'multi':
+      return [];
+    case 'link':
+      return null;
+    case 'array':
+      return [];
+    case 'tuple':
+      return [];
+    case 'map':
+      return {};
+    case 'record':
+      return {};
+    case 'json':
+      return template.default || '';
+    default:
+      return null;
+  }
+}
+
+
 
 // function extractBool(def: Record<string, unknown>, k: string, v: unknown) {
 //   if (typeof v === 'boolean') def[k] = v;

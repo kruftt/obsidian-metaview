@@ -7,10 +7,11 @@
   import NoteData from 'data/NoteData.svelte';
 
   import FileProp from "./props/FileProp.svelte";
-  import FreeProp from './props/FreeProp.svelte';
-  import TypedProp from './props/TypedProp.svelte';
+  import NoteProp from './props/NoteProp.svelte';
   import TemplateProp from './props/TemplateProp.svelte';
-
+  import EditableKey from './props/keys/EditableKey.svelte';
+  import NewKey from './props/keys/NewKey.svelte';
+  
   $effect(() => store.sync());
 
   let data = $derived(store.data);
@@ -20,6 +21,10 @@
   let expanded = $state(true);
   let expandedIcon!: HTMLElement;
   $effect(() => setIcon(expandedIcon, expanded ? 'chevron-down' : 'chevron-right'));
+
+  function addTemplateProp(key: string, target: HTMLInputElement) {
+    data!.props[key] = { type: 'text' };
+  }
 </script>
 
 <template lang='pug'>
@@ -40,15 +45,18 @@
       div.metadata-content
         +startif("data instanceof NoteData")
           +each("data.freeProps as key")
-            FreeProp({key} context="{data.props}")
+            NoteProp({key} context="{data.props}")
+          div.metadata-property
+            NewKey(context="{data.props}" value="''")
           +each("Object.entries(data.typeData) as [name, typeData]")
             div.mv-properties-title {name}
             +each("Object.entries(typeData.props) as [key, template]")
-              TypedProp({key} {template} context="{data.props}")
+              NoteProp({key} {template} context="{data.props}")
         +else
           +each("Object.keys(data.props) as key (key)")
-            TemplateProp({key} context="{data.props}")
-          TemplateProp(context="{data.props}")
+            TemplateProp({key} context="{data.props}" editable)
+          div.metadata-property
+            NewKey(context="{data.props}" value="{{ type: 'text' }}")
         +endif
 </template>
 

@@ -15,7 +15,7 @@
     if (entry && !entries.includes(entry)) entries.push(entry);
   }
 
-  function submitOnEnter(e: KeyboardEvent) {
+  function submit(e: KeyboardEvent) {
     // e.preventDefault();
     // e.stopPropagation();
     const k = e.key;
@@ -41,7 +41,7 @@
         div.multi-select-input(
           contentEditable
           bind:this="{input}"
-          onkeypress="{submitOnEnter}"
+          onkeypress="{submit}"
           onblur!="{addEntry}"
         )
 </template>

@@ -40,3 +40,100 @@ export const TYPE_ICONS: Record<string, string> = {
   'record': 'list',
   'json': 'braces',
 };
+
+export const INPUT_TYPES = {
+  'json': 'json',
+  'boolean': 'input',
+  'number': 'input',
+  'text': 'input',
+  'date': 'input',
+  'datetime-local': 'input',
+  'time': 'input',
+  'month': 'input',
+  'link': 'select',
+  'select': 'select',
+  'multi': 'select',
+  'array': 'json',
+  'tuple': 'json',
+  'map': 'json',
+  'record': 'json',
+  '': 'json',
+}
+
+export const OPTIONS_TYPES: Record<MVInputDef["type"], { name: string, type: string}[]> = {
+  'boolean': [{ name: 'default', type: 'checkbox' }],
+  'number' : [
+    { name: "default", type: "number" },
+    { name: "min", type: "number" },
+    { name: "max", type: "number" },
+    { name: "step", type: "number" },
+  ],
+  'text' : [
+    { name: "default", type: "text" },
+    { name: "minlength", type: "number" },
+    { name: "maxlength", type: "number" },
+    { name: "pattern", type: "text" }
+  ],
+  'date' : [
+    { name: "default", type: 'date' },
+    { name: "min", type: 'date' },
+    { name: "max", type: 'date' },
+    { name: "step", type: 'number' }
+  ],
+  'datetime-local' : [
+    { name: 'default', type: 'datetime-local' },
+    { name: "min", type: 'datetime-local' },
+    { name: "max", type: 'datetime-local' },
+    { name: "step", type: 'number' }
+  ],
+  'time' : [
+    { name: 'default', type: 'time' },
+    { name: "min", type: 'time' },
+    { name: "max", type: 'time' },
+    { name: "step", type: 'number' }
+  ],
+  'month' : [
+    { name: 'default', type: 'month' },
+    { name: "min", type: 'month' },
+    { name: "max", type: 'month' },
+    { name: "step", type: 'number' }
+  ],
+};
+
+
+export const PROPERTY_TYPES = [
+  "text",
+  "boolean",
+  "number",
+  "select",
+  "multi",
+  "link",
+  "date",
+  "time",
+  "datetime-local",
+  "month",
+  "tuple",
+  "array",
+  "record",
+  "map",
+  "json",
+];
+
+
+// export const CONTAINER_TYPES = {
+//   'json': 'json',
+//   'boolean': null,
+//   'number': null,
+//   'text': null,
+//   'date': null,
+//   'datetime-local': null,
+//   'time': null,
+//   'month': null,
+//   'link': null,
+//   'select': null,
+//   'multi': null,
+//   'array': 'array',
+//   'tuple': 'tuple',
+//   'map': 'map',
+//   'record': 'record',
+// }

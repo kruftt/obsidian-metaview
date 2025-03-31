@@ -5,19 +5,18 @@
   let stringifiedValue = $derived(JSON.stringify(value).replace(/^"|"$/g, ''));
   
   function updateValue(e: FocusEvent) {
-    console.log("updating value");
     const target = <HTMLInputElement>e.target;
-    const innerText = target.innerText;
+    const text = target.value;
     
     try {
-      const newValue = JSON.parse(innerText);
+      const newValue = JSON.parse(text);
       value = newValue;
     } catch (e) {
       if (e instanceof SyntaxError) {
-        value = innerText;
+        value = text;
       } else throw(e);
     }
-    target.innerText = stringifiedValue;
+    target.value = stringifiedValue;
   }
 </script>
 
@@ -28,14 +27,6 @@
     onblur="{updateValue}"
     type="text"
   )
-
-  //- bind:this="{input}"
-  //- div.metadata-property-value-input(
-  //-   contentEditable
-  //-   onkeypress="{blurOnEnter}"
-  //-   onblur="{updateValue}"
-  //- ) { stringifiedValue }
-    
 </template>
 
 <style lang="sass" scoped>

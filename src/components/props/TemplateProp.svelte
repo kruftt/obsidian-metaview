@@ -1,48 +1,68 @@
 <script lang="ts">
-  import { Menu, setIcon } from 'obsidian';
-  import { onMount } from 'svelte';
-  import options from '../options';
-  import { blurOnEnter, getContextMenuCallback, getSetKeyCallback } from '../events';
+  import { setIcon } from 'obsidian';
+  import { blurOnEnter, createContextMenuCallback } from './events';
   import { makePropTemplate } from 'utils';
-  import { TYPE_ICONS } from 'const';
+  import { PROPERTY_TYPES, TYPE_ICONS } from 'const';
+  import EditableKey from './keys/EditableKey.svelte';
+  import SelectValue from './values/SelectValue.svelte';
+  import Configs from './configs';
   
-  let { context, key = "" } : {
+  let { context, key, editable = false, remove = () => delete context[key] } : {
     context: Record<string, MVPropDef>,
     key: string,
+    editable?: boolean,
+    remove?: () => void
   } = $props();
 
   let template = $derived(context[key]);
-  let Options = $derived(template && options[template.type as keyof typeof options] || null);
   
-  let keyInput!: HTMLInputElement;
-
   let typeIcon!: HTMLElement;
-  $effect(() => typeIcon && template && setIcon(typeIcon, TYPE_ICONS[template.type]));
+  $effect(() => setIcon(typeIcon, TYPE_ICONS[template ? template.type : TYPE_ICONS.text]));
   
-  let expandedIcon!: HTMLElement;
   let expanded = $state(false);
-  $effect(() => setIcon(expandedIcon, (key && expanded) ? 'chevron-down' : 'chevron-right'));
-
-  let newIcon!: HTMLElement;
-  onMount(() => { setIcon(newIcon, 'plus'); });
+  let expandedIcon!: HTMLElement;
+  $effect(() => setIcon(expandedIcon, expanded ? 'chevron-down' : 'chevron-right'));
   
-  const openContextMenu = getContextMenuCallback(context, key);
-  const setKey = getSetKeyCallback(context, key);
+  const openContextMenu = createContextMenuCallback(remove);
 
-  function changeTemplate(e: Event) {
-    const type = (<HTMLSelectElement>e.target).value;
-    context[key] = makePropTemplate({ type })!;
-  }
+  let selectedType = $state(template.type);
+  $effect(() => { context[key] = makePropTemplate({ type: selectedType })! });
+
+  let Config = $derived.by(() => {
+    switch (template.type) {
+      case 'json':
+      case 'text':
+      case 'number':
+      case 'boolean':
+      case 'date':
+      case 'datetime-local':
+      case 'time':
+      case 'month':
+        return Configs.input;
+      case 'link':
+        return Configs.link;
+      case 'select':
+      case 'multi':
+        return Configs.select;
+      case 'array':
+      case 'tuple':
+      case 'map':
+      case 'record':
+        return Configs.collection;
+      default:
+        return null;
+    }
+  });
 </script>
 
 <template lang="pug">
   div.metadata-template-property
     div.metadata-property
       div.metadata-property-key
+        
         div.metadata-property-icon(
           bind:this="{expandedIcon}"
-          style:display="{Options ? 'flex' : 'none'}"
-          onclick="{() => expanded = !expanded}"
+          onclick!="{() => expanded = !expanded}"
         )
 
         div.metadata-property-icon(
@@ -52,49 +72,17 @@
           oncontextmenu="{openContextMenu}"
         )
 
-        div.metadata-property-icon(
-          bind:this="{newIcon}"
-          style:display="{key ? 'none' : 'flex'}"
-          onclick!="{() => keyInput.focus()}"
-        )
-      
-        input.metadata-property-key-input(
-          value="{key}"
-          bind:this="{keyInput}"
-          onkeypress="{blurOnEnter}"
-          onblur="{setKey}"
-          placeholder="Add Property"
-        )
+        +startif("editable")
+          EditableKey({context} {key})
+        +else
+          div {key}
+        +endif
       
       div.metadata-property-value
-        +if("key")
-          select.dropdown(value="{template.type}" onchange="{changeTemplate}")
-            option(value="text") text
-            option(value="boolean") boolean
-            option(value="number") number
-            option(value="select") select
-            option(value="multi") multi-select
-            option(value="link") link
-            option(disabled) ------------
-            option(value="date") date
-            option(value="time") time
-            option(value="datetime-local") datetime
-            option(value="month") month
-            option(disabled) ------------
-            option(value="tuple") tuple
-            option(value="array") array
-            option(value="record") record
-            option(value="map") map
-            option(value="json") json
-        
-    +if('key && expanded')
-      +startif('Options') 
-        Options({template} this="{options[template.type]}")
-      +else 
-        div ((options))
-      +endif
-
-        //- remove If once options implemented
+        SelectValue(bind:value="{selectedType}" options="{PROPERTY_TYPES}")
+          
+    +if('expanded')
+      Config({template})
 </template>
 
 <style scoped lang="sass">
@@ -102,7 +90,7 @@
     flex: 0 2 var(--size-4-4)
 
   * :global
-    .mv-options-container
+    .mv-content-container
       display: flex
       flex-direction: column
 
