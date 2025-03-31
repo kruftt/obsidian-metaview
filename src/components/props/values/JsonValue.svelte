@@ -2,8 +2,9 @@
   import { blurOnEnter } from '../events';
 
   let { value = $bindable() } : { value: any } = $props();
-  let stringifiedValue = $derived(JSON.stringify(value).replace(/^"|"$/g, ''));
+  let stringifiedValue = $derived(JSON.stringify(value || '').replace(/^"|"$/g, ''));
   
+
   function updateValue(e: FocusEvent) {
     const target = <HTMLInputElement>e.target;
     const text = target.value;

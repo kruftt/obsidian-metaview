@@ -20,7 +20,6 @@
   $effect(() => setIcon(icon, TYPE_ICONS[template?.type || 'json']));
 
   let inputType = $derived(INPUT_TYPES[template?.type || '']);
-  // let Input = $derived(Inputs[<keyof typeof Inputs>inputType]);
   let Collection = $derived.by(() => {
     let t;
     if (template) {
@@ -45,7 +44,7 @@
     return null;
   });
 
-const openContextMenu = createContextMenuCallback(remove,
+  const openContextMenu = createContextMenuCallback(remove,
     (<MVInputDef>template)?.default
       ? () => { context[key] = (<MVInputDef>template)?.default! }
       : undefined
