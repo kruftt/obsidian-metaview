@@ -6,6 +6,7 @@
   import EditableKey from './keys/EditableKey.svelte';
   import SelectValue from './values/SelectValue.svelte';
   import Configs from './configs';
+  import createExpand from 'components/expand.svelte';
   
   let { context, key, editable = false, remove = () => delete context[key] } : {
     context: Record<string, MVPropDef>,
@@ -17,12 +18,9 @@
   let template = $derived(context[key]);
   
   let typeIcon!: HTMLElement;
-  $effect(() => setIcon(typeIcon, TYPE_ICONS[template ? template.type : TYPE_ICONS.text]));
+  $effect(() => setIcon(typeIcon, TYPE_ICONS[template.type]));
   
-  let expanded = $state(false);
-  let expandedIcon!: HTMLElement;
-  $effect(() => setIcon(expandedIcon, expanded ? 'chevron-down' : 'chevron-right'));
-  
+  const expand = createExpand();
   const openContextMenu = createContextMenuCallback(remove);
 
   let selectedType = $state(template.type);
@@ -36,8 +34,8 @@
       div.metadata-property-key
         
         div.metadata-property-icon(
-          bind:this="{expandedIcon}"
-          onclick!="{() => expanded = !expanded}"
+          bind:this="{expand.icon}"
+          onclick!="{expand.toggle}"
         )
 
         div.metadata-property-icon(
@@ -56,7 +54,7 @@
       div.metadata-property-value
         SelectValue(bind:value="{selectedType}" options="{PROPERTY_TYPES}")
           
-    +if('expanded')
+    +if('expand.open')
       Config({template})
 </template>
 

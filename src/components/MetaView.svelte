@@ -11,16 +11,14 @@
   import TemplateProp from './props/TemplateProp.svelte';
   import EditableKey from './props/keys/EditableKey.svelte';
   import NewKey from './props/keys/NewKey.svelte';
+  import createExpand from './expand.svelte';
   
   $effect(() => store.sync());
 
   let data = $derived(store.data);
   let filename = $derived(store.file ? store.file.name : 'Awaiting file...');
   const freeTemplate = { type: 'json', default: '' };
-
-  let expanded = $state(true);
-  let expandedIcon!: HTMLElement;
-  $effect(() => setIcon(expandedIcon, expanded ? 'chevron-down' : 'chevron-right'));
+  const expand = createExpand();
 
   function addTemplateProp(key: string, target: HTMLInputElement) {
     data!.props[key] = { type: 'text' };
@@ -29,13 +27,13 @@
 
 <template lang='pug'>
   div.metadata-container 
-    div.mv-filename(onclick!="{() => { expanded = !expanded; }}")
-      span.metadata-property-icon(bind:this="{expandedIcon}")
+    div.mv-filename(onclick!="{expand.toggle}")
+      span.metadata-property-icon(bind:this="{expand.icon}")
       | { filename }
 
     +if("data !== null")
       div.mv-metadata-file-props
-        +if("expanded")
+        +if("expand.open")
           FileProp(key="aliases", entries="{data.fileProps.aliases}")
           FileProp(key="tags", entries="{data.fileProps.tags}")
           FileProp(key="cssclasses", entries="{data.fileProps.cssclasses}")
