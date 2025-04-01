@@ -3,11 +3,11 @@
   import { blurOnEnter, createContextMenuCallback } from './events';
   import { INPUT_TYPES, TYPE_ICONS } from 'const';
   import InputValue from './values/InputValue.svelte';
+  import LinkValue from './values/LinkValue.svelte';
   import JsonValue from './values/JsonValue.svelte';
   import SelectValue from './values/SelectValue.svelte';
   import Collections from './collections'
   import EditableKey from './keys/EditableKey.svelte';
-  import store from 'data/store.svelte'
 
   let { context, key, remove = () => delete context[key], template } : {
     context: FrontMatter
@@ -21,34 +21,20 @@
 
   let inputType = $derived(INPUT_TYPES[template?.type || '']);
   let Collection = $derived.by(() => {
-    let t;
     if (template) {
-      t = template.type;
-      switch (t) {
-        case 'array':
-        case 'map':
-        case 'tuple':
-        case 'record':
-          return Collections[t];
-        case 'json':
-          break;
-        default:
-          return null;
-      }
+      const t = template.type;
+      const C = Collections[<keyof typeof Collections>t];
+      if (C) return C;
+      if (t !== "json") return null;
     }
     if (typeof context[key] === 'object') {
-      return context[key] instanceof Array
-        ? Collections.array
-        : Collections.map;
+      return context[key] instanceof Array ? Collections.array : Collections.map;
     }
     return null;
   });
 
   const openContextMenu = createContextMenuCallback(remove,
-    (<MVInputDef>template)?.default
-      ? () => { context[key] = (<MVInputDef>template)?.default! }
-      : undefined
-    );
+    (<MVInputDef>template)?.default ? () => { context[key] = (<MVInputDef>template)?.default! } : undefined);
 </script>
 
 <template lang="pug">
@@ -63,17 +49,15 @@
     div.metadata-property-value
       +startif('inputType === "input"')
         InputValue(name="{key}" type="{template.type}" bind:value="{context[key]}")
+      +elseif('inputType === "link"')
+        LinkValue(name="{key}" bind:value="{context[key]}" target="{template.target}")
       +elseif('inputType === "select"')
-        +startif('template.type === "link"')
-          SelectValue(name="{key}" bind:value="{context[key]}"
-            options!="{store.getNotesByType(template.target)}"
-          )
-          +else
-            SelectValue(name="{key}" bind:value="{context[key]}"
-              options="{template.options}"
-              multiple="{template.type === 'multi'}"
-            )
-        +endif
+        SelectValue(
+          name="{key}"
+          bind:value="{context[key]}"
+          options="{template.options}"
+          multiple="{template.type === 'multi'}"
+        )
       +else
         JsonValue(bind:value="{context[key]}")
       +endif

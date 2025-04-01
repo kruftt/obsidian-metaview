@@ -1,13 +1,15 @@
 <script lang="ts">
   let {
     name,
-    value = $bindable(),
     options = [],
+    value = $bindable(),
+    values = options,
     multiple
   } : {
     name?: string,
-    value: any,
     options: string[],
+    value: any,
+    values: any[],
     multiple: boolean
   } = $props();
 
@@ -18,13 +20,13 @@
   +startif('multiple')
     select.dropdown(name="{name}" bind:value="{value}" multiple)
       option(value="" disabled selected hidden) Select an option...
-      +each('options as option')
-        option(value="{option}") {option}
+      +each('options as option, i')
+        option(value="{values[i]}") {option}
   +else
     select.dropdown(name="{name}" bind:value="{value}")
-        option(value="" disabled selected hidden) Select an option...
-        +each('options as option')
-          option(value="{option}") {option}
+      option(value="" disabled selected hidden) Select an option...
+      +each('options as option, i')
+        option(value="{values[i]}") {option}
   +endif
 </template>
 

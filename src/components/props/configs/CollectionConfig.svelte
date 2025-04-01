@@ -17,7 +17,6 @@
           TemplateProp(
             context="{template}"
             key="elementType"
-            editable
           )
         +elseif('template.type === "tuple"')
           +each('template.elementTypes as type, i')

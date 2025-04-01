@@ -4,8 +4,22 @@ import LinkConfig from "./LinkConfig.svelte";
 import SelectConfig from "./SelectConfig.svelte";
 
 export default {
-  'collection': CollectionConfig,
-  'input': InputConfig,
-  'link': LinkConfig,
-  'select': SelectConfig,
+  "json": InputConfig,
+  "text": InputConfig,
+  "number": InputConfig,
+  "boolean": InputConfig,
+  "date": InputConfig,
+  "datetime-local": InputConfig,
+  "time": InputConfig,
+  "month": InputConfig,
+ 
+  "link": LinkConfig,
+  
+  "select": SelectConfig,
+  "multi": SelectConfig,
+  
+  "tuple": CollectionConfig,
+  "record": CollectionConfig,
+  "array": CollectionConfig,
+  "map": CollectionConfig,
 }

@@ -22,13 +22,11 @@ export default class MetaView extends ItemView {
     }
 
     async onOpen() {
-        console.log('View Open');
         // @ts-ignore
         this.component = mount(Component, { target: this.contentEl });
     }
     
     async onClose() {
-        console.log('View Close');
         unmount(this.component);
     }
 }

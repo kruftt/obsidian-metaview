@@ -27,7 +27,6 @@ function parseObject(v: Record<string, FrontMatterValue>): MVPropDef | null {
   
   const type = v.type;
   if (typeof type !== 'string' || !VALID_TYPES[type]) return null;
-  
   let config;
   
   switch (type) {
@@ -72,6 +71,13 @@ function parseObject(v: Record<string, FrontMatterValue>): MVPropDef | null {
       return {
         type,
         elementTypes: config,
+      };
+
+    case 'map':
+      config = makePropTemplate(v.elementType);
+      return {
+        type,
+        elementType: config || { type: 'text' },
       };
 
     case 'record':

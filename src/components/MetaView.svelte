@@ -29,7 +29,7 @@
 
 <template lang='pug'>
   div.metadata-container 
-    div.mv-filename(onclick!="{() => { expanded = !expanded; console.log(expandedIcon); }}")
+    div.mv-filename(onclick!="{() => { expanded = !expanded; }}")
       span.metadata-property-icon(bind:this="{expandedIcon}")
       | { filename }
 

@@ -1,9 +1,8 @@
-import { type FrontMatterCache, TFile, Vault } from 'obsidian'
+import { TFile, Vault } from 'obsidian'
 import TemplateData from "./TemplateData.svelte"
 import NoteData from './NoteData.svelte'
 import type MetaViewPlugin from 'Plugin';
 import * as CONST from 'const' 
-import { arrayWrap } from 'utils'
 
 class MVStore {
   public notes: Record<string, Array<TFile>>;
@@ -76,11 +75,11 @@ class MVStore {
 
   public getNotesByType(type: string) {
     const files = this.notes[type] || [];
-    return files.map((v) => v.basename);
+    return files.map((v) => v.name);
   }
 
   public sync() {
-    console.log('sync');
+    console.log('sync', this.updating);
     const data = this.data;
     if (data === null) return;
 
@@ -88,7 +87,6 @@ class MVStore {
     const fileProps = $state.snapshot(data.fileProps);
     const props = $state.snapshot(data.props);
     this.updating = !this.updating;
-    console.log('updating', this.updating);
 
     if (this.updating) {
       if (data instanceof NoteData) {

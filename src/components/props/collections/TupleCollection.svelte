@@ -1,5 +1,4 @@
 <script lang='ts'>
-  console.log('TupleCollection');
   import NoteProp from "../NoteProp.svelte";
   let { data = $bindable(), template } : {
     data: FrontMatterValue[]

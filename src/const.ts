@@ -16,6 +16,7 @@ export const VALID_TYPES: Record<string, true> = {
   'array': true,
   'tuple': true,
   'record': true,
+  'map': true,
   'json': true,
 };
 export const FILE_PROPS: Record<string, true> = {
@@ -37,6 +38,7 @@ export const TYPE_ICONS: Record<string, string> = {
   'multi': 'list-checks',
   'array': 'list-ordered',
   'tuple': 'align-justify',
+  'map': 'list',
   'record': 'list',
   'json': 'braces',
 };
@@ -50,7 +52,7 @@ export const INPUT_TYPES = {
   'datetime-local': 'input',
   'time': 'input',
   'month': 'input',
-  'link': 'select',
+  'link': 'link',
   'select': 'select',
   'multi': 'select',
   'array': 'json',

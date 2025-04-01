@@ -26,33 +26,8 @@
   const openContextMenu = createContextMenuCallback(remove);
 
   let selectedType = $state(template.type);
-  $effect(() => { context[key] = makePropTemplate({ type: selectedType })! });
-
-  let Config = $derived.by(() => {
-    switch (template.type) {
-      case 'json':
-      case 'text':
-      case 'number':
-      case 'boolean':
-      case 'date':
-      case 'datetime-local':
-      case 'time':
-      case 'month':
-        return Configs.input;
-      case 'link':
-        return Configs.link;
-      case 'select':
-      case 'multi':
-        return Configs.select;
-      case 'array':
-      case 'tuple':
-      case 'map':
-      case 'record':
-        return Configs.collection;
-      default:
-        return null;
-    }
-  });
+  let Config = $derived(Configs[template.type]);
+  $effect(() => { if (selectedType !== template.type) context[key] = makePropTemplate({ type: selectedType })! });
 </script>
 
 <template lang="pug">
