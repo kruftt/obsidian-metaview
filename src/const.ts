@@ -54,7 +54,7 @@ export const INPUT_TYPES = {
   'month': 'input',
   'link': 'link',
   'select': 'select',
-  'multi': 'select',
+  'multi': 'json',
   'array': 'json',
   'tuple': 'json',
   'map': 'json',
@@ -102,7 +102,6 @@ export const OPTIONS_TYPES: Record<MVInputDef["type"], { name: string, type: str
   ],
 };
 
-
 export const PROPERTY_TYPES = [
   "text",
   "boolean",
@@ -120,22 +119,3 @@ export const PROPERTY_TYPES = [
   "map",
   "json",
 ];
-
-
-// export const CONTAINER_TYPES = {
-//   'json': 'json',
-//   'boolean': null,
-//   'number': null,
-//   'text': null,
-//   'date': null,
-//   'datetime-local': null,
-//   'time': null,
-//   'month': null,
-//   'link': null,
-//   'select': null,
-//   'multi': null,
-//   'array': 'array',
-//   'tuple': 'tuple',
-//   'map': 'map',
-//   'record': 'record',
-// }

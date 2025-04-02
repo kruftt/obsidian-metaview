@@ -3,8 +3,6 @@ import * as CONST from './const';
 import Component from './components/MetaView.svelte';
 import { mount, unmount } from 'svelte';
 
-// const UPDATE_EVENTS = ["file-open", "window-open", "editor-change"];
-
 export default class MetaView extends ItemView {
     component: Component;
 

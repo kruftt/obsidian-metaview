@@ -100,7 +100,6 @@ function parseObject(v: Record<string, FrontMatterValue>): MVPropDef | null {
   }
 }
 
-
 export function createValue(template: MVPropDef = { type: 'json' }) {
   switch (template.type) {
     case 'boolean':
@@ -137,23 +136,3 @@ export function createValue(template: MVPropDef = { type: 'json' }) {
       return null;
   }
 }
-
-
-
-// function extractBool(def: Record<string, unknown>, k: string, v: unknown) {
-//   if (typeof v === 'boolean') def[k] = v;
-// }
-
-// function extractNumber(v: unknown): number | null {
-//   if (typeof v === 'number') return v;
-//   return null;
-// }
-
-// function extractString(v: unknown): string | null {
-//   if (typeof v === 'string') return v;
-//   return null;
-// }
-
-// function makeJsonProp(v: FrontMatterValue): MVJsonDef {
-//   return { type: 'json', default: v };
-// }

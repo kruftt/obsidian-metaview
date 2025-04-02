@@ -6,8 +6,9 @@
   import LinkValue from './values/LinkValue.svelte';
   import JsonValue from './values/JsonValue.svelte';
   import SelectValue from './values/SelectValue.svelte';
-  import Collections from './collections'
+  import ContentContainers from './contents'
   import EditableKey from './keys/EditableKey.svelte';
+  import createExpand from 'components/expand.svelte';
 
   let { context, key, remove = () => delete context[key], template } : {
     context: FrontMatter
@@ -20,29 +21,36 @@
   $effect(() => setIcon(icon, TYPE_ICONS[template?.type || 'json']));
 
   let inputType = $derived(INPUT_TYPES[template?.type || '']);
-  let Collection = $derived.by(() => {
+  let Contents = $derived.by(() => {
     if (template) {
       const t = template.type;
-      const C = Collections[<keyof typeof Collections>t];
+      const C = ContentContainers[<keyof typeof ContentContainers>t];
       if (C) return C;
       if (t !== "json") return null;
     }
     if (typeof context[key] === 'object') {
-      return context[key] instanceof Array ? Collections.array : Collections.map;
+      return context[key] instanceof Array ? ContentContainers.array : ContentContainers.map;
     }
     return null;
   });
 
+  const expand = createExpand();
   const openContextMenu = createContextMenuCallback(remove,
     (<MVInputDef>template)?.default ? () => { context[key] = (<MVInputDef>template)?.default! } : undefined);
 </script>
 
 <template lang="pug">
   div.metadata-property
-    div.metadata-property-key
+    div.metadata-property-key(class="{template ? 'mv-bound-key' : 'mv-free-key'}")
+      div.metadata-property-icon(
+        bind:this="{expand.icon}"
+        onclick!="{expand.toggle}"
+        style:opacity="{Contents ? 1 : 0}"
+      )
+
       span.metadata-property-icon(bind:this="{icon}" onclick="{openContextMenu}")
       +startif('template')
-        label(name="{key}") {key}
+        label.mv-typed-key(for="{key}") {key}
       +else
         EditableKey({context} {key})
       +endif
@@ -59,26 +67,18 @@
           multiple="{template.type === 'multi'}"
         )
       +else
-        JsonValue(bind:value="{context[key]}")
+        JsonValue(bind:value="{context[key]}" editable!="{!template || template.type === 'json'}")
       +endif
 
-  +if("Collection") 
-    Collection({template} bind:data="{context[key]}")
+  +if("expand.open && Contents") 
+    Contents({template} bind:data="{context[key]}")
 </template>
 
 <style lang="sass">
-  .mv-typed-key
-    padding-left: 0.1em
-    align-items: center
+  .mv-bound-key
     flex: 0 0 auto
+
   .mv-free-key
-    align-items: center
-    min-width: var(--metadata-label-width) 
-    color: var(--metadata-label-text-color)
-    font-size: var(--metadata-label-font-size)
-    font-weight: var(--metadata-label-font-weight)
-    height: var(--input-height)
     flex: 0 0 min-content !important
-    margin-right: 0.2em
-    padding-left: 0.1em
+    
 </style>

@@ -1,10 +1,9 @@
 <script lang="ts">
   import { blurOnEnter } from '../events';
 
-  let { value = $bindable() } : { value: any } = $props();
+  let { editable = false, value = $bindable()} : { editable: boolean, value: any } = $props();
   let stringifiedValue = $derived(JSON.stringify(value || '').replace(/^"|"$/g, ''));
   
-
   function updateValue(e: FocusEvent) {
     const target = <HTMLInputElement>e.target;
     const text = target.value;
@@ -22,12 +21,16 @@
 </script>
 
 <template lang="pug">
-  input.metadata-property-value-input(
-    value="{stringifiedValue}"
-    onkeypress="{blurOnEnter}"
-    onblur="{updateValue}"
-    type="text"
-  )
+  +startif("editable")
+    input.metadata-property-value-input(
+      value="{stringifiedValue}"
+      onkeypress="{blurOnEnter}"
+      onblur="{updateValue}"
+      type="text"
+    )
+  +else
+    div {stringifiedValue}
+  +endif
 </template>
 
 <style lang="sass" scoped>

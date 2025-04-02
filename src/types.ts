@@ -16,8 +16,8 @@ type MVInputDef =
 | MVMonthDef
 
 type MVSelectDef =
-| MVSelectSingle
-| MVSelectMulti
+| MVSelectSingleDef
+| MVSelectMultiDef
 
 type MVCollectionDef =
 | MVArrayDef
@@ -25,9 +25,7 @@ type MVCollectionDef =
 | MVMapDef
 | MVRecordDef
 
-
 type MVPropDef = MVInputDef | MVLinkDef | MVSelectDef | MVCollectionDef | MVJsonDef
-
 
 interface MVJsonDef {
   type: 'json'
@@ -92,12 +90,12 @@ interface MVLinkDef {
   target?: string | null
 }
 
-interface MVSelectSingle {
+interface MVSelectSingleDef {
   type: 'select'
   options: Array<string>
 }
 
-interface MVSelectMulti {
+interface MVSelectMultiDef {
   type: 'multi'
   options: Array<string>
 }

@@ -18,7 +18,7 @@
 
 <template lang="pug">
   +startif('multiple')
-    select.dropdown(name="{name}" bind:value="{value}" multiple)
+    select(name="{name}" bind:value="{value}" multiple)
       option(value="" disabled selected hidden) Select an option...
       +each('options as option, i')
         option(value="{values[i]}") {option}

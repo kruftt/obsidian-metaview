@@ -22,14 +22,6 @@ export default class NoteData {
     this.updateTypeData(typesProperty);
   }
 
-  // Add / Remove Prop?
-  // in order to update type data?
-  // sln: effect
-  // freeProps, boundProps could be derived state (they are anyway)
-  // They are currently sets because
-  // - it removes duplicate values
-  // - more simple add/remove
-
   public updateTypeData(typesProperty: string) {
     const typeData: Record<string, TemplateData> = this.typeData = {};
     const freeProps = { ...this.props };

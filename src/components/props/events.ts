@@ -11,7 +11,6 @@ export function createContextMenuCallback(remove: () => void, reset?: () => void
   return (e: MouseEvent) => {
     const menu = new Menu();
 
-    // if (template && input_types.contains(template.type))
     if (reset) {
       menu.addItem((item) => item
         .setTitle('Default')

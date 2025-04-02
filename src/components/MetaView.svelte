@@ -58,7 +58,7 @@
         +endif
 </template>
 
-<style lang='sass' scoped>
+<style lang='sass'>
   .mv-filename
     display: flex
     align-items: center
@@ -67,18 +67,11 @@
     &:hover
       color: var(--text-normal)
 
-  
-  // .mv-types-prop
-  //   border-top: var(--border-width) solid var(--metadata-divider-color)
-
   .mv-metadata-file-props
     padding-bottom: 0.4em
     margin-bottom: 0.6em
     border-bottom: var(--border-width) solid var(--metadata-divider-color)
-    // background-color: var(--metadata-label-background-active)
-    // box-shadow: -0.1em -0.2em #0006 inset
-    // border-bottom-left-radius: 0.5em
-    // border-bottom-right-radius: 0.5em
+
 
   * :global
           
@@ -89,25 +82,27 @@
         box-shadow: none
 
     .metadata-property
-      // padding: var(--size-4-1) 0
       margin: var(--size-4-1) 0
       border: none
     
     .metadata-property-key
       border: none
+      min-width: var(--metadata-label-width) 
+      color: var(--metadata-label-text-color)
       font-size: var(--metadata-label-font-size)
       font-weight: var(--metadata-label-font-weight)
-      // background-color: #522
+      margin-right: 0.2em
+      padding-left: 0.1em
+      align-items: center
+      height: var(--input-height)
     
     .metadata-property-key-input
       margin: 0 var(--size-4-1)
   
     .metadata-property-value
       border: none
-      // background-color: #255
 
     .metadata-property-value-input
-      // border: none
       width: 100%
 
     .mv-properties-title
@@ -121,5 +116,41 @@
 
     input.metadata-property-value-input
       border-radius: var(--input-radius)
+    
+    .mv-content-container
+      margin-left: var(--size-4-4)
 
+    input
+      background: var(--metadata-input-background)
+      // color: var(--text-faint)
+      font-variant-numeric: tabular-nums
+      border: none
+      font-family: inherit
+      outline: none
+
+    input[type='month']
+      border: none
+      color: var(--text-normal)
+      -webkit-app-region: no-drag
+      position: relative
+      padding: var(--size-4-1) var(--size-4-2)
+      padding-inline-start: var(--size-4-6)
+      &::-webkit-calendar-picker-indicator
+        position: absolute
+        left: var(--size-4-1)
+        right: auto
+        opacity: 0.5
+    
+    input[type='time']
+      border: none
+      color: var(--text-normal)
+      -webkit-app-region: no-drag
+      position: relative
+      padding: var(--size-4-1) var(--size-4-2)
+      padding-inline-start: var(--size-4-6)
+      &::-webkit-calendar-picker-indicator
+        position: absolute
+        left: -5px
+        right: auto
+        opacity: 0.5
 </style>

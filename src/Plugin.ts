@@ -5,7 +5,6 @@ import store from './data/store.svelte'
 import NoteData from 'data/NoteData.svelte';
 import { arrayWrap } from './utils'
 
-// const FILENAME_REGEX = /^(?:.*\/)?(.+).md$/;
 const DEFAULT_SETTINGS: MVSettings = {
 	templatesPath: '',
 	typesProperty: 'types',
@@ -30,11 +29,8 @@ export default class MetaViewPlugin extends Plugin {
 	}
 
 	async onload() {
-		// console.log('Plugin load');
 		await this.loadSettings();
 		this.addSettingTab(new MetaViewSettingTab(this.app, this));
-
-		// create store here
 		this.registerView(CONST.ID, (leaf) => new MetaView(leaf));
 
 		const ribbonIconEl = this.addRibbonIcon('info', CONST.NAME, (evt: MouseEvent) => { this.activateView(); });
