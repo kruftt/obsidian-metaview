@@ -1,31 +1,39 @@
 <script lang="ts">
   import { blurOnEnter } from '../events';
   
-  let { name, type, value = $bindable() } : {
+  let { name, template, value = $bindable() } : {
     name?: string,
-    type: MVInputDef["type"],
-    value: string,
+    template: MVInputDef
+    value: any,
   } = $props();
+  
+  let type = $derived(template.type); 
+  let inputProps = $derived(template.props || {});
+
+  function syncValue (e: Event) {
+    const target = <HTMLInputElement>e.target;
+    const valid = target.validity.valid;
+    if (valid) value = target.value;
+  }
 </script>
 
-<template lang="pug">
-  +startif('type === "boolean"')
-    input.metadata-property-value-input(
-      {name}
-      type="checkbox"
-      bind:checked="{value}"
+<template>
+  {#if type === "boolean"}
+    <input type="checkbox" class="metadata-property-value-input"
+      {name} bind:checked={value} {...inputProps}
       style:flex="0 0 auto"
-    )
-  +else
-    input.metadata-property-value-input(
-      {name}
-      {type}
-      {value}
-      onkeypress="{blurOnEnter}"
-      onblur!="{(e) => value = e.target.value }"
-    )
-  +endif
+    />
+  {:else}
+    <input {type} class="metadata-property-value-input" 
+      {name} {value} {...inputProps}
+      onkeypress={blurOnEnter}
+      onblur={syncValue}
+    />
+  {/if}
 </template>
 
 <style scoped lang="sass">
+  input:invalid
+    border: var(--size-2-1) solid var(--color-red) !important
+    // background-color: var(--background-modifier-error)
 </style>

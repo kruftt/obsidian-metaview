@@ -43,59 +43,42 @@ export const TYPE_ICONS: Record<string, string> = {
   'json': 'braces',
 };
 
-export const INPUT_TYPES = {
-  'json': 'json',
-  'boolean': 'input',
-  'number': 'input',
-  'text': 'input',
-  'date': 'input',
-  'datetime-local': 'input',
-  'time': 'input',
-  'month': 'input',
-  'link': 'link',
-  'select': 'select',
-  'multi': 'json',
-  'array': 'json',
-  'tuple': 'json',
-  'map': 'json',
-  'record': 'json',
-  '': 'json',
-}
-
 export const OPTIONS_TYPES: Record<MVInputDef["type"], { name: string, type: string}[]> = {
-  'boolean': [{ name: 'default', type: 'checkbox' }],
+  'boolean': [
+    // { name: 'default', type: 'checkbox' }
+  ],
   'number' : [
-    { name: "default", type: "number" },
+    // { name: "default", type: "number" },
     { name: "min", type: "number" },
     { name: "max", type: "number" },
     { name: "step", type: "number" },
   ],
   'text' : [
-    { name: "default", type: "text" },
+    // { name: "default", type: "text" },
     { name: "minlength", type: "number" },
     { name: "maxlength", type: "number" },
     { name: "pattern", type: "text" }
   ],
   'date' : [
-    { name: "default", type: 'date' },
+    // { name: "default", type: 'date' },
     { name: "min", type: 'date' },
     { name: "max", type: 'date' },
     { name: "step", type: 'number' }
   ],
   'datetime-local' : [
-    { name: 'default', type: 'datetime-local' },
+    // { name: 'default', type: 'datetime-local' },
     { name: "min", type: 'datetime-local' },
     { name: "max", type: 'datetime-local' },
     { name: "step", type: 'number' }
   ],
   'time' : [
-    { name: 'default', type: 'time' },
+    // { name: 'default', type: 'time' },
     { name: "min", type: 'time' },
     { name: "max", type: 'time' },
     { name: "step", type: 'number' }
   ],
   'month' : [
-    { name: 'default', type: 'month' },
+    // { name: 'default', type: 'month' },
     { name: "min", type: 'month' },
     { name: "max", type: 'month' },
     { name: "step", type: 'number' }

@@ -73,8 +73,8 @@ class MVStore {
     return this.templateNameRegex.exec(path)![1];
   }
 
-  public getNotesByType(type: string) {
-    const files = this.notes[type] || [];
+  public getNotesByType(type: string | null | undefined) {
+    const files = type ? this.notes[type] : [];
     return files.map((v) => v.name);
   }
 

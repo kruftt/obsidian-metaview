@@ -1,33 +1,25 @@
 <script lang="ts">
   let {
     name,
-    options = [],
+    options,
+    template,
     value = $bindable(),
-    values = options,
-    multiple
   } : {
-    name?: string,
-    options: string[],
+    name?: string
+    options?: string[]
+    template?: MVSelectDef
     value: any,
-    values: any[],
-    multiple: boolean
   } = $props();
 
-  if (!value) value = multiple ? [] : '';
+  if (!options) options = template?.options || [];
+  if (!value) value = '';
 </script>
 
 <template lang="pug">
-  +startif('multiple')
-    select(name="{name}" bind:value="{value}" multiple)
-      option(value="" disabled selected hidden) Select an option...
-      +each('options as option, i')
-        option(value="{values[i]}") {option}
-  +else
-    select.dropdown(name="{name}" bind:value="{value}")
-      option(value="" disabled selected hidden) Select an option...
-      +each('options as option, i')
-        option(value="{values[i]}") {option}
-  +endif
+  select.dropdown(name="{name}" bind:value="{value}")
+    option(value="" disabled selected hidden) Select an option...
+    +each('options as option')
+      option(value="{option}") {option}
 </template>
 
 <style lang="sass">

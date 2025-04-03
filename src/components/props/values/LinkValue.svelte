@@ -2,15 +2,16 @@
   import store from 'data/store.svelte'
   let {
     name,
-    target = '',
+    template,
     value = $bindable()
   } : {
     name?: string,
-    target: string
+    template: MVLinkDef
     value: any,
   } = $props();
 
   if (!value) value = '';
+  let target = template.target;
   const options = store.getNotesByType(target);
 </script>
 

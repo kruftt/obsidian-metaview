@@ -16,7 +16,7 @@
   $effect(() => store.sync());
 
   let data = $derived(store.data);
-  let filename = $derived(store.file ? store.file.name : 'Awaiting file...');
+  let filename = $derived(store.file ? store.file.name : '');
   const freeTemplate = { type: 'json', default: '' };
   const expand = createExpand();
 
@@ -27,18 +27,18 @@
 
 <template lang='pug'>
   div.metadata-container 
-    div.mv-filename(onclick!="{expand.toggle}")
-      span.metadata-property-icon(bind:this="{expand.icon}")
-      | { filename }
-
     +if("data !== null")
+      div.mv-filename(onclick!="{expand.toggle}")
+        span.metadata-property-icon(bind:this="{expand.icon}")
+        | { filename }
+
       div.mv-metadata-file-props
         +if("expand.open")
           FileProp(key="aliases", entries="{data.fileProps.aliases}")
           FileProp(key="tags", entries="{data.fileProps.tags}")
           FileProp(key="cssclasses", entries="{data.fileProps.cssclasses}")
-        +if("data instanceof NoteData")
-          FileProp(key="types", entries="{data.types}")
+          +if("data instanceof NoteData")
+            FileProp(key="types", entries="{data.types}")
 
       div.metadata-content
         +startif("data instanceof NoteData")

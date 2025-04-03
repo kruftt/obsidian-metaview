@@ -24,7 +24,7 @@
         div.mv-metadata-options-spacer
         span(onclick!="{() => template.options.splice(i, 1)}") x
         Input(
-          type="text"
+          template="{{ type: 'text' }}"
           bind:value="{template.options[i]}"
         )
     

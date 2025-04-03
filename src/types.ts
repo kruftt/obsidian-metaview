@@ -35,54 +35,67 @@ interface MVJsonDef {
 interface MVBoolDef {
   type: 'boolean'
   default?: boolean | null
+  props?: {}
 }
 
 interface MVNumberDef {
   type: 'number'
   default?: number | null
-  min?: number | null
-  max?: number | null
-  step?: number | null
+  props?: {
+    min?: number | null
+    max?: number | null
+    step?: number | null
+  }
 }
 
 interface MVTextDef {
   type: 'text'
   default?: string | null
-  minlength?: number | null
-  maxlength?: number | null
-  pattern?: string | null
+  props?: {
+    minlength?: number | null
+    maxlength?: number | null
+    pattern?: string | null
+  }
 }
 
 interface MVDateDef {
   type: 'date'
   default?: string | null
-  min?: string | null
-  max?: string | null
-  step?: string | null
+  props?: {
+    min?: string | null
+    max?: string | null
+    step?: string | null
+  }
 }
 
 interface MVDateTimeDef {
   type: 'datetime-local'
   default?: string | null
-  min?: string | null
-  max?: string | null
-  step?: string | null
+  props?: {
+    min?: string | null
+    max?: string | null
+    step?: string | null
+  }
 }
 
 interface MVTimeDef {
   type: 'time'
   default?: string | null
-  min?: string | null
-  max?: string | null
-  step?: string | null
+  props?: {
+    min?: string | null
+    max?: string | null
+    step?: string | null
+  }
 }
 
 interface MVMonthDef {
   type: 'month'
   default?: string | null
-  min?: string | null
-  max?: string | null
-  step?: string | null
+  props?: {
+    min?: string | null
+    max?: string | null
+    step?: string | null
+  }
 }
 
 interface MVLinkDef {

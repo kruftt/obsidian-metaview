@@ -1,9 +1,15 @@
 <script lang="ts">
   import { blurOnEnter } from '../events';
 
-  let { editable = false, value = $bindable()} : { editable: boolean, value: any } = $props();
-  let stringifiedValue = $derived(JSON.stringify(value || '').replace(/^"|"$/g, ''));
+  let { name, template, value = $bindable()} : {
+    name: string
+    template?: MVJsonDef | MVCollectionDef | MVSelectMultiDef
+    value: any
+  } = $props();
   
+  let stringifiedValue = $derived(JSON.stringify(value || '').replace(/^"|"$/g, ''));
+  let editable = $derived(!template || template.type === 'json');
+
   function updateValue(e: FocusEvent) {
     const target = <HTMLInputElement>e.target;
     const text = target.value;
@@ -29,9 +35,11 @@
       type="text"
     )
   +else
-    div {stringifiedValue}
+    div.mv-static-json {stringifiedValue}
   +endif
 </template>
 
 <style lang="sass" scoped>
+  .mv-static-json
+    color: var(--text-warning)
 </style>
