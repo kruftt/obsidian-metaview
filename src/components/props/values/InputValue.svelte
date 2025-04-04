@@ -36,4 +36,7 @@
   input:invalid
     border: var(--size-2-1) solid var(--color-red) !important
     // background-color: var(--background-modifier-error)
+
+  input[type="checkbox"]
+    margin-left: var(--size-2-3)
 </style>

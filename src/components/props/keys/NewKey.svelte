@@ -1,6 +1,6 @@
 <script lang='ts'>
   import { blurOnEnter } from '../events';
-  import { createValue } from 'utils'
+  
 
   let { context, value } : {
     context: Record<string, any>

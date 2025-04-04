@@ -3,6 +3,7 @@
   import { blurOnEnter, createContextMenuCallback } from './events';
   import { makePropTemplate } from 'utils';
   import { PROPERTY_TYPES, TYPE_ICONS } from 'const';
+  import StaticKey from './keys/StaticKey.svelte';
   import EditableKey from './keys/EditableKey.svelte';
   import SelectValue from './values/SelectValue.svelte';
   import Configs from './configs';
@@ -38,18 +39,18 @@
           onclick!="{expand.toggle}"
         )
 
+        +startif("editable")
+          EditableKey({context} {key})
+        +else
+          StaticKey({key})
+        +endif
+
         div.metadata-property-icon(
           bind:this="{typeIcon}"
           style:display="{key ? 'flex' : 'none'}"
           onclick="{openContextMenu}"
           oncontextmenu="{openContextMenu}"
         )
-
-        +startif("editable")
-          EditableKey({context} {key})
-        +else
-          div {key}
-        +endif
       
       div.metadata-property-value
         SelectValue(bind:value="{selectedType}" options="{PROPERTY_TYPES}")

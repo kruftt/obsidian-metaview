@@ -1,49 +1,16 @@
 <script lang="ts">
+  import ListValue from './values/ListValue.svelte';
   import { setIcon } from 'obsidian';
 	let { key, entries }: { key: MVFilePropType, entries: string[] } = $props();
   let input!: HTMLDivElement;
-
-  function removeEntry(this: HTMLElement, e: InputEvent) {
-    const entry = this.dataset.entry!;
-    entries.remove(entry);
-    e.stopPropagation();
-  }
-
-  function addEntry() {
-    const entry = (input.textContent || '').trim();
-    input.textContent = '';
-    if (entry && !entries.includes(entry)) entries.push(entry);
-  }
-
-  function submit(e: KeyboardEvent) {
-    // e.preventDefault();
-    // e.stopPropagation();
-    const k = e.key;
-    if (k === ' ' || k === 'Enter') {
-      addEntry();
-    }
-  }
+  import StaticKey from './keys/StaticKey.svelte';
 </script>
 
 <template lang="pug">
   div.metadata-property
-    div.mv-file-key.metadata-property-key {key}
-    div.metadata-property-value
-      div.multi-select-container(onclick!="{() => input.focus()}")
-        +each("entries as entry (entry)")
-          div.multi-select-pill(tabindex="0")
-            div.multi-select-pill-content {entry}
-            div.multi-select-pill-remove-button(
-              use:setIcon="{'x'}"
-              onclick="{removeEntry}"
-              data-entry="{entry}"
-            )
-        div.multi-select-input(
-          contentEditable
-          bind:this="{input}"
-          onkeypress="{submit}"
-          onblur!="{addEntry}"
-        )
+    //- div.mv-file-key.metadata-property-key {key}
+    StaticKey({key})
+    ListValue({entries} editable="{true}")
 </template>
 
 <style scoped lang="sass">

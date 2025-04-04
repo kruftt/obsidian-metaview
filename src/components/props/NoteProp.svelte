@@ -5,6 +5,7 @@
   import Values from './values'
   import ContentContainers from './contents'
   import EditableKey from './keys/EditableKey.svelte';
+  import StaticKey from './keys/StaticKey.svelte';
   import createExpand from 'components/expand.svelte';
 
   let { context, key, remove = () => delete context[key], template } : {
@@ -44,13 +45,13 @@
         onclick!="{expand.toggle}"
         style:opacity="{Contents ? 1 : 0}"
       )
-      span.metadata-property-icon(bind:this="{icon}" onclick="{openContextMenu}")
       +startif('template')
-        label.mv-typed-key(for="{key}") {key}
+        StaticKey({key})
       +else
         EditableKey({context} {key})
       +endif
     div.metadata-property-value
+      div.metadata-property-icon(bind:this="{icon}" onclick="{openContextMenu}")
       Value({template} name="{key}" bind:value="{context[key]}")
 
   +if("expand.open && Contents") 

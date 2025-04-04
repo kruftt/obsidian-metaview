@@ -15,11 +15,13 @@ Uses Svelte 5, Typescript, Pug, Sass.
 #### Roadmap
 
 - [x] Complete data backend for the plugin.
-- [ ] Complete prop interface elements.
+- [x] Complete basic interface elements.
+- [ ] Testing and refinement.
 - [ ] Add initial version to Obsidian plugin store.
 
 
 #### Future
 
-- Add in-editor panel (in addition to the current sidebar)
+- Additional functionality 
+- Add in-editor panel (in addition to the current sidebar).
 - Ability to use templates' bodies in notes using a code block processor.

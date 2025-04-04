@@ -3,7 +3,7 @@ import { Menu, setIcon } from 'obsidian';
 export function blurOnEnter(e: KeyboardEvent) {
   if (e.key === 'Enter') {
     e.preventDefault();
-    ; (<HTMLDivElement>e.target).blur();
+    ;(<HTMLDivElement>e.target).blur();
   }
 }
 

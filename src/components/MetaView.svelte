@@ -82,8 +82,11 @@
         box-shadow: none
 
     .metadata-property
-      margin: var(--size-4-1) 0
+      // margin: var(--size-4-1) 0
       border: none
+      margin: none
+      // margin-bottom: var(--size-4-1)
+      // border-bottom: var(--border-width) solid var(--metadata-divider-color)
     
     .metadata-property-key
       border: none
@@ -104,6 +107,10 @@
 
     .metadata-property-value-input
       width: 100%
+      
+    .metadata-property-value-input[type='checkbox']
+      width: var(--checkbox-size)
+      height: var(--checkbox-size)
 
     .mv-properties-title
       margin: 1.0em 0 0.4em 0.5em
@@ -124,7 +131,7 @@
       background: var(--metadata-input-background)
       // color: var(--text-faint)
       font-variant-numeric: tabular-nums
-      border: none
+      // border: none
       font-family: inherit
       outline: none
 
