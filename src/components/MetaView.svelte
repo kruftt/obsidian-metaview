@@ -70,7 +70,7 @@
   .mv-metadata-file-props
     padding-bottom: 0.4em
     margin-bottom: 0.6em
-    border-bottom: var(--border-width) solid var(--metadata-divider-color)
+    // border-bottom: var(--border-width) solid var(--metadata-divider-color)
 
 
   * :global
@@ -82,11 +82,9 @@
         box-shadow: none
 
     .metadata-property
-      // margin: var(--size-4-1) 0
       border: none
-      margin: none
-      // margin-bottom: var(--size-4-1)
-      // border-bottom: var(--border-width) solid var(--metadata-divider-color)
+      margin: 0
+      border-bottom: var(--border-width) solid var(--metadata-divider-color)
     
     .metadata-property-key
       border: none
@@ -160,4 +158,10 @@
         left: -5px
         right: auto
         opacity: 0.5
+    
+    .mv-content-container
+      padding-bottom: var(--size-4-1)
+
+    .mv-icon-tray
+      display: flex
 </style>

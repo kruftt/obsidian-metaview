@@ -18,6 +18,7 @@
         context="{data}"
         key="{ i }"
         template="{ elementType }"
+        remove!="{() => data.splice(i, 1)}"
       )
     div.metadata-property
       button(onclick!="{() => (data || (data = [])).push(createValue(elementType))}") Add Element

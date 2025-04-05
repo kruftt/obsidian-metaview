@@ -32,26 +32,23 @@
 <template lang="pug">
   div.metadata-template-property
     div.metadata-property
-      div.metadata-property-key
-        
+      div.mv-icon-tray 
         div.metadata-property-icon(
           bind:this="{expand.icon}"
           onclick!="{expand.toggle}"
         )
-
-        +startif("editable")
-          EditableKey({context} {key})
-        +else
-          StaticKey({key})
-        +endif
-
         div.metadata-property-icon(
           bind:this="{typeIcon}"
           style:display="{key ? 'flex' : 'none'}"
           onclick="{openContextMenu}"
           oncontextmenu="{openContextMenu}"
         )
-      
+      div.metadata-property-key
+        +startif("editable")
+          EditableKey({context} {key})
+        +else
+          StaticKey({key})
+        +endif      
       div.metadata-property-value
         SelectValue(bind:value="{selectedType}" options="{PROPERTY_TYPES}")
           
@@ -62,6 +59,9 @@
 <style scoped lang="sass">
   .mv-metadata-options-spacer
     flex: 0 2 var(--size-4-4)
+
+  .metadata-property
+    padding: 1px 0
 
   * :global
     .mv-content-container

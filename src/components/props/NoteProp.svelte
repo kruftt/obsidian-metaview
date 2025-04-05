@@ -39,19 +39,21 @@
 
 <template lang="pug">
   div.metadata-property
-    div.metadata-property-key(class="{template ? 'mv-bound-key' : 'mv-free-key'}")
+    div.mv-icon-tray
       div.metadata-property-icon(
         bind:this="{expand.icon}"
         onclick!="{expand.toggle}"
         style:opacity="{Contents ? 1 : 0}"
       )
+      div.metadata-property-icon.mv-type-icon(bind:this="{icon}" onclick="{openContextMenu}")
+    
+    div.metadata-property-key(class="{template ? 'mv-bound-key' : 'mv-free-key'}")
       +startif('template')
         StaticKey({key})
       +else
         EditableKey({context} {key})
       +endif
     div.metadata-property-value
-      div.metadata-property-icon(bind:this="{icon}" onclick="{openContextMenu}")
       Value({template} name="{key}" bind:value="{context[key]}")
 
   +if("expand.open && Contents") 
@@ -64,4 +66,7 @@
 
   .mv-free-key
     flex: 0 0 min-content !important
+
+  .mv-type-icon
+    margin-right: var(--size-4-1)
 </style>

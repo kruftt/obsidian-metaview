@@ -42,4 +42,5 @@
 <style lang="sass" scoped>
   .mv-static-json
     color: var(--text-warning)
+    font-size: var(--metadata-input-font-size)
 </style>

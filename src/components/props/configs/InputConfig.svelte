@@ -2,10 +2,11 @@
   import { OPTIONS_TYPES } from "const";
   import InputValue from "../values/InputValue.svelte";
 
-  let { template } : { template: MVInputDef } = $props();
+  let { template } : { template: MVInputDef | MVJsonDef } = $props();
 
   let options = $derived(OPTIONS_TYPES[<keyof typeof OPTIONS_TYPES>template.type]);
-  let inputProps = $state(template.props || <MVInputDef["props"]>(template.props = {}));
+  let inputProps = $state(template.type === 'json' ? null : template.props || <MVInputDef["props"]>(template.props = {}));
+  let valueTemplate = $derived({ type: template.type === 'json' ? 'text' : template.type });
 </script>
 
 <template lang='pug'>
@@ -14,7 +15,7 @@
       div.mv-metadata-options-spacer
       label(for="default") default:
       InputValue(
-        template="{{ type: template.type }}"
+        template="{valueTemplate}"
         name="default"
         bind:value="{template.default}"
       )

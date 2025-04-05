@@ -22,7 +22,7 @@
   input.metadata-property-key-input(
     onkeypress="{blurOnEnter}"
     onblur!="{setKey}"
-    placeholder="PropKey"
+    placeholder="Add Property"
   )
 </template>
 

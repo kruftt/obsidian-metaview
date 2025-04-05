@@ -7,6 +7,13 @@ export function blurOnEnter(e: KeyboardEvent) {
   }
 }
 
+export function blurOnSpace(e: KeyboardEvent) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    ;(<HTMLDivElement>e.target).blur();
+  }
+}
+
 export function createContextMenuCallback(remove: () => void, reset?: () => void) {
   return (e: MouseEvent) => {
     const menu = new Menu();
