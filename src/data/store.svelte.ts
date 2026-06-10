@@ -1,4 +1,4 @@
-import { TFile, Vault, debounce, type Debouncer } from 'obsidian'
+import { TFile, Vault, debounce, type Debouncer, type WorkspaceLeaf } from 'obsidian'
 import { getContext, setContext } from 'svelte'
 import { stableStringify } from '../utils'
 import TemplateData from "./TemplateData.svelte"
@@ -8,33 +8,29 @@ import * as CONST from 'const'
 
 const STORE_KEY = Symbol('mv-store');
 
-/** Provide the active store to the component subtree (call in the root view component). */
-export function setStore(store: MVStore): void {
+/** Provide the active session to the component subtree (call in the root view component). */
+export function setStore(store: MVSession): void {
   setContext(STORE_KEY, store);
 }
 
-/** Retrieve the store provided by an ancestor (call during component init). */
-export function getStore(): MVStore {
-  return getContext(STORE_KEY) as MVStore;
+/** Retrieve the session provided by an ancestor (call during component init). */
+export function getStore(): MVSession {
+  return getContext(STORE_KEY) as MVSession;
 }
 
-export class MVStore {
+/**
+ * Vault-wide note/template index. One instance per plugin, shared by every view. Holds the
+ * data that is genuinely global (which notes exist, by type, and the parsed templates).
+ */
+export class MVIndex {
   public notes: Record<string, Array<TFile>>;
   public templates: Record<string, TemplateData>;
 
-  public data = $state.raw<null|TemplateData|NoteData>(null);
-  public file = $state.raw<TFile|null>(null);
-
-  /** Normalized serialization of the frontmatter currently believed to be on disk. */
-  public lastWritten: string | null = null;
-
   private readonly plugin: MetaViewPlugin;
   private templateNameRegex: RegExp;
-  private readonly writer: Debouncer<[], void>;
 
   constructor(plugin: MetaViewPlugin) {
     this.plugin = plugin;
-    this.writer = debounce(() => this.flush(), 400, true);
     this.templateNameRegex = this.buildTemplateNameRegex();
     this.notes = {};
     this.templates = {};
@@ -62,6 +58,10 @@ export class MVStore {
     });
   }
 
+  public isTemplate(path: string): boolean {
+    return path.startsWith(this.plugin.settings.templatesPath);
+  }
+
   public addNote(file: TFile) {
     const notes = this.notes;
     const plugin = this.plugin;
@@ -85,6 +85,19 @@ export class MVStore {
     }
   }
 
+  /**
+   * Re-classify a note after its frontmatter changed: drop it from every type bucket (its old
+   * types aren't available from the new cache), then re-add it under its current types.
+   */
+  public reindexNote(file: TFile) {
+    const notes = this.notes;
+    for (const t of Object.keys(notes)) {
+      notes[t].remove(file);
+      if (notes[t].length === 0) delete notes[t];
+    }
+    this.addNote(file);
+  }
+
   public addTemplate(file: TFile) {
     this.templates[this.getTemplateName(file.path)] = new TemplateData(this.plugin.getFrontMatter(file), this.plugin.settings.typesProperty);
   }
@@ -105,6 +118,117 @@ export class MVStore {
     const files = type ? this.notes[type] : [];
     return files.map((v) => v.basename);
   }
+}
+
+/**
+ * Per-view editing session. One instance per MetaView leaf. Owns the file currently shown in
+ * that pane, its editable model, the debounced writer, and the dirty-tracking baseline — all
+ * independent of other panes. A pinned session stops following the active file and stays on
+ * the file it was pinned to (pin state is mirrored from the leaf's native pinned flag).
+ */
+export class MVSession {
+  public data = $state.raw<null|TemplateData|NoteData>(null);
+  public file = $state.raw<TFile|null>(null);
+  public filename = $state('');
+  public pinned = $state(false);
+
+  /** Normalized serialization of the frontmatter currently believed to be on disk. */
+  public lastWritten: string | null = null;
+
+  private readonly index: MVIndex;
+  private readonly plugin: MetaViewPlugin;
+  private readonly leaf: WorkspaceLeaf;
+  private readonly writer: Debouncer<[], void>;
+
+  constructor(index: MVIndex, plugin: MetaViewPlugin, leaf: WorkspaceLeaf) {
+    this.index = index;
+    this.plugin = plugin;
+    this.leaf = leaf;
+    this.writer = debounce(() => this.flush(), 400, true);
+    this.pinned = leaf.getViewState().pinned ?? false;
+  }
+
+  // --- facade over the shared index, so components keep using `store.x` unchanged ---
+
+  public get templates() {
+    return this.index.templates;
+  }
+
+  public getNotesByType(type: string | null | undefined) {
+    return this.index.getNotesByType(type);
+  }
+
+  // --- file loading ---
+
+  /** Load `file` into this pane, flushing any pending write to the previous file first. */
+  public loadFile(file: TFile | null) {
+    this.flushNow();
+    if (file === null || file.extension !== 'md') {
+      this.file = this.data = null;
+      this.filename = '';
+    } else {
+      this.file = file;
+      this.filename = file.name;
+      const fm = this.plugin.getFrontMatter(file);
+      this.data = this.index.isTemplate(file.path)
+        ? this.index.getTemplate(file.path)
+        : new NoteData(fm, this.plugin.settings.typesProperty, this.index);
+    }
+    this.markClean();
+  }
+
+  // --- workspace event reactions (driven by the plugin's global handlers) ---
+
+  /** The active file changed; follow it unless this pane is pinned. */
+  public onActiveFile(file: TFile | null) {
+    if (this.pinned) return;
+    this.loadFile(file);
+  }
+
+  /** A file's metadata changed; refresh derived data and reload if it is the file we show. */
+  public onMetadataChanged(file: TFile, frontmatter: FrontMatter, isTemplate: boolean) {
+    const isMine = file === this.file;
+    // Ignore the metadata event echoed back from our own write to the file we show.
+    if (isMine && !this.isExternalChange(frontmatter, isTemplate)) return;
+
+    // A template was re-parsed into the index; any note view's bound props may have changed.
+    if (isTemplate && this.data instanceof NoteData) {
+      this.data.updateTypeData(this.plugin.settings.typesProperty);
+    }
+    if (isMine) this.loadFile(file);
+  }
+
+  public onFileDeleted(file: TFile) {
+    if (file !== this.file) return;
+    if (this.pinned) {
+      this.leaf.setPinned(false); // unpin → pinned-change resumes following the active file
+    } else {
+      this.file = this.data = null;
+      this.filename = '';
+      this.markClean();
+    }
+  }
+
+  public onFileRenamed(file: TFile, _oldPath: string) {
+    // Obsidian keeps the same TFile (its path mutates in place), so identity still holds.
+    if (file === this.file) this.loadFile(file);
+  }
+
+  // --- pinning (native pin is the source of truth) ---
+
+  /** Mirror the leaf's native pinned flag; on unpin, resume following the active file. */
+  public setPinned(pinned: boolean) {
+    if (pinned === this.pinned) return;
+    this.pinned = pinned;
+    if (!pinned) this.loadFile(this.plugin.app.workspace.getActiveFile());
+  }
+
+  /** Toggle the leaf's native pin; `setPinned` is then invoked via the `pinned-change` event. */
+  public togglePin() {
+    this.leaf.setPinned(!this.pinned);
+  }
+
+  // --- writing ---
 
   /** Build the exact frontmatter object the model wants on disk. */
   private desiredFrontmatter(data: NoteData | TemplateData): FrontMatter {
@@ -158,12 +282,12 @@ export class MVStore {
     this.lastWritten = this.data ? stableStringify(this.desiredFrontmatter(this.data)) : null;
   }
 
-  /** True if `frontmatter` differs from what we last wrote/loaded for the active file. */
+  /** True if `frontmatter` differs from what we last wrote/loaded for the file we show. */
   public isExternalChange(frontmatter: FrontMatter, isTemplate: boolean): boolean {
     const typesProp = this.plugin.settings.typesProperty;
     const model = isTemplate
       ? new TemplateData(frontmatter, typesProp)
-      : new NoteData(frontmatter, typesProp, this);
+      : new NoteData(frontmatter, typesProp, this.index);
     return stableStringify(this.desiredFrontmatter(model)) !== this.lastWritten;
   }
 }

@@ -1,8 +1,7 @@
-import { App, Plugin, PluginSettingTab, Setting, TFolder, TFile, WorkspaceLeaf, MetadataCache, type FrontMatterCache, Vault } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, TFile, WorkspaceLeaf, type FrontMatterCache } from 'obsidian';
 import * as CONST from './const'
 import MetaView from "./MetaView"
-import { MVStore } from './data/store.svelte'
-import NoteData from 'data/NoteData.svelte';
+import { MVIndex, type MVSession } from './data/store.svelte'
 import { arrayWrap } from './utils'
 
 const DEFAULT_SETTINGS: MVSettings = {
@@ -12,7 +11,23 @@ const DEFAULT_SETTINGS: MVSettings = {
 
 export default class MetaViewPlugin extends Plugin {
 	declare settings: MVSettings;
-	store!: MVStore;
+	index!: MVIndex;
+	private readonly sessions = new Set<MVSession>();
+
+	/** Register a view's session so it receives workspace/metadata event notifications. */
+	public registerSession(session: MVSession) {
+		this.sessions.add(session);
+	}
+
+	public unregisterSession(session: MVSession) {
+		this.sessions.delete(session);
+	}
+
+	/** Reload every live session against its file (pinned) or the active file (following). */
+	private refreshSessions() {
+		const active = this.app.workspace.getActiveFile();
+		for (const s of this.sessions) s.loadFile(s.pinned ? s.file : active);
+	}
 
 	async activateView() {
 		const { workspace } = this.app;
@@ -31,9 +46,9 @@ export default class MetaViewPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-		this.store = new MVStore(this);
+		this.index = new MVIndex(this);
 		this.addSettingTab(new MetaViewSettingTab(this.app, this));
-		this.registerView(CONST.ID, (leaf) => new MetaView(leaf, this.store));
+		this.registerView(CONST.ID, (leaf) => new MetaView(leaf, this));
 
 		const ribbonIconEl = this.addRibbonIcon('info', CONST.NAME, (evt: MouseEvent) => { this.activateView(); });
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -41,72 +56,53 @@ export default class MetaViewPlugin extends Plugin {
 		this.app.workspace.onLayoutReady(() => {
 			const app = this.app;
 			const { workspace, metadataCache } = app;
-			const store = this.store;
-			store.scan();
+			const index = this.index;
+			index.scan();
 
-			const loadFile = (file: TFile | null) => {
-				store.flushNow();
-				if (file === null || file.extension !== 'md') {
-					store.file = store.data = null;
-				} else {
-					store.file = file;
-					const fm = this.getFrontMatter(file);
-					store.data = (this.isTemplate(file.path))
-						? store.getTemplate(file.path)
-						: new NoteData(fm, this.settings.typesProperty, store);
-				}
-				store.markClean();
-			};
-
-			this.registerEvent(workspace.on('file-open', loadFile));
+			this.registerEvent(workspace.on('file-open', (file) => {
+				for (const s of this.sessions) s.onActiveFile(file);
+			}));
 
 			this.registerEvent(metadataCache.on('changed', (file, data, cache) => {
 				if (file.extension !== 'md') return;
-				const storeData = store.data;
-				const isTemplate = this.isTemplate(file.path);
+				const isTemplate = index.isTemplate(file.path);
 
-				// Ignore the metadata event echoed back from our own write to the active file.
-				if (file === store.file && !store.isExternalChange(cache.frontmatter || {}, isTemplate)) {
-					return;
-				}
+				if (isTemplate) index.addTemplate(file);
+				else index.reindexNote(file);
 
-				if (isTemplate) {
-					store.addTemplate(file); // updates template
-					if (storeData instanceof NoteData) storeData.updateTypeData(this.settings.typesProperty);
-				} else {
-					store.removeNote(file, this.getTypes(cache));
-					store.addNote(file);
-				}
-				if (file === store.file) loadFile(file);
+				const fm = cache.frontmatter || {};
+				for (const s of this.sessions) s.onMetadataChanged(file, fm, isTemplate);
 			}));
 
 			this.registerEvent(metadataCache.on('deleted', (file, prevCache) => {
-				if (this.isTemplate(file.path)) {
-					store.removeTemplate(file.path);
+				if (index.isTemplate(file.path)) {
+					index.removeTemplate(file.path);
 				} else {
-					store.removeNote(file, this.getTypes(prevCache?.frontmatter || {}))
+					index.removeNote(file, this.getTypes(prevCache?.frontmatter || {}))
 				}
+				for (const s of this.sessions) s.onFileDeleted(file);
 			}));
 
 			this.registerEvent(app.vault.on('rename', (file, oldPath) => {
 				if (file instanceof TFile) {
 					if (oldPath.endsWith('.md')) {
-						if (this.isTemplate(oldPath)) store.removeTemplate(oldPath);
-						else store.removeNote(file, this.getTypes(this.getFrontMatter(file)));
+						if (index.isTemplate(oldPath)) index.removeTemplate(oldPath);
+						else index.removeNote(file, this.getTypes(this.getFrontMatter(file)));
 					}
 					if (file.path.endsWith('.md')) {
-						if (this.isTemplate(file.path)) store.addTemplate(file);
-						else store.addNote(file);
+						if (index.isTemplate(file.path)) index.addTemplate(file);
+						else index.addNote(file);
 					}
+					for (const s of this.sessions) s.onFileRenamed(file, oldPath);
 				}
 			}));
 
-			loadFile(workspace.getActiveFile());
+			this.refreshSessions();
 		});
 	}
 
 	onunload() {
-		this.store.flushNow();
+		for (const s of this.sessions) s.flushNow();
 	}
 
 	async loadSettings() {
@@ -115,7 +111,8 @@ export default class MetaViewPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.store.scan();
+		this.index.scan();
+		this.refreshSessions();
 	}
 
 	public getFrontMatter(file: TFile) {
@@ -124,10 +121,6 @@ export default class MetaViewPlugin extends Plugin {
 
 	public getTypes(fm: FrontMatterCache) {
 		return arrayWrap(fm[this.settings.typesProperty]);
-	}
-
-	private isTemplate(path: string) {
-		return path.startsWith(this.settings.templatesPath);
 	}
 }
 

@@ -1,5 +1,5 @@
 import { Menu, setIcon } from 'obsidian';
-import type { MVStore } from 'data/store.svelte';
+import type { MVSession } from 'data/store.svelte';
 
 export function blurOnEnter(e: KeyboardEvent) {
   if (e.key === 'Enter') {
@@ -15,7 +15,7 @@ export function blurOnSpace(e: KeyboardEvent) {
   }
 }
 
-export function createContextMenuCallback(store: MVStore, remove: () => void, reset?: () => void) {
+export function createContextMenuCallback(store: MVSession, remove: () => void, reset?: () => void) {
   return (e: MouseEvent) => {
     const menu = new Menu();
 
