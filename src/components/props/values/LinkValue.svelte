@@ -15,12 +15,12 @@
   const options = store.getNotesByType(target);
 </script>
 
-<template lang="pug">
-  select.dropdown(name="{name}" bind:value="{value}")
-    option(value="" disabled selected hidden) Select an option...
-    +each('options as option')
-      option(value="{option}") {option}
-</template>
+<select class="dropdown" name={name} bind:value={value}>
+  <option value="" disabled selected hidden>Select an option...</option>
+  {#each options as option}
+    <option value={option}>{option}</option>
+  {/each}
+</select>
 
 <style lang="sass">
 </style>

@@ -28,30 +28,32 @@
   $effect(() => { if (selectedType !== template.type) context[key] = makePropTemplate({ type: selectedType })! });
 </script>
 
-<template lang="pug">
-  div.mv-template-property
-    div.metadata-property
-      div.mv-icon-tray 
-        div.metadata-property-icon(
-          bind:this="{expand.icon}"
-          onclick!="{expand.toggle}"
-        )
-        div.metadata-property-icon(
-          bind:this="{typeIcon}"
-          style:display="{key ? 'flex' : 'none'}"
-          onclick="{openContextMenu}"
-          oncontextmenu="{openContextMenu}"
-        )
-      
-      div.metadata-property-key
-        PropKey({context} {key} {editable})
-        
-      div.metadata-property-value
-        SelectValue(bind:value="{selectedType}" options="{PROPERTY_TYPES}")
-          
-    +if('expand.open')
-      Config({template})
-</template>
+<div class="mv-template-property">
+  <div class="metadata-property">
+    <div class="mv-icon-tray">
+      <div class="metadata-property-icon" bind:this={expand.icon} onclick={expand.toggle}></div>
+      <div
+        class="metadata-property-icon"
+        bind:this={typeIcon}
+        style:display={key ? 'flex' : 'none'}
+        onclick={openContextMenu}
+        oncontextmenu={openContextMenu}
+      ></div>
+    </div>
+
+    <div class="metadata-property-key">
+      <PropKey {context} {key} {editable} />
+    </div>
+
+    <div class="metadata-property-value">
+      <SelectValue bind:value={selectedType} options={PROPERTY_TYPES} />
+    </div>
+  </div>
+
+  {#if expand.open}
+    <Config {template} />
+  {/if}
+</div>
 
 <style scoped lang="sass">
   .metadata-property

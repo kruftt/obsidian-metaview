@@ -26,18 +26,17 @@
   }
 </script>
 
-<template lang="pug">
-  +startif("editable")
-    input.metadata-property-value-input(
-      value="{stringifiedValue}"
-      onkeypress="{blurOnEnter}"
-      onblur="{updateValue}"
-      type="text"
-    )
-  +else
-    div.mv-static-json {stringifiedValue}
-  +endif
-</template>
+{#if editable}
+  <input
+    class="metadata-property-value-input"
+    value={stringifiedValue}
+    onkeypress={blurOnEnter}
+    onblur={updateValue}
+    type="text"
+  />
+{:else}
+  <div class="mv-static-json">{stringifiedValue}</div>
+{/if}
 
 <style lang="sass" scoped>
   .mv-static-json

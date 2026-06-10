@@ -22,7 +22,6 @@
 		"eslint": "^9.0.0",
 		"obsidian": "^1.13.1",
 		"obsidian-dataview": "^0.5.68",
-		"pug": "^3.0.4",
 		"sass": "^1.100.0",
 		"svelte": "^5.56.3",
 		"svelte-preprocess": "^6.0.5",

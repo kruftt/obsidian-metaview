@@ -19,16 +19,14 @@
   };
 </script>
 
-<template lang='pug'>
-  div.mv-content-container
-    select.multi(name="{name}" bind:value="{data}" multiple)
-      option(value="" disabled selected hidden) Select an option...
-      +each('template.options as option')
-        option(
-          onmousedown="{toggleSelected}"
-          value="{option}"
-        ) {option}
-</template>
+<div class="mv-content-container">
+  <select class="multi" name={name} bind:value={data} multiple>
+    <option value="" disabled selected hidden>Select an option...</option>
+    {#each template.options as option}
+      <option onmousedown={toggleSelected} value={option}>{option}</option>
+    {/each}
+  </select>
+</div>
 
 <style lang='sass'>
   .multi

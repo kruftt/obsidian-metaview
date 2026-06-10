@@ -18,13 +18,12 @@
   };
 </script>
 
-<template lang='pug'>
-  input.metadata-property-key-input(
-    onkeypress="{blurOnEnter}"
-    onblur!="{setKey}"
-    placeholder="Add Property"
-  )
-</template>
+<input
+  class="metadata-property-key-input"
+  onkeypress={blurOnEnter}
+  onblur={setKey}
+  placeholder="Add Property"
+/>
 
 <style lang='sass'>
 </style>

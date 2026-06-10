@@ -4,48 +4,35 @@
   let { template } : { template: MVCollectionDef } = $props();
 </script>
 
-<template lang='pug'>
-  div.mv-content-container
-    div.mv-metadata-property-option
-      div.mv-metadata-options-spacer
-        +startif('template.type === "array"')
-          TemplateProp(
-            context="{template}"
-            key="elementType"
-          )
-        +elseif('template.type === "map"')
-          TemplateProp(
-            context="{template}"
-            key="elementType"
-          )
-        +elseif('template.type === "tuple"')
-          +each('template.elementTypes as type, i')
-            TemplateProp(
-              context="{template.elementTypes}"
-              key="{i}"
-              remove!="{() => template.elementTypes.splice(i, 1)}"
-            )
-          
-          div.metadata-property
-            div.metadata-property-key(
-              onclick!="{() => template.elementTypes.push({ type: 'text' })}"
-            ) Add Entry
-
-        +else
-          +each('Object.keys(template.entries) as key')
-            TemplateProp(
-              context="{template.entries}"
-              key="{key}"
-              editable
-            )
-          div.metadata-property
-            NewKey(
-              context="{template.entries}"
-              value="{{ type: 'text' }}"
-            )
-        +endif
-
-</template>
+<div class="mv-content-container">
+  <div class="mv-metadata-property-option">
+    <div class="mv-metadata-options-spacer">
+      {#if template.type === "array"}
+        <TemplateProp context={template} key="elementType" />
+      {:else if template.type === "map"}
+        <TemplateProp context={template} key="elementType" />
+      {:else if template.type === "tuple"}
+        {#each template.elementTypes as type, i}
+          <TemplateProp
+            context={template.elementTypes}
+            key={i}
+            remove={() => template.elementTypes.splice(i, 1)}
+          />
+        {/each}
+        <div class="metadata-property">
+          <div class="metadata-property-key" onclick={() => template.elementTypes.push({ type: 'text' })}>Add Entry</div>
+        </div>
+      {:else}
+        {#each Object.keys(template.entries) as key}
+          <TemplateProp context={template.entries} key={key} editable />
+        {/each}
+        <div class="metadata-property">
+          <NewKey context={template.entries} value={{ type: 'text' }} />
+        </div>
+      {/if}
+    </div>
+  </div>
+</div>
 
 <style lang='sass'>
 </style>

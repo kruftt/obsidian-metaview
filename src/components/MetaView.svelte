@@ -24,38 +24,49 @@
   }
 </script>
 
-<template lang='pug'>
-  div.metadata-container 
-    +if("data !== null")
-      div.mv-filename(onclick!="{expand.toggle}")
-        span.metadata-property-icon(bind:this="{expand.icon}")
-        | { filename }
+<div class="metadata-container">
+  {#if data !== null}
+    <div class="mv-filename" onclick={expand.toggle}>
+      <span class="metadata-property-icon" bind:this={expand.icon}></span>
+      {filename}
+    </div>
 
-      div.mv-metadata-file-props
-        +if("expand.open")
-          FileProp(key="aliases", context="{data.fileProps}")
-          FileProp(key="tags", context="{data.fileProps}")
-          FileProp(key="cssclasses", context="{data.fileProps}")
-          +if("data instanceof NoteData")
-            FileProp(key="types", context="{data}")
+    <div class="mv-metadata-file-props">
+      {#if expand.open}
+        <FileProp key="aliases" context={data.fileProps} />
+        <FileProp key="tags" context={data.fileProps} />
+        <FileProp key="cssclasses" context={data.fileProps} />
+        {#if data instanceof NoteData}
+          <FileProp key="types" context={data} />
+        {/if}
+      {/if}
+    </div>
 
-      div.metadata-content
-        +startif("data instanceof NoteData")
-          +each("data.freeProps as key")
-            NoteProp({key} context="{data.props}" editable)
-          div.metadata-property
-            NewKey(context="{data.props}" value="''")
-          +each("Object.entries(data.typeData) as [name, typeData]")
-            div.mv-properties-title {name}
-            +each("Object.entries(typeData.props) as [key, template]")
-              NoteProp({key} {template} context="{data.props}")
-        +else
-          +each("Object.keys(data.props) as key (key)")
-            TemplateProp({key} context="{data.props}" editable)
-          div.metadata-property
-            NewKey(context="{data.props}" value="{{ type: 'text' }}")
-        +endif
-</template>
+    <div class="metadata-content">
+      {#if data instanceof NoteData}
+        {#each data.freeProps as key}
+          <NoteProp {key} context={data.props} editable />
+        {/each}
+        <div class="metadata-property">
+          <NewKey context={data.props} value="''" />
+        </div>
+        {#each Object.entries(data.typeData) as [name, typeData]}
+          <div class="mv-properties-title">{name}</div>
+          {#each Object.entries(typeData.props) as [key, template]}
+            <NoteProp {key} {template} context={data.props} />
+          {/each}
+        {/each}
+      {:else}
+        {#each Object.keys(data.props) as key (key)}
+          <TemplateProp {key} context={data.props} editable />
+        {/each}
+        <div class="metadata-property">
+          <NewKey context={data.props} value={{ type: 'text' }} />
+        </div>
+      {/if}
+    </div>
+  {/if}
+</div>
 
 <style lang='sass'>
   .mv-filename

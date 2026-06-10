@@ -17,26 +17,24 @@
   }
 </script>
 
-<template lang='pug'>
-  div.mv-content-container
-    +each('template.options as option, i')    
-      div.mv-metadata-property-option
-        div.mv-metadata-options-spacer
-        span(onclick!="{() => template.options.splice(i, 1)}") x
-        Input(
-          template="{{ type: 'text' }}"
-          bind:value="{template.options[i]}"
-        )
-
-    div.mv-metadata-property-option
-      input(
-        type="text"
-        onkeypress="{blurOnEnter}"
-        onblur="{updateTemplate}"
-        style:margin-left="var(--size-4-5)"
-        placeholder="Add option..."
-      )
-</template>
+<div class="mv-content-container">
+  {#each template.options as option, i}
+    <div class="mv-metadata-property-option">
+      <div class="mv-metadata-options-spacer"></div>
+      <span onclick={() => template.options.splice(i, 1)}>x</span>
+      <Input template={{ type: 'text' }} bind:value={template.options[i]} />
+    </div>
+  {/each}
+  <div class="mv-metadata-property-option">
+    <input
+      type="text"
+      onkeypress={blurOnEnter}
+      onblur={updateTemplate}
+      style:margin-left="var(--size-4-5)"
+      placeholder="Add option..."
+    />
+  </div>
+</div>
 
 <style lang='sass'>
 </style>

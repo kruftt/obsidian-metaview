@@ -22,18 +22,17 @@
   };
 </script>
 
-<template lang='pug'>
-  +startif("context && editable")
-      input.metadata-property-key-input(
-        value="{key}"
-        onkeypress="{blurOnEnter}"
-        onblur!="{setKey}"
-        placeholder="PropKey"
-      )
-  +else
-    div(onclick="{focus ? focus : ''}") {key}
-  +endif      
-</template>
+{#if context && editable}
+  <input
+    class="metadata-property-key-input"
+    value={key}
+    onkeypress={blurOnEnter}
+    onblur={setKey}
+    placeholder="PropKey"
+  />
+{:else}
+  <div onclick={focus ? focus : ''}>{key}</div>
+{/if}
 
 <style lang='sass'>
 </style>

@@ -10,12 +10,8 @@
   const types = template.elementTypes;
 </script>
 
-<template lang='pug'>
-  div.mv-content-container
-    +each('types as t, i')
-      NoteProp(
-        context="{ data }"
-        key="{ i }"
-        template="{ t }"
-      )
-</template>
+<div class="mv-content-container">
+  {#each types as t, i}
+    <NoteProp context={data} key={i} template={t} />
+  {/each}
+</div>

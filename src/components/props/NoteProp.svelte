@@ -37,26 +37,31 @@
     (<MVInputDef>template)?.default ? () => { context[key] = (<MVInputDef>template)?.default! } : undefined);
 </script>
 
-<template lang="pug">
-  div.mv-note-property
-    div.metadata-property
-      div.mv-icon-tray
-        div.metadata-property-icon(
-          bind:this="{expand.icon}"
-          onclick!="{expand.toggle}"
-          style:opacity="{Contents ? 1 : 0}"
-        )
-        div.metadata-property-icon.mv-type-icon(bind:this="{icon}" onclick="{openContextMenu}")
-      
-      div.metadata-property-key(class="{template ? 'mv-bound-key' : 'mv-free-key'}")
-        PropKey({context} {key} {editable})
+<div class="mv-note-property">
+  <div class="metadata-property">
+    <div class="mv-icon-tray">
+      <div
+        class="metadata-property-icon"
+        bind:this={expand.icon}
+        onclick={expand.toggle}
+        style:opacity={Contents ? 1 : 0}
+      ></div>
+      <div class="metadata-property-icon mv-type-icon" bind:this={icon} onclick={openContextMenu}></div>
+    </div>
 
-      div.metadata-property-value
-        Value({template} name="{key}" bind:value="{context[key]}")
+    <div class="metadata-property-key {template ? 'mv-bound-key' : 'mv-free-key'}">
+      <PropKey {context} {key} {editable} />
+    </div>
 
-    +if("expand.open && Contents") 
-      Contents({template} bind:data="{context[key]}")
-</template>
+    <div class="metadata-property-value">
+      <Value {template} name={key} bind:value={context[key]} />
+    </div>
+  </div>
+
+  {#if expand.open && Contents}
+    <Contents {template} bind:data={context[key]} />
+  {/if}
+</div>
 
 <style lang="sass">
   .mv-note-property

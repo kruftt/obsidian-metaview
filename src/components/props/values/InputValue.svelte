@@ -20,20 +20,18 @@
   }
 </script>
 
-<template>
-  {#if type === "boolean"}
-    <input type="checkbox" class="metadata-property-value-input"
-      {name} bind:checked={value} {...inputProps}
-      style:flex="0 0 auto"
-    />
-  {:else}
-    <input {type} class="metadata-property-value-input" 
-      {name} {value} {...inputProps}
-      onkeypress={blurOnEnter}
-      onblur={syncValue}
-    />
-  {/if}
-</template>
+{#if type === "boolean"}
+  <input type="checkbox" class="metadata-property-value-input"
+    {name} bind:checked={value} {...inputProps}
+    style:flex="0 0 auto"
+  />
+{:else}
+  <input {type} class="metadata-property-value-input"
+    {name} {value} {...inputProps}
+    onkeypress={blurOnEnter}
+    onblur={syncValue}
+  />
+{/if}
 
 <style scoped lang="sass">
   input:invalid

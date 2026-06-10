@@ -6,12 +6,12 @@
   import PropKey from './keys/PropKey.svelte';
 </script>
 
-<template lang="pug">
-  div.metadata-property(data-property-key="{key}")
-    div.mv-file-key.metadata-property-key
-      PropKey({context} {key})
-    ListValue(entries="{context[key]}" editable="{true}")
-</template>
+<div class="metadata-property" data-property-key={key}>
+  <div class="mv-file-key metadata-property-key">
+    <PropKey {context} {key} />
+  </div>
+  <ListValue entries={context[key]} editable={true} />
+</div>
 
 <style scoped lang="sass">
   .mv-file-key

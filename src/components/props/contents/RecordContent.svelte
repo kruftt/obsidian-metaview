@@ -9,15 +9,11 @@
   const entries = template.entries;  
 </script>
 
-<template lang='pug'>
-  div.mv-content-container
-    +each('Object.entries(entries) as [key, entry]')
-      NoteProp(
-        context="{ data }"
-        template="{ entry }"
-        key="{ key }"
-      )
-</template>
+<div class="mv-content-container">
+  {#each Object.entries(entries) as [key, entry]}
+    <NoteProp context={data} template={entry} key={key} />
+  {/each}
+</div>
 
 <style lang='sass'>
 </style>

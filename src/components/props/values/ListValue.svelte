@@ -18,16 +18,17 @@
   }
 </script>
 
-<template lang='pug'>
-  div.metadata-property-value
-    div.multi-select-container(onclick!="{() => {input.focus(); console.log('focus')}}")
-      +each("entries as entry, i")
-        ListItem({entry} {editable} {entries})
-
-      div.multi-select-input(
-        contentEditable
-        bind:this="{input}"
-        onkeypress="{blurOnSpace}"
-        onblur!="{createEntry}"
-      )
-</template>
+<div class="metadata-property-value">
+  <div class="multi-select-container" onclick={() => { input.focus(); console.log('focus'); }}>
+    {#each entries as entry, i}
+      <ListItem {entry} {editable} {entries} />
+    {/each}
+    <div
+      class="multi-select-input"
+      contenteditable
+      bind:this={input}
+      onkeypress={blurOnSpace}
+      onblur={createEntry}
+    ></div>
+  </div>
+</div>

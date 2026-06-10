@@ -5,17 +5,13 @@
   let { template } : { template: MVLinkDef } = $props();
 </script>
 
-<template lang='pug'>
-  div.mv-content-container
-    div.mv-metadata-property-option
-      div.mv-metadata-options-spacer
-      label(for="target") target:
-      Select(
-        name="target"
-        bind:value="{template.target}"
-        options="{Object.keys(store.templates)}"
-      )
-</template>
+<div class="mv-content-container">
+  <div class="mv-metadata-property-option">
+    <div class="mv-metadata-options-spacer"></div>
+    <label for="target">target:</label>
+    <Select name="target" bind:value={template.target} options={Object.keys(store.templates)} />
+  </div>
+</div>
 
 <style lang='sass'>
 </style>

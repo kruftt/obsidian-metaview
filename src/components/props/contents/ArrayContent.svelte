@@ -11,19 +11,21 @@
   const elementType = template?.type !== 'json' ? template?.elementType : template;
 </script>
 
-<template lang='pug'>
-  div.mv-content-container
-    +each('data as value, i')
-      NoteProp(
-        context="{data}"
-        key="{ i }"
-        template="{ elementType }"
-        remove!="{() => data.splice(i, 1)}"
-      )
-    div.metadata-property
-      div.mv-add-element(onclick!="{() => (data || (data = [])).push(createValue(elementType))}")
-        div [+] Add Element
-</template>
+<div class="mv-content-container">
+  {#each data as value, i}
+    <NoteProp
+      context={data}
+      key={i}
+      template={elementType}
+      remove={() => data.splice(i, 1)}
+    />
+  {/each}
+  <div class="metadata-property">
+    <div class="mv-add-element" onclick={() => (data || (data = [])).push(createValue(elementType))}>
+      <div>[+] Add Element</div>
+    </div>
+  </div>
+</div>
 
 <style lang='sass'>
   .mv-add-element

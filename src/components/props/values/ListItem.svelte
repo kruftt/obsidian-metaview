@@ -39,31 +39,23 @@
   }
 </script>
 
-<template lang='pug'>
-  +startif("editing")
-    div.multi-select-input(
-      tabIndex="0"
-      contentEditable
-      use:stopProp
-      onkeypress="{blurOnSpace}"
-      onfocusout="{editEntry}"
-    ) {entry}
-
-  +else
-    div.multi-select-pill(
-      tabindex="0"
-    )
-      div.multi-select-pill-content(
-        use:stopProp
-        ondblclick="{startEdit}"
-      )
-        span {entry}
-      div.multi-select-pill-remove-button(
-        use:setIcon="{'x'}"
-        onclick="{removeEntry}"
-      )
-  +endif
-</template>
+{#if editing}
+  <div
+    class="multi-select-input"
+    tabindex="0"
+    contenteditable
+    use:stopProp
+    onkeypress={blurOnSpace}
+    onfocusout={editEntry}
+  >{entry}</div>
+{:else}
+  <div class="multi-select-pill" tabindex="0">
+    <div class="multi-select-pill-content" use:stopProp ondblclick={startEdit}>
+      <span>{entry}</span>
+    </div>
+    <div class="multi-select-pill-remove-button" use:setIcon={'x'} onclick={removeEntry}></div>
+  </div>
+{/if}
 
 <style lang='sass'>
   .multi-select-input

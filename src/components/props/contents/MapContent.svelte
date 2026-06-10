@@ -12,21 +12,14 @@
   const elementType = template?.elementType;
 </script>
 
-<template lang='pug'>
-  div.mv-content-container
-    +each('Object.keys(data) as key')
-      NoteProp(
-        context="{data}"
-        template="{ elementType }"
-        key="{ key }"
-        editable
-      )
-    div.metadata-property
-      NewKey(
-        context="{data}"
-        value="{createValue(elementType)}"
-      )
-</template>
+<div class="mv-content-container">
+  {#each Object.keys(data) as key}
+    <NoteProp context={data} template={elementType} key={key} editable />
+  {/each}
+  <div class="metadata-property">
+    <NewKey context={data} value={createValue(elementType)} />
+  </div>
+</div>
 
 <style lang='sass'>
 </style>

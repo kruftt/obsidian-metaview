@@ -9,26 +9,20 @@
   let valueTemplate = $derived({ type: template.type === 'json' ? 'text' : template.type });
 </script>
 
-<template lang='pug'>
-  div.mv-content-container
-    div.mv-metadata-property-option
-      div.mv-metadata-options-spacer
-      label(for="default") default:
-      InputValue(
-        template="{valueTemplate}"
-        name="default"
-        bind:value="{template.default}"
-      )
-    +each("options as option")
-      div.mv-metadata-property-option
-        div.mv-metadata-options-spacer
-        label(for="{option.name}") {option.name}:
-        InputValue(
-          name="{option.name}"
-          template="{option}"
-          bind:value="{inputProps[option.name]}"
-        )
-</template>
+<div class="mv-content-container">
+  <div class="mv-metadata-property-option">
+    <div class="mv-metadata-options-spacer"></div>
+    <label for="default">default:</label>
+    <InputValue template={valueTemplate} name="default" bind:value={template.default} />
+  </div>
+  {#each options as option}
+    <div class="mv-metadata-property-option">
+      <div class="mv-metadata-options-spacer"></div>
+      <label for={option.name}>{option.name}:</label>
+      <InputValue name={option.name} template={option} bind:value={inputProps[option.name]} />
+    </div>
+  {/each}
+</div>
 
 <style lang='sass'>
 </style>
