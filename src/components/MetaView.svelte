@@ -2,7 +2,7 @@
   import { setIcon } from 'obsidian';
   import { onMount } from 'svelte'
 
-  import store from '../data/store.svelte';
+  import { type MVStore, setStore } from '../data/store.svelte';
   import TemplateData from 'data/TemplateData.svelte';
   import NoteData from 'data/NoteData.svelte';
 
@@ -11,7 +11,10 @@
   import TemplateProp from './props/TemplateProp.svelte';
   import NewKey from './props/keys/NewKey.svelte';
   import createExpand from './expand.svelte';
-  
+
+  let { store }: { store: MVStore } = $props();
+  setStore(store);
+
   let data = $derived(store.data);
   let filename = $derived(store.file ? store.file.name : '');
   const freeTemplate = { type: 'json', default: '' };

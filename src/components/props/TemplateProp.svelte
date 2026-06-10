@@ -8,8 +8,10 @@
   import SelectValue from './values/SelectValue.svelte';
   import Configs from './configs';
   import createExpand from 'components/expand.svelte';
-  import store from 'data/store.svelte';
-  
+  import { getStore } from 'data/store.svelte';
+
+  const store = getStore();
+
   let { context, key, editable = false, remove } : {
     context: Record<string, MVPropDef> | MVPropDef[] | MVCollectionDef,
     key: string | number,
@@ -28,7 +30,7 @@
   $effect(() => setIcon(typeIcon, TYPE_ICONS[template.type]));
 
   const expand = createExpand();
-  const openContextMenu = createContextMenuCallback(removeSlot);
+  const openContextMenu = createContextMenuCallback(store, removeSlot);
 
   let selectedType = $state(template.type);
   let Config: Component<any> = $derived(Configs[template.type]);

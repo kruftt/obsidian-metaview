@@ -2,7 +2,9 @@
   import { on } from 'svelte/events'
   import { setIcon } from 'obsidian';
   import { blurOnSpace } from '../events';
-  import store from 'data/store.svelte';
+  import { getStore } from 'data/store.svelte';
+
+  const store = getStore();
 
   let { editable, entries, entry }: {
     editable: boolean

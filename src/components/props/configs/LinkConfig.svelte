@@ -1,7 +1,9 @@
 <script lang='ts'>
-  import store from "data/store.svelte";
+  import { getStore } from "data/store.svelte";
   import Select from "../values/SelectValue.svelte";
-  
+
+  const store = getStore();
+
   let { template } : { template: MVLinkDef } = $props();
 </script>
 

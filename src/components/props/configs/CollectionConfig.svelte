@@ -1,7 +1,10 @@
 <script lang='ts'>
   import TemplateProp from "../TemplateProp.svelte";
   import NewKey from "../keys/NewKey.svelte";
-  import store from 'data/store.svelte';
+  import { getStore } from 'data/store.svelte';
+
+  const store = getStore();
+
   let { template } : { template: MVCollectionDef } = $props();
 </script>
 

@@ -2,6 +2,7 @@
   import { setIcon } from 'obsidian';
   import type { Component } from 'svelte';
   import { blurOnEnter, createContextMenuCallback } from './events';
+  import { getStore } from 'data/store.svelte';
   import { TYPE_ICONS } from 'const';
   import Values from './values'
   import ContentContainers from './contents'
@@ -15,6 +16,8 @@
     remove?: () => void
     template?: MVPropDef
   } = $props();
+
+  const store = getStore();
 
   // `context` is an object (string keys) or an array (numeric keys); both
   // index to a FrontMatterValue slot at runtime.
@@ -39,7 +42,7 @@
   });
 
   const expand = createExpand();
-  const openContextMenu = createContextMenuCallback(removeSlot,
+  const openContextMenu = createContextMenuCallback(store, removeSlot,
     (<MVInputDef>template)?.default ? () => { slot[key] = (<MVInputDef>template)?.default! } : undefined);
 </script>
 

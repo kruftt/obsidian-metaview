@@ -1,16 +1,19 @@
 import type TemplateData from "./TemplateData.svelte";
-import store from './store.svelte';
+import type { MVStore } from './store.svelte';
 import { arrayWrap, truthy } from "../utils";
 
 export default class NoteData {
   props: FrontMatter = $state({});
   fileProps: Record<string, string[]> = $state({});
   types: string[] = $state([]);
-  
+
   freeProps: Array<string> = $state([]);
   typeData: Record<string, TemplateData> = $state.raw({});
-  
-  constructor(frontmatter: FrontMatter, typesProperty: string) {
+
+  private readonly store: MVStore;
+
+  constructor(frontmatter: FrontMatter, typesProperty: string, store: MVStore) {
+    this.store = store;
     const { [typesProperty]: types, aliases, cssclasses, tags, ...props } = frontmatter;
     
     this.types = arrayWrap(types).filter(truthy);
@@ -34,7 +37,7 @@ export default class NoteData {
     let templateData: TemplateData;
 
     for (type of this.types) {
-      templateData = store.templates[type];
+      templateData = this.store.templates[type];
       if (!templateData) continue;
       typeData[type] = templateData;
       for (let propKey of Object.keys(templateData.props)) {

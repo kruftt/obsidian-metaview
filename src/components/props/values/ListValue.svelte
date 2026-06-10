@@ -1,7 +1,9 @@
 <script lang='ts'>
   import { blurOnSpace } from '../events';
   import ListItem from './ListItem.svelte';
-  import store from 'data/store.svelte';
+  import { getStore } from 'data/store.svelte';
+
+  const store = getStore();
 
 	let { editable, entries }: {
     editable: boolean

@@ -1,7 +1,9 @@
 <script lang="ts">
   import { blurOnEnter } from '../events';
-  import store from 'data/store.svelte';
-  
+  import { getStore } from 'data/store.svelte';
+
+  const store = getStore();
+
   let { name, template, value = $bindable() } : {
     name?: string,
     template: MVInputDef

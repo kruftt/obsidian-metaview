@@ -1,7 +1,7 @@
 import { App, Plugin, PluginSettingTab, Setting, TFolder, TFile, WorkspaceLeaf, MetadataCache, type FrontMatterCache, Vault } from 'obsidian';
 import * as CONST from './const'
 import MetaView from "./MetaView"
-import store from './data/store.svelte'
+import { MVStore } from './data/store.svelte'
 import NoteData from 'data/NoteData.svelte';
 import { arrayWrap } from './utils'
 
@@ -12,7 +12,8 @@ const DEFAULT_SETTINGS: MVSettings = {
 
 export default class MetaViewPlugin extends Plugin {
 	declare settings: MVSettings;
-		
+	store!: MVStore;
+
 	async activateView() {
 		const { workspace } = this.app;
 		const leaves = workspace.getLeavesOfType(CONST.ID);
@@ -30,8 +31,9 @@ export default class MetaViewPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+		this.store = new MVStore(this);
 		this.addSettingTab(new MetaViewSettingTab(this.app, this));
-		this.registerView(CONST.ID, (leaf) => new MetaView(leaf));
+		this.registerView(CONST.ID, (leaf) => new MetaView(leaf, this.store));
 
 		const ribbonIconEl = this.addRibbonIcon('info', CONST.NAME, (evt: MouseEvent) => { this.activateView(); });
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -39,7 +41,8 @@ export default class MetaViewPlugin extends Plugin {
 		this.app.workspace.onLayoutReady(() => {
 			const app = this.app;
 			const { workspace, metadataCache } = app;
-			store.init(this);
+			const store = this.store;
+			store.scan();
 
 			const loadFile = (file: TFile | null) => {
 				store.flushNow();
@@ -50,11 +53,11 @@ export default class MetaViewPlugin extends Plugin {
 					const fm = this.getFrontMatter(file);
 					store.data = (this.isTemplate(file.path))
 						? store.getTemplate(file.path)
-						: new NoteData(fm, this.settings.typesProperty);
+						: new NoteData(fm, this.settings.typesProperty, store);
 				}
 				store.markClean();
 			};
-			
+
 			this.registerEvent(workspace.on('file-open', loadFile));
 
 			this.registerEvent(metadataCache.on('changed', (file, data, cache) => {
@@ -103,7 +106,7 @@ export default class MetaViewPlugin extends Plugin {
 	}
 
 	onunload() {
-		store.flushNow();
+		this.store.flushNow();
 	}
 
 	async loadSettings() {
@@ -112,7 +115,7 @@ export default class MetaViewPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		store.init(this);
+		this.store.scan();
 	}
 
 	public getFrontMatter(file: TFile) {

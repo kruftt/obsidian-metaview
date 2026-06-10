@@ -1,5 +1,8 @@
 <script lang='ts'>
-  import store from 'data/store.svelte';
+  import { getStore } from 'data/store.svelte';
+
+  const store = getStore();
+
   let { data = $bindable(), template } : {
     data: unknown
     template: MVSelectMultiDef

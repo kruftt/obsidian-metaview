@@ -1,8 +1,10 @@
 <script lang='ts'>
   import NoteProp from "../NoteProp.svelte";
   import { createValue } from "utils";
-  import store from 'data/store.svelte';
-  
+  import { getStore } from 'data/store.svelte';
+
+  const store = getStore();
+
   let { data = $bindable([]), template } : {
     data: FrontMatterValue[]
     template?: MVArrayDef | MVJsonDef

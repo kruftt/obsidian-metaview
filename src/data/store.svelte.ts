@@ -1,34 +1,57 @@
 import { TFile, Vault, debounce, type Debouncer } from 'obsidian'
+import { getContext, setContext } from 'svelte'
 import { stableStringify } from '../utils'
 import TemplateData from "./TemplateData.svelte"
 import NoteData from './NoteData.svelte'
 import type MetaViewPlugin from 'Plugin';
-import * as CONST from 'const' 
+import * as CONST from 'const'
 
-class MVStore {
+const STORE_KEY = Symbol('mv-store');
+
+/** Provide the active store to the component subtree (call in the root view component). */
+export function setStore(store: MVStore): void {
+  setContext(STORE_KEY, store);
+}
+
+/** Retrieve the store provided by an ancestor (call during component init). */
+export function getStore(): MVStore {
+  return getContext(STORE_KEY) as MVStore;
+}
+
+export class MVStore {
   public notes: Record<string, Array<TFile>>;
   public templates: Record<string, TemplateData>;
-  
+
   public data = $state.raw<null|TemplateData|NoteData>(null);
   public file = $state.raw<TFile|null>(null);
 
   /** Normalized serialization of the frontmatter currently believed to be on disk. */
   public lastWritten: string | null = null;
 
-  private plugin: MetaViewPlugin;
+  private readonly plugin: MetaViewPlugin;
   private templateNameRegex: RegExp;
-  private writer!: Debouncer<[], void>;
-  
-  public init(plugin: MetaViewPlugin) {
+  private readonly writer: Debouncer<[], void>;
+
+  constructor(plugin: MetaViewPlugin) {
     this.plugin = plugin;
     this.writer = debounce(() => this.flush(), 400, true);
-    const templatesPath = plugin.settings.templatesPath;
-    this.templateNameRegex = new RegExp('^' + templatesPath + CONST.TEMPLATE_NAME_REGEX);
-    
+    this.templateNameRegex = this.buildTemplateNameRegex();
+    this.notes = {};
+    this.templates = {};
+  }
+
+  private buildTemplateNameRegex(): RegExp {
+    return new RegExp('^' + this.plugin.settings.templatesPath + CONST.TEMPLATE_NAME_REGEX);
+  }
+
+  /** Rebuild the note/template index by scanning the vault. Safe to call once the vault is ready. */
+  public scan() {
+    const templatesPath = this.plugin.settings.templatesPath;
+    this.templateNameRegex = this.buildTemplateNameRegex();
     this.notes = {};
     this.templates = {};
 
-    Vault.recurseChildren(plugin.app.vault.getRoot(), (file) => {
+    Vault.recurseChildren(this.plugin.app.vault.getRoot(), (file) => {
       if (file instanceof TFile) {
         if (file.path.startsWith(templatesPath)) {
           this.addTemplate(file);
@@ -140,9 +163,7 @@ class MVStore {
     const typesProp = this.plugin.settings.typesProperty;
     const model = isTemplate
       ? new TemplateData(frontmatter, typesProp)
-      : new NoteData(frontmatter, typesProp);
+      : new NoteData(frontmatter, typesProp, this);
     return stableStringify(this.desiredFrontmatter(model)) !== this.lastWritten;
   }
 }
-
-export default new MVStore();

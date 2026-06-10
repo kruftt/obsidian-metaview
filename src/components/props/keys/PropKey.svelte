@@ -1,6 +1,8 @@
 <script lang='ts'>
   import { blurOnEnter } from '../events';
-  import store from 'data/store.svelte';
+  import { getStore } from 'data/store.svelte';
+
+  const store = getStore();
 
   let { context, editable, key } : {
     context: Record<string, any>
