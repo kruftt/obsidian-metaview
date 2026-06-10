@@ -1,6 +1,7 @@
 <script lang='ts'>
   import { blurOnSpace } from '../events';
   import ListItem from './ListItem.svelte';
+  import store from 'data/store.svelte';
 
 	let { editable, entries }: {
     editable: boolean
@@ -14,6 +15,7 @@
     if (entry && !entries.includes(entry)) {
       entries.push(entry);
       this.textContent = '';
+      store.commit();
     }
   }
 </script>

@@ -2,6 +2,7 @@
   import { on } from 'svelte/events'
   import { setIcon } from 'obsidian';
   import { blurOnSpace } from '../events';
+  import store from 'data/store.svelte';
 
   let { editable, entries, entry }: {
     editable: boolean
@@ -11,9 +12,10 @@
 
   let editing: boolean = $state(false);
 
-  function removeEntry(this: HTMLElement, e: InputEvent) {
+  function removeEntry(this: HTMLElement, e: MouseEvent) {
     e.stopPropagation();
     entries.remove(entry);
+    store.commit();
   }
 
   function editEntry(this: HTMLDivElement, e: UIEvent) {
@@ -21,6 +23,7 @@
     const i = entries.indexOf(entry);
     if (edit && !entries.includes(edit)) {
       entries[i] = edit;
+      store.commit();
     } else {
       this.textContent = entries[i];
     }

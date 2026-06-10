@@ -1,4 +1,5 @@
 <script lang='ts'>
+  import store from 'data/store.svelte';
   let { data = $bindable(), template } : {
     data: unknown
     template: MVSelectMultiDef
@@ -16,11 +17,12 @@
       const index = (<string[]>data).indexOf(value);
       if (index !== -1) (<string[]>data).splice(index, 1);
     }
+    store.commit();
   };
 </script>
 
 <div class="mv-content-container">
-  <select class="multi" name={name} bind:value={data} multiple>
+  <select class="multi" bind:value={data} multiple>
     <option value="" disabled selected hidden>Select an option...</option>
     {#each template.options as option}
       <option onmousedown={toggleSelected} value={option}>{option}</option>

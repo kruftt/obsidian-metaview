@@ -1,5 +1,6 @@
 <script lang="ts">
   import { blurOnEnter } from '../events';
+  import store from 'data/store.svelte';
 
   let { name, template, value = $bindable()} : {
     name: string
@@ -23,6 +24,7 @@
       } else throw(e);
     }
     target.value = stringifiedValue;
+    store.commit();
   }
 </script>
 

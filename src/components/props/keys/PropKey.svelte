@@ -1,11 +1,11 @@
 <script lang='ts'>
   import { blurOnEnter } from '../events';
-  
+  import store from 'data/store.svelte';
+
   let { context, editable, key } : {
     context: Record<string, any>
     editable?: boolean
-    focus: (e: PointerEvent) => void
-    key: string
+    key: string | number
   } = $props();
 
   const setKey = (e: Event) => {
@@ -13,11 +13,12 @@
     const newKey = target.value;
     if (!newKey || newKey === key) return;
     if (newKey in context!) {
-      target.value = key;
+      target.value = String(key);
     } else {
       context![newKey] = context![key];
       delete context![key];
       key = newKey;
+      store.commit();
     }
   };
 </script>
@@ -25,13 +26,13 @@
 {#if context && editable}
   <input
     class="metadata-property-key-input"
-    value={key}
+    value={String(key)}
     onkeypress={blurOnEnter}
     onblur={setKey}
     placeholder="PropKey"
   />
 {:else}
-  <div onclick={focus ? focus : ''}>{key}</div>
+  <div>{key}</div>
 {/if}
 
 <style lang='sass'>

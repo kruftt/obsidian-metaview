@@ -3,6 +3,24 @@ import { VALID_TYPES } from './const';
 export const arrayWrap = (v: unknown) => Array.isArray(v) ? v : (v === undefined) ? [] : [v];
 export const truthy = (v: any) => v;
 
+/**
+ * Deterministic JSON serialization with recursively sorted object keys, so two
+ * structurally-equal frontmatter objects always produce the same string
+ * regardless of key order. Used to detect whether an incoming metadata change is
+ * our own write echoed back or a genuine external edit.
+ */
+export function stableStringify(value: unknown): string {
+  return JSON.stringify(value, (_key, v) => {
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      return Object.keys(v).sort().reduce((sorted: Record<string, unknown>, k) => {
+        sorted[k] = (v as Record<string, unknown>)[k];
+        return sorted;
+      }, {});
+    }
+    return v;
+  });
+}
+
 export function makePropTemplate(v: FrontMatterValue): MVPropDef | null {
   let t = typeof v;
   switch(t) {

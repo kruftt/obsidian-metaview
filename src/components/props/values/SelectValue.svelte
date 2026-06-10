@@ -1,4 +1,5 @@
 <script lang="ts">
+  import store from 'data/store.svelte';
   let {
     name,
     options,
@@ -15,7 +16,7 @@
   if (!value) value = '';
 </script>
 
-<select class="dropdown" name={name} bind:value={value}>
+<select class="dropdown" name={name} bind:value={value} onchange={() => store.commit()}>
   <option value="" disabled selected hidden>Select an option...</option>
   {#each options as option}
     <option value={option}>{option}</option>

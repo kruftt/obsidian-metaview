@@ -1,8 +1,10 @@
 <script lang="ts">
   import ListValue from './values/ListValue.svelte';
   import { setIcon } from 'obsidian';
-	let { key, context }: { key: MVFilePropType, context: Record<string, string[]> } = $props();
+  import type NoteData from 'data/NoteData.svelte';
+	let { key, context }: { key: MVFilePropType, context: Record<string, string[]> | NoteData } = $props();
   let input!: HTMLDivElement;
+  let entries = $derived((context as unknown as Record<string, string[]>)[key]);
   import PropKey from './keys/PropKey.svelte';
 </script>
 
@@ -10,7 +12,7 @@
   <div class="mv-file-key metadata-property-key">
     <PropKey {context} {key} />
   </div>
-  <ListValue entries={context[key]} editable={true} />
+  <ListValue entries={entries} editable={true} />
 </div>
 
 <style scoped lang="sass">

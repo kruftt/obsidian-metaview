@@ -1,5 +1,6 @@
 <script lang="ts">
   import { blurOnEnter } from '../events';
+  import store from 'data/store.svelte';
   
   let { name, template, value = $bindable() } : {
     name?: string,
@@ -16,13 +17,14 @@
     if (valid) {
       if (type === "number") value = parseFloat(target.value);
       else value = target.value;
+      store.commit();
     }
   }
 </script>
 
 {#if type === "boolean"}
   <input type="checkbox" class="metadata-property-value-input"
-    {name} bind:checked={value} {...inputProps}
+    {name} bind:checked={value} onchange={() => store.commit()} {...inputProps}
     style:flex="0 0 auto"
   />
 {:else}

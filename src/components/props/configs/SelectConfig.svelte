@@ -1,6 +1,7 @@
 <script lang='ts'>
   import { blurOnEnter } from "../events";
   import Input from "../values/InputValue.svelte";
+  import store from 'data/store.svelte';
 
   let { template } : { template: MVSelectDef } = $props();
   
@@ -13,6 +14,7 @@
       options.push(value);
       template.options = options;
       target.value = '';
+      store.commit();
     }
   }
 </script>
@@ -21,7 +23,7 @@
   {#each template.options as option, i}
     <div class="mv-metadata-property-option">
       <div class="mv-metadata-options-spacer"></div>
-      <span onclick={() => template.options.splice(i, 1)}>x</span>
+      <span onclick={() => { template.options.splice(i, 1); store.commit(); }}>x</span>
       <Input template={{ type: 'text' }} bind:value={template.options[i]} />
     </div>
   {/each}

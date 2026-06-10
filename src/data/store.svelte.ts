@@ -1,4 +1,5 @@
-import { TFile, Vault } from 'obsidian'
+import { TFile, Vault, debounce, type Debouncer } from 'obsidian'
+import { stableStringify } from '../utils'
 import TemplateData from "./TemplateData.svelte"
 import NoteData from './NoteData.svelte'
 import type MetaViewPlugin from 'Plugin';
@@ -10,13 +11,17 @@ class MVStore {
   
   public data = $state.raw<null|TemplateData|NoteData>(null);
   public file = $state.raw<TFile|null>(null);
-  public updating = false;
-  
+
+  /** Normalized serialization of the frontmatter currently believed to be on disk. */
+  public lastWritten: string | null = null;
+
   private plugin: MetaViewPlugin;
   private templateNameRegex: RegExp;
+  private writer!: Debouncer<[], void>;
   
   public init(plugin: MetaViewPlugin) {
     this.plugin = plugin;
+    this.writer = debounce(() => this.flush(), 400, true);
     const templatesPath = plugin.settings.templatesPath;
     this.templateNameRegex = new RegExp('^' + templatesPath + CONST.TEMPLATE_NAME_REGEX);
     
@@ -78,36 +83,65 @@ class MVStore {
     return files.map((v) => v.basename);
   }
 
-  public sync() {
-    console.log('sync', this.updating);
-    const data = this.data;
-    if (data === null) return;
-
+  /** Build the exact frontmatter object the model wants on disk. */
+  private desiredFrontmatter(data: NoteData | TemplateData): FrontMatter {
+    const typesProp = this.plugin.settings.typesProperty;
     const types = $state.snapshot(data.types);
     const fileProps = $state.snapshot(data.fileProps);
-    const props = $state.snapshot(data.props) as Record<string, any>;
-    this.updating = !this.updating;
+    const props = $state.snapshot(data.props) as unknown as FrontMatter;
 
-    if (this.updating) {
-      if (data instanceof NoteData) {
-        data.updateTypeData(this.plugin.settings.typesProperty);
-      }
-
-      this.plugin.app.fileManager!.processFrontMatter(this.file!, (frontmatter) => {
-        let k, v;
-        for (k of Object.keys(frontmatter)) {
-          if (props[k] === undefined) {
-            delete frontmatter[k];
-          }
-        }
-
-        if (types.length > 0) frontmatter[this.plugin.settings.typesProperty] = types;
-        for ([k, v] of Object.entries(fileProps)) {
-          if (v.length > 0) frontmatter[k] = v;
-        }
-        Object.assign(frontmatter, props);
-      });
+    const fm: FrontMatter = {};
+    if (types.length > 0) fm[typesProp] = types;
+    for (const [k, v] of Object.entries(fileProps)) {
+      if (v.length > 0) fm[k] = v;
     }
+    Object.assign(fm, props);
+    return fm;
+  }
+
+  /** Schedule a debounced write of the current model to disk. Call after any edit. */
+  public commit() {
+    if (this.data && this.file) this.writer();
+  }
+
+  /** Write the current model to disk if it differs from what's there (runs debounced). */
+  private flush() {
+    const data = this.data;
+    const file = this.file;
+    if (!data || !file) return;
+
+    const fm = this.desiredFrontmatter(data);
+    const serialized = stableStringify(fm);
+    if (serialized === this.lastWritten) return; // nothing changed versus disk
+    this.lastWritten = serialized; // set before writing so the echo is recognized
+
+    if (data instanceof NoteData) data.updateTypeData(this.plugin.settings.typesProperty);
+
+    this.plugin.app.fileManager.processFrontMatter(file, (frontmatter) => {
+      for (const k of Object.keys(frontmatter)) {
+        if (!(k in fm)) delete frontmatter[k];
+      }
+      Object.assign(frontmatter, fm);
+    });
+  }
+
+  /** Flush any pending write immediately (call before switching files and on unload). */
+  public flushNow() {
+    this.writer.run();
+  }
+
+  /** Record the current model as the on-disk baseline (call after loading a file). */
+  public markClean() {
+    this.lastWritten = this.data ? stableStringify(this.desiredFrontmatter(this.data)) : null;
+  }
+
+  /** True if `frontmatter` differs from what we last wrote/loaded for the active file. */
+  public isExternalChange(frontmatter: FrontMatter, isTemplate: boolean): boolean {
+    const typesProp = this.plugin.settings.typesProperty;
+    const model = isTemplate
+      ? new TemplateData(frontmatter, typesProp)
+      : new NoteData(frontmatter, typesProp);
+    return stableStringify(this.desiredFrontmatter(model)) !== this.lastWritten;
   }
 }
 

@@ -1,6 +1,7 @@
 <script lang='ts'>
   import { blurOnEnter } from '../events';
-  
+  import store from 'data/store.svelte';
+
 
   let { context, value } : {
     context: Record<string, any>
@@ -13,7 +14,8 @@
     if (!newKey) return;
     if (!(newKey in context)) {
       context[newKey] = value;
-    } 
+      store.commit();
+    }
     target.value = '';
   };
 </script>

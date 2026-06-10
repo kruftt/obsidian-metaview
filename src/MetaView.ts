@@ -1,31 +1,30 @@
-import { ItemView, WorkspaceLeaf } from 'obsidian';
-import * as CONST from './const';
-import Component from './components/MetaView.svelte';
-import { mount, unmount } from 'svelte';
+import { ItemView, type WorkspaceLeaf } from "obsidian";
+import { mount, unmount } from "svelte";
+import Component from "./components/MetaView.svelte";
+import * as CONST from "./const";
 
 export default class MetaView extends ItemView {
-    component: Component;
+	component: ReturnType<typeof mount>;
 
-    constructor(leaf: WorkspaceLeaf) {
-        super(leaf);
-        this.navigation = false;
-    }
+	constructor(leaf: WorkspaceLeaf) {
+		super(leaf);
+		this.navigation = false;
+	}
 
-    getViewType() {
-        return CONST.ID;
-    }
+	getViewType() {
+		return CONST.ID;
+	}
 
-    getDisplayText(): string {
-        return CONST.NAME;
-    }
+	getDisplayText(): string {
+		return CONST.NAME;
+	}
 
-    async onOpen() {
-        this.contentEl.addClass('mv-view');
-        // @ts-ignore
-        this.component = mount(Component, { target: this.contentEl });
-    }
-    
-    async onClose() {
-        unmount(this.component);
-    }
+	async onOpen() {
+		this.contentEl.addClass("mv-view");
+		this.component = mount(Component, { target: this.contentEl });
+	}
+
+	async onClose() {
+		unmount(this.component);
+	}
 }

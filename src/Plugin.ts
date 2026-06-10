@@ -42,40 +42,39 @@ export default class MetaViewPlugin extends Plugin {
 			store.init(this);
 
 			const loadFile = (file: TFile | null) => {
-				store.updating = true;
+				store.flushNow();
 				if (file === null || file.extension !== 'md') {
 					store.file = store.data = null;
 				} else {
-					console.log('loading file', file.name);
 					store.file = file;
 					const fm = this.getFrontMatter(file);
 					store.data = (this.isTemplate(file.path))
 						? store.getTemplate(file.path)
 						: new NoteData(fm, this.settings.typesProperty);
 				}
+				store.markClean();
 			};
 			
 			this.registerEvent(workspace.on('file-open', loadFile));
 
 			this.registerEvent(metadataCache.on('changed', (file, data, cache) => {
-				console.log('metadata changed', store.updating);
 				if (file.extension !== 'md') return;
 				const storeData = store.data;
+				const isTemplate = this.isTemplate(file.path);
 
-				if (store.updating && file === store.file) {
-					store.updating = false;
+				// Ignore the metadata event echoed back from our own write to the active file.
+				if (file === store.file && !store.isExternalChange(cache.frontmatter || {}, isTemplate)) {
+					return;
+				}
+
+				if (isTemplate) {
+					store.addTemplate(file); // updates template
+					if (storeData instanceof NoteData) storeData.updateTypeData(this.settings.typesProperty);
 				} else {
-					if (this.isTemplate(file.path)) {
-						store.addTemplate(file); // updates template
-						// check if current note is a template
-						if (file === store.file) store.getTemplate
-						if (storeData instanceof NoteData) storeData.updateTypeData(this.settings.typesProperty);
-					} else {
-						store.removeNote(file, this.getTypes(cache));
-						store.addNote(file);
-					}
-					if (file === store.file) loadFile(file);
-				}				
+					store.removeNote(file, this.getTypes(cache));
+					store.addNote(file);
+				}
+				if (file === store.file) loadFile(file);
 			}));
 
 			this.registerEvent(metadataCache.on('deleted', (file, prevCache) => {
@@ -103,7 +102,9 @@ export default class MetaViewPlugin extends Plugin {
 		});
 	}
 
-	onunload() { }
+	onunload() {
+		store.flushNow();
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());

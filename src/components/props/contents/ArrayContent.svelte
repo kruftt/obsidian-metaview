@@ -1,9 +1,10 @@
 <script lang='ts'>
   import NoteProp from "../NoteProp.svelte";
   import { createValue } from "utils";
+  import store from 'data/store.svelte';
   
-  let { data = $bindable(), template } : {
-    data?: FrontMatterValue[]
+  let { data = $bindable([]), template } : {
+    data: FrontMatterValue[]
     template?: MVArrayDef | MVJsonDef
   } = $props();
 
@@ -21,7 +22,7 @@
     />
   {/each}
   <div class="metadata-property">
-    <div class="mv-add-element" onclick={() => (data || (data = [])).push(createValue(elementType))}>
+    <div class="mv-add-element" onclick={() => { (data || (data = [])).push(createValue(elementType)); store.commit(); }}>
       <div>[+] Add Element</div>
     </div>
   </div>

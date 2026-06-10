@@ -1,5 +1,6 @@
 <script lang="ts">
   import { setIcon } from 'obsidian';
+  import type { Component } from 'svelte';
   import { blurOnEnter, createContextMenuCallback } from './events';
   import { makePropTemplate } from 'utils';
   import { PROPERTY_TYPES, TYPE_ICONS } from 'const';
@@ -7,25 +8,31 @@
   import SelectValue from './values/SelectValue.svelte';
   import Configs from './configs';
   import createExpand from 'components/expand.svelte';
+  import store from 'data/store.svelte';
   
-  let { context, key, editable = false, remove = () => delete context[key] } : {
-    context: Record<string, MVPropDef>,
-    key: string,
+  let { context, key, editable = false, remove } : {
+    context: Record<string, MVPropDef> | MVPropDef[] | MVCollectionDef,
+    key: string | number,
     editable?: boolean,
     remove?: () => void
   } = $props();
 
-  let template = $derived(context[key]);
-  
+  // `context` holds prop definitions keyed by name (object) or index
+  // (array/tuple); both resolve to an MVPropDef slot at runtime.
+  let ctx = $derived(context as unknown as Record<string | number, MVPropDef>);
+  const removeSlot = remove ?? (() => { delete ctx[key]; });
+
+  let template = $derived(ctx[key]);
+
   let typeIcon!: HTMLElement;
   $effect(() => setIcon(typeIcon, TYPE_ICONS[template.type]));
-  
+
   const expand = createExpand();
-  const openContextMenu = createContextMenuCallback(remove);
+  const openContextMenu = createContextMenuCallback(removeSlot);
 
   let selectedType = $state(template.type);
-  let Config = $derived(Configs[template.type]);
-  $effect(() => { if (selectedType !== template.type) context[key] = makePropTemplate({ type: selectedType })! });
+  let Config: Component<any> = $derived(Configs[template.type]);
+  $effect(() => { if (selectedType !== template.type) { ctx[key] = makePropTemplate({ type: selectedType })!; store.commit(); } });
 </script>
 
 <div class="mv-template-property">

@@ -12,8 +12,6 @@
   import NewKey from './props/keys/NewKey.svelte';
   import createExpand from './expand.svelte';
   
-  $effect(() => store.sync());
-
   let data = $derived(store.data);
   let filename = $derived(store.file ? store.file.name : '');
   const freeTemplate = { type: 'json', default: '' };

@@ -15,7 +15,7 @@
   const options = store.getNotesByType(target);
 </script>
 
-<select class="dropdown" name={name} bind:value={value}>
+<select class="dropdown" name={name} bind:value={value} onchange={() => store.commit()}>
   <option value="" disabled selected hidden>Select an option...</option>
   {#each options as option}
     <option value={option}>{option}</option>

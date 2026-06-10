@@ -1,4 +1,5 @@
 import { Menu, setIcon } from 'obsidian';
+import store from 'data/store.svelte';
 
 export function blurOnEnter(e: KeyboardEvent) {
   if (e.key === 'Enter') {
@@ -24,7 +25,7 @@ export function createContextMenuCallback(remove: () => void, reset?: () => void
         .setIcon('rotate-ccw')
         .setSection('danger')
         .setWarning(true)
-        .onClick(reset)
+        .onClick(() => { reset(); store.commit(); })
       );
     }
 
@@ -34,7 +35,7 @@ export function createContextMenuCallback(remove: () => void, reset?: () => void
         .setIcon('trash-2')
         .setSection('danger')
         .setWarning(true)
-        .onClick(remove)
+        .onClick(() => { remove(); store.commit(); })
       );
     }
 

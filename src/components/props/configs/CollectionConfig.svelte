@@ -1,6 +1,7 @@
 <script lang='ts'>
   import TemplateProp from "../TemplateProp.svelte";
   import NewKey from "../keys/NewKey.svelte";
+  import store from 'data/store.svelte';
   let { template } : { template: MVCollectionDef } = $props();
 </script>
 
@@ -20,7 +21,7 @@
           />
         {/each}
         <div class="metadata-property">
-          <div class="metadata-property-key" onclick={() => template.elementTypes.push({ type: 'text' })}>Add Entry</div>
+          <div class="metadata-property-key" onclick={() => { template.elementTypes.push({ type: 'text' }); store.commit(); }}>Add Entry</div>
         </div>
       {:else}
         {#each Object.keys(template.entries) as key}
