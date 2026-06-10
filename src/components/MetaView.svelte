@@ -47,9 +47,7 @@
         <FileProp key="aliases" context={data.fileProps} />
         <FileProp key="tags" context={data.fileProps} />
         <FileProp key="cssclasses" context={data.fileProps} />
-        {#if data instanceof NoteData}
-          <FileProp key="types" context={data} />
-        {/if}
+        <FileProp key="types" context={data} />
       {/if}
     </div>
 
@@ -61,9 +59,9 @@
         <div class="metadata-property">
           <NewKey context={data.props} value="''" />
         </div>
-        {#each Object.entries(data.typeData) as [name, typeData]}
+        {#each Object.entries(data.typeData) as [name, typeProps]}
           <div class="mv-properties-title">{name}</div>
-          {#each Object.entries(typeData.props) as [key, template]}
+          {#each Object.entries(typeProps) as [key, template]}
             <NoteProp {key} {template} context={data.props} />
           {/each}
         {/each}

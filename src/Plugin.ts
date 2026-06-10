@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting, TFile, WorkspaceLeaf, type FrontMatterCache } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, TFile, WorkspaceLeaf, debounce, type Debouncer, type FrontMatterCache } from 'obsidian';
 import * as CONST from './const'
 import MetaView from "./MetaView"
 import { MVIndex, type MVSession } from './data/store.svelte'
@@ -13,6 +13,8 @@ export default class MetaViewPlugin extends Plugin {
 	declare settings: MVSettings;
 	index!: MVIndex;
 	private readonly sessions = new Set<MVSession>();
+	/** Debounced index rebuild, so typing in the settings fields doesn't rescan per keystroke. */
+	private reindex!: Debouncer<[], void>;
 
 	/** Register a view's session so it receives workspace/metadata event notifications. */
 	public registerSession(session: MVSession) {
@@ -47,6 +49,7 @@ export default class MetaViewPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		this.index = new MVIndex(this);
+		this.reindex = debounce(() => { this.index.scan(); this.refreshSessions(); }, 500, true);
 		this.addSettingTab(new MetaViewSettingTab(this.app, this));
 		this.registerView(CONST.ID, (leaf) => new MetaView(leaf, this));
 
@@ -102,6 +105,7 @@ export default class MetaViewPlugin extends Plugin {
 	}
 
 	onunload() {
+		this.reindex.cancel();
 		for (const s of this.sessions) s.flushNow();
 	}
 
@@ -109,10 +113,11 @@ export default class MetaViewPlugin extends Plugin {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
+	/** Persist settings immediately; rebuild the (vault-wide) index debounced, since the
+	 *  current settings all change how the whole vault is classified/parsed. */
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.index.scan();
-		this.refreshSessions();
+		this.reindex();
 	}
 
 	public getFrontMatter(file: TFile) {

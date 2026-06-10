@@ -2,7 +2,8 @@
   import ListValue from './values/ListValue.svelte';
   import { setIcon } from 'obsidian';
   import type NoteData from 'data/NoteData.svelte';
-	let { key, context }: { key: MVFilePropType, context: Record<string, string[]> | NoteData } = $props();
+  import type TemplateData from 'data/TemplateData.svelte';
+	let { key, context }: { key: MVFilePropType, context: Record<string, string[]> | NoteData | TemplateData } = $props();
   let input!: HTMLDivElement;
   let entries = $derived((context as unknown as Record<string, string[]>)[key]);
   import PropKey from './keys/PropKey.svelte';
