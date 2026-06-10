@@ -28,7 +28,6 @@
 <style lang='sass'>
   .mv-add-element
     color: var(--text-muted)
-    // color: var(--metadata-label-text-color)
     font-size: var(--metadata-label-font-size)
     font-weight: var(--metadata-label-font-weight)
     height: var(--input-height)
@@ -39,9 +38,4 @@
 
     &:hover
       color: var(--text-normal)
-
-  * :global
-    .mv-bound-key
-      min-width: calc(var(--metadata-label-width) * 0.4)
-      flex: 0 0 min-content !important
 </style>

@@ -1,8 +1,145 @@
-/*
+/* ==========================================================================
+   MetaView plugin styles
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+   Global overrides of Obsidian's native metadata classes live here, scoped
+   under `.mv-view` (added to the plugin view's content element) so they do not
+   leak into the rest of the app. Component-specific styling stays scoped inside
+   each Svelte component.
+   ========================================================================== */
 
-If your plugin does not need CSS, delete this file.
+/* --- Selects ------------------------------------------------------------- */
 
-*/
+.mv-view select {
+  flex-grow: 1;
+  border: none;
+}
+
+.mv-view select:focus {
+  box-shadow: none;
+}
+
+/* --- Native metadata-property overrides ---------------------------------- */
+
+.mv-view .metadata-property {
+  border: none;
+  margin: 0;
+}
+
+.mv-view .metadata-property-key {
+  border: none;
+  min-width: var(--metadata-label-width);
+  color: var(--metadata-label-text-color);
+  font-size: var(--metadata-label-font-size);
+  font-weight: var(--metadata-label-font-weight);
+  margin-right: 0.2em;
+  padding-left: 0.1em;
+  align-items: center;
+  height: var(--input-height);
+}
+
+.mv-view .metadata-property-key-input {
+  margin: 0 var(--size-4-1);
+}
+
+.mv-view .metadata-property-value {
+  border: none;
+}
+
+.mv-view .metadata-property-value-input {
+  width: 100%;
+}
+
+.mv-view input.metadata-property-value-input {
+  border-radius: var(--input-radius);
+}
+
+.mv-view .metadata-property-value-input[type='checkbox'] {
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+}
+
+/* --- Inputs -------------------------------------------------------------- */
+
+.mv-view input {
+  background: var(--metadata-input-background);
+  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+  outline: none;
+}
+
+.mv-view input[type='month'],
+.mv-view input[type='time'] {
+  border: none;
+  color: var(--text-normal);
+  -webkit-app-region: no-drag;
+  position: relative;
+  padding: var(--size-4-1) var(--size-4-2);
+  padding-inline-start: var(--size-4-6);
+}
+
+.mv-view input[type='month']::-webkit-calendar-picker-indicator {
+  position: absolute;
+  left: var(--size-4-1);
+  right: auto;
+  opacity: 0.5;
+}
+
+.mv-view input[type='time']::-webkit-calendar-picker-indicator {
+  position: absolute;
+  left: -5px;
+  right: auto;
+  opacity: 0.5;
+}
+
+/* --- Layout helpers ------------------------------------------------------ */
+
+.mv-view .mv-icon-tray {
+  display: flex;
+}
+
+.mv-view .mv-value-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  padding-left: var(--size-4-1);
+}
+
+.mv-view .mv-properties-title {
+  margin: 1em 0 0.4em 0.5em;
+}
+
+.mv-view .mv-content-container {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 0 var(--size-4-4);
+  border-left: var(--border-width) solid var(--metadata-divider-color);
+  padding-bottom: var(--size-4-1);
+}
+
+/* --- Property keys inside collection contents ---------------------------- */
+
+.mv-view .mv-bound-key {
+  min-width: calc(var(--metadata-label-width) * 0.4);
+  flex: 0 0 min-content !important;
+}
+
+/* --- Config option rows -------------------------------------------------- */
+
+.mv-view .mv-metadata-property-option {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  margin-top: var(--size-4-1);
+  font-size: var(--metadata-label-font-size);
+}
+
+.mv-view .mv-metadata-property-option label {
+  width: var(--size-4-16);
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+.mv-view .mv-metadata-property-option input {
+  flex: 1 1 auto;
+  min-width: 0;
+}

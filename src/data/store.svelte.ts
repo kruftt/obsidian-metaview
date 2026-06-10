@@ -85,7 +85,7 @@ class MVStore {
 
     const types = $state.snapshot(data.types);
     const fileProps = $state.snapshot(data.fileProps);
-    const props = $state.snapshot(data.props);
+    const props = $state.snapshot(data.props) as Record<string, any>;
     this.updating = !this.updating;
 
     if (this.updating) {

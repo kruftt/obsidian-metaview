@@ -36,6 +36,7 @@
     width: 100%
     box-shadow: none
     background: transparent
+    padding-bottom: var(--size-4-2)
 
     &:focus
       

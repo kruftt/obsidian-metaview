@@ -31,14 +31,3 @@
         onblur!="{createEntry}"
       )
 </template>
-
-<style lang='sass'>
-  // .multi-select-input
-  // .multi-select-container
-  //   flex: 1 1 auto
-  //   &:hover
-  //     background-color: var(--metadata-input-background-active)
-  
-  // .multi-select-input
-  //   background-color: transparent
-</style>

@@ -23,25 +23,17 @@
     min-width: calc(var(--metadata-label-width) * 0.6)
     flex: 0 0 min-content !important
     padding-left: 0.5em
-  
-  .multi-select-container
-    flex: 1 1 auto
-    &:hover
-      background-color: var(--metadata-input-background-active)
-  
-  .multi-select-input
-    background-color: transparent
-  
+
   .metadata-property
     --pill-padding-x: var(--tag-padding-x)
     --pill-padding-y: var(--tag-padding-y)
 
   .metadata-property[data-property-key="aliases"]
-    --pill-background: rgba(168, 130, 255, 0.1)
+    --pill-background: rgba(var(--color-purple-rgb), 0.1)
 
   .metadata-property[data-property-key="cssclasses"]
-    --pill-background: rgba(224, 222, 113, 0.1)
+    --pill-background: rgba(var(--color-yellow-rgb), 0.1)
 
   .metadata-property[data-property-key="types"]
-    --pill-background: rgba(68, 207, 110, 0.1)
+    --pill-background: rgba(var(--color-green-rgb), 0.1)
 </style>

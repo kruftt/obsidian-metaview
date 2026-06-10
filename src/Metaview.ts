@@ -20,6 +20,7 @@ export default class MetaView extends ItemView {
     }
 
     async onOpen() {
+        this.contentEl.addClass('mv-view');
         // @ts-ignore
         this.component = mount(Component, { target: this.contentEl });
     }

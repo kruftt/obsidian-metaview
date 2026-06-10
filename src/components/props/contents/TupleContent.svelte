@@ -19,9 +19,3 @@
         template="{ t }"
       )
 </template>
-
-<style lang='sass'>
-  .mv-bound-key
-    min-width: calc(var(--metadata-label-width) * 0.6)
-    flex: 0 0 min-content !important
-</style>

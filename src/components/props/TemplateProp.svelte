@@ -54,30 +54,9 @@
 </template>
 
 <style scoped lang="sass">
-  .mv-metadata-options-spacer
-    flex: 0 2 var(--size-4-4)
-
   .metadata-property
     padding: 1px 0
 
-  * :global
-    .mv-content-container
-      display: flex
-      flex-direction: column
-
-    .mv-metadata-property-option
-      display: flex
-      margin-top: var(--size-4-1)
-      font-size: var(--metadata-label-font-size)
-      align-items: center
-      gap: var(--size-4-2)
-
-      label
-        width: var(--size-4-16)
-        text-align: right
-        flex: 0 0 auto
-      
-      input
-        flex: 1 1 auto
-        min-width: 0    
+  .mv-template-property
+    border-bottom: var(--border-width) solid var(--metadata-divider-color)
 </style>

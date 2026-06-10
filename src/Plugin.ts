@@ -11,7 +11,7 @@ const DEFAULT_SETTINGS: MVSettings = {
 }
 
 export default class MetaViewPlugin extends Plugin {
-	public settings: MVSettings;
+	declare settings: MVSettings;
 		
 	async activateView() {
 		const { workspace } = this.app;

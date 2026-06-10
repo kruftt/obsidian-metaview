@@ -61,7 +61,7 @@
   .mv-filename
     display: flex
     align-items: center
-    gap: 4px
+    gap: var(--size-4-1)
 
     &:hover
       color: var(--text-normal)
@@ -69,98 +69,4 @@
   .mv-metadata-file-props
     padding-bottom: 0.4em
     margin-bottom: 0.6em
-    // border-bottom: var(--border-width) solid var(--metadata-divider-color)
-
-
-  * :global
-          
-    select
-      flex-grow: 1
-      border: none
-      &:focus
-        box-shadow: none
-
-    .metadata-property
-      border: none
-      margin: 0
-      // border-bottom: var(--border-width) solid var(--metadata-divider-color)
-    
-    .metadata-property-key
-      border: none
-      min-width: var(--metadata-label-width) 
-      color: var(--metadata-label-text-color)
-      font-size: var(--metadata-label-font-size)
-      font-weight: var(--metadata-label-font-weight)
-      margin-right: 0.2em
-      padding-left: 0.1em
-      align-items: center
-      height: var(--input-height)
-    
-    .metadata-property-key-input
-      margin: 0 var(--size-4-1)
-  
-    .metadata-property-value
-      border: none
-
-    .metadata-property-value-input
-      width: 100%
-      
-    .metadata-property-value-input[type='checkbox']
-      width: var(--checkbox-size)
-      height: var(--checkbox-size)
-
-    .mv-properties-title
-      margin: 1.0em 0 0.4em 0.5em
-
-    .mv-value-wrapper
-      display: flex
-      align-items: center
-      flex: 1 1 auto
-      padding-left: var(--size-4-1)
-
-    input.metadata-property-value-input
-      border-radius: var(--input-radius)
-    
-    .mv-content-container
-      margin: 0 0 0 var(--size-4-4)
-      border-left: var(--border-width) solid var(--metadata-divider-color)
-      // padding-bottom: var(--size-4-2)
-
-    input
-      background: var(--metadata-input-background)
-      // color: var(--text-faint)
-      font-variant-numeric: tabular-nums
-      // border: none
-      font-family: inherit
-      outline: none
-
-    input[type='month']
-      border: none
-      color: var(--text-normal)
-      -webkit-app-region: no-drag
-      position: relative
-      padding: var(--size-4-1) var(--size-4-2)
-      padding-inline-start: var(--size-4-6)
-      &::-webkit-calendar-picker-indicator
-        position: absolute
-        left: var(--size-4-1)
-        right: auto
-        opacity: 0.5
-    
-    input[type='time']
-      border: none
-      color: var(--text-normal)
-      -webkit-app-region: no-drag
-      position: relative
-      padding: var(--size-4-1) var(--size-4-2)
-      padding-inline-start: var(--size-4-6)
-      &::-webkit-calendar-picker-indicator
-        position: absolute
-        left: -5px
-        right: auto
-        opacity: 0.5
-    
-
-    .mv-icon-tray
-      display: flex
 </style>
