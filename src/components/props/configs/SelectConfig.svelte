@@ -18,7 +18,7 @@
 </script>
 
 <template lang='pug'>
-  div.mv-content-container Options:
+  div.mv-content-container
     +each('template.options as option, i')    
       div.mv-metadata-property-option
         div.mv-metadata-options-spacer
@@ -27,12 +27,15 @@
           template="{{ type: 'text' }}"
           bind:value="{template.options[i]}"
         )
-    
-    input(
-      type="text"
-      onkeypress="{blurOnEnter}"
-      onblur="{updateTemplate}"
-    )
+
+    div.mv-metadata-property-option
+      input(
+        type="text"
+        onkeypress="{blurOnEnter}"
+        onblur="{updateTemplate}"
+        style:margin-left="var(--size-4-5)"
+        placeholder="Add option..."
+      )
 </template>
 
 <style lang='sass'>

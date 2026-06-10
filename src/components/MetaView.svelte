@@ -9,7 +9,6 @@
   import FileProp from "./props/FileProp.svelte";
   import NoteProp from './props/NoteProp.svelte';
   import TemplateProp from './props/TemplateProp.svelte';
-  import EditableKey from './props/keys/EditableKey.svelte';
   import NewKey from './props/keys/NewKey.svelte';
   import createExpand from './expand.svelte';
   
@@ -34,16 +33,16 @@
 
       div.mv-metadata-file-props
         +if("expand.open")
-          FileProp(key="aliases", entries="{data.fileProps.aliases}")
-          FileProp(key="tags", entries="{data.fileProps.tags}")
-          FileProp(key="cssclasses", entries="{data.fileProps.cssclasses}")
+          FileProp(key="aliases", context="{data.fileProps}")
+          FileProp(key="tags", context="{data.fileProps}")
+          FileProp(key="cssclasses", context="{data.fileProps}")
           +if("data instanceof NoteData")
-            FileProp(key="types", entries="{data.types}")
+            FileProp(key="types", context="{data}")
 
       div.metadata-content
         +startif("data instanceof NoteData")
           +each("data.freeProps as key")
-            NoteProp({key} context="{data.props}")
+            NoteProp({key} context="{data.props}" editable)
           div.metadata-property
             NewKey(context="{data.props}" value="''")
           +each("Object.entries(data.typeData) as [name, typeData]")
@@ -84,7 +83,7 @@
     .metadata-property
       border: none
       margin: 0
-      border-bottom: var(--border-width) solid var(--metadata-divider-color)
+      // border-bottom: var(--border-width) solid var(--metadata-divider-color)
     
     .metadata-property-key
       border: none
@@ -123,7 +122,9 @@
       border-radius: var(--input-radius)
     
     .mv-content-container
-      margin-left: var(--size-4-4)
+      margin: 0 0 0 var(--size-4-4)
+      border-left: var(--border-width) solid var(--metadata-divider-color)
+      // padding-bottom: var(--size-4-2)
 
     input
       background: var(--metadata-input-background)
@@ -159,8 +160,6 @@
         right: auto
         opacity: 0.5
     
-    .mv-content-container
-      padding-bottom: var(--size-4-1)
 
     .mv-icon-tray
       display: flex

@@ -4,11 +4,11 @@
   
   let { data = $bindable(), template } : {
     data?: FrontMatterValue[]
-    template?: MVArrayDef
+    template?: MVArrayDef | MVJsonDef
   } = $props();
 
   if (!data || !(data instanceof Array)) data = [];
-  const elementType = template?.elementType;
+  const elementType = template?.type !== 'json' ? template?.elementType : template;
 </script>
 
 <template lang='pug'>
@@ -21,8 +21,27 @@
         remove!="{() => data.splice(i, 1)}"
       )
     div.metadata-property
-      button(onclick!="{() => (data || (data = [])).push(createValue(elementType))}") Add Element
+      div.mv-add-element(onclick!="{() => (data || (data = [])).push(createValue(elementType))}")
+        div [+] Add Element
 </template>
 
 <style lang='sass'>
+  .mv-add-element
+    color: var(--text-muted)
+    // color: var(--metadata-label-text-color)
+    font-size: var(--metadata-label-font-size)
+    font-weight: var(--metadata-label-font-weight)
+    height: var(--input-height)
+    width: 100%
+    display: flex
+    align-items: center
+    padding-left: var(--size-4-6)
+
+    &:hover
+      color: var(--text-normal)
+
+  * :global
+    .mv-bound-key
+      min-width: calc(var(--metadata-label-width) * 0.4)
+      flex: 0 0 min-content !important
 </style>

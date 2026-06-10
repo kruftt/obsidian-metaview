@@ -41,3 +41,18 @@ export function createContextMenuCallback(remove: () => void, reset?: () => void
     menu.showAtMouseEvent(e);
   }
 }
+
+export function createSetKey(context: Record<string, any>, key: string) {
+  return (e: Event) => {
+    const target = <HTMLInputElement>e.target;
+    const newKey = target.value;
+    if (!newKey || newKey === key) return;
+    if (newKey in context) {
+      target.value = key;
+    } else {
+      context[newKey] = context[key];
+      delete context[key];
+      key = newKey;
+    }
+  };
+}

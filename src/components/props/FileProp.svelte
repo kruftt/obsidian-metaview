@@ -1,28 +1,26 @@
 <script lang="ts">
   import ListValue from './values/ListValue.svelte';
   import { setIcon } from 'obsidian';
-	let { key, entries }: { key: MVFilePropType, entries: string[] } = $props();
+	let { key, context }: { key: MVFilePropType, context: Record<string, string[]> } = $props();
   let input!: HTMLDivElement;
-  import StaticKey from './keys/StaticKey.svelte';
+  import PropKey from './keys/PropKey.svelte';
 </script>
 
 <template lang="pug">
   div.metadata-property(data-property-key="{key}")
-    //- div.mv-file-key.metadata-property-key {key}
     div.mv-file-key.metadata-property-key
-      StaticKey({key})
-    ListValue({entries} editable="{true}")
-      
+      PropKey({context} {key})
+    ListValue(entries="{context[key]}" editable="{true}")
 </template>
 
 <style scoped lang="sass">
   .mv-file-key
     align-items: center
-    min-width: calc(var(--metadata-label-width) * 0.6)
     color: var(--metadata-label-text-color)
     font-size: var(--metadata-label-font-size)
     font-weight: var(--metadata-label-font-weight)
     height: var(--input-height)
+    min-width: calc(var(--metadata-label-width) * 0.6)
     flex: 0 0 min-content !important
     padding-left: 0.5em
   

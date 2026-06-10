@@ -3,8 +3,7 @@
   import { blurOnEnter, createContextMenuCallback } from './events';
   import { makePropTemplate } from 'utils';
   import { PROPERTY_TYPES, TYPE_ICONS } from 'const';
-  import StaticKey from './keys/StaticKey.svelte';
-  import EditableKey from './keys/EditableKey.svelte';
+  import PropKey from './keys/PropKey.svelte';
   import SelectValue from './values/SelectValue.svelte';
   import Configs from './configs';
   import createExpand from 'components/expand.svelte';
@@ -30,7 +29,7 @@
 </script>
 
 <template lang="pug">
-  div.metadata-template-property
+  div.mv-template-property
     div.metadata-property
       div.mv-icon-tray 
         div.metadata-property-icon(
@@ -43,12 +42,10 @@
           onclick="{openContextMenu}"
           oncontextmenu="{openContextMenu}"
         )
+      
       div.metadata-property-key
-        +startif("editable")
-          EditableKey({context} {key})
-        +else
-          StaticKey({key})
-        +endif      
+        PropKey({context} {key} {editable})
+        
       div.metadata-property-value
         SelectValue(bind:value="{selectedType}" options="{PROPERTY_TYPES}")
           

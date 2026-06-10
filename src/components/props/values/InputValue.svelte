@@ -13,7 +13,10 @@
   function syncValue (e: Event) {
     const target = <HTMLInputElement>e.target;
     const valid = target.validity.valid;
-    if (valid) value = target.value;
+    if (valid) {
+      if (type === "number") value = parseFloat(target.value);
+      else value = target.value;
+    }
   }
 </script>
 

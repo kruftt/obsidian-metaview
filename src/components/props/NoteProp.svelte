@@ -4,12 +4,12 @@
   import { TYPE_ICONS } from 'const';
   import Values from './values'
   import ContentContainers from './contents'
-  import EditableKey from './keys/EditableKey.svelte';
-  import StaticKey from './keys/StaticKey.svelte';
+  import PropKey from './keys/PropKey.svelte';
   import createExpand from 'components/expand.svelte';
 
-  let { context, key, remove = () => delete context[key], template } : {
+  let { context, editable = false, key, remove = () => delete context[key], template } : {
     context: FrontMatter
+    editable?: boolean
     key: string
     remove?: () => void
     template?: MVPropDef
@@ -38,29 +38,30 @@
 </script>
 
 <template lang="pug">
-  div.metadata-property
-    div.mv-icon-tray
-      div.metadata-property-icon(
-        bind:this="{expand.icon}"
-        onclick!="{expand.toggle}"
-        style:opacity="{Contents ? 1 : 0}"
-      )
-      div.metadata-property-icon.mv-type-icon(bind:this="{icon}" onclick="{openContextMenu}")
-    
-    div.metadata-property-key(class="{template ? 'mv-bound-key' : 'mv-free-key'}")
-      +startif('template')
-        StaticKey({key})
-      +else
-        EditableKey({context} {key})
-      +endif
-    div.metadata-property-value
-      Value({template} name="{key}" bind:value="{context[key]}")
+  div.mv-note-property
+    div.metadata-property
+      div.mv-icon-tray
+        div.metadata-property-icon(
+          bind:this="{expand.icon}"
+          onclick!="{expand.toggle}"
+          style:opacity="{Contents ? 1 : 0}"
+        )
+        div.metadata-property-icon.mv-type-icon(bind:this="{icon}" onclick="{openContextMenu}")
+      
+      div.metadata-property-key(class="{template ? 'mv-bound-key' : 'mv-free-key'}")
+        PropKey({context} {key} {editable})
 
-  +if("expand.open && Contents") 
-    Contents({template} bind:data="{context[key]}")
+      div.metadata-property-value
+        Value({template} name="{key}" bind:value="{context[key]}")
+
+    +if("expand.open && Contents") 
+      Contents({template} bind:data="{context[key]}")
 </template>
 
 <style lang="sass">
+  .mv-note-property
+    border-bottom: var(--border-width) solid var(--metadata-divider-color)
+
   .mv-bound-key
     flex: 0 0 auto
 

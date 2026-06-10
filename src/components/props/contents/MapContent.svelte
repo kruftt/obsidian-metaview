@@ -19,6 +19,7 @@
         context="{data}"
         template="{ elementType }"
         key="{ key }"
+        editable
       )
     div.metadata-property
       NewKey(

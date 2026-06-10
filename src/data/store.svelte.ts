@@ -75,7 +75,7 @@ class MVStore {
 
   public getNotesByType(type: string | null | undefined) {
     const files = type ? this.notes[type] : [];
-    return files.map((v) => v.name);
+    return files.map((v) => v.basename);
   }
 
   public sync() {
