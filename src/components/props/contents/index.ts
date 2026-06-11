@@ -5,9 +5,9 @@ import RecordContent from "./RecordContent.svelte";
 import TupleContent from "./TupleContent.svelte";
 
 export default {
-  'array': ArrayContent,
-  'map': MapContent,
-  'multi': MultiContent,
-  'record': RecordContent,
-  'tuple': TupleContent,
-}
+	array: ArrayContent,
+	map: MapContent,
+	multi: MultiContent,
+	record: RecordContent,
+	tuple: TupleContent,
+};

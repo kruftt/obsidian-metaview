@@ -1,14 +1,23 @@
 <script lang='ts'>
-  import { OPTIONS_TYPES } from "const";
-  import InputValue from "../values/InputValue.svelte";
+import { OPTIONS_TYPES } from "const";
+import InputValue from "../values/InputValue.svelte";
 
-  let { template } : { template: MVInputDef | MVJsonDef } = $props();
+let { template }: { template: MVInputDef | MVJsonDef } = $props();
 
-  let options = $derived(OPTIONS_TYPES[<keyof typeof OPTIONS_TYPES>template.type]);
-  let inputProps = $state<Record<string, FrontMatterValue | null | undefined>>(
-    template.type === 'json' ? {} : ((template.props ??= {}) as Record<string, FrontMatterValue | null | undefined>)
-  );
-  let valueTemplate = $derived({ type: template.type === 'json' ? 'text' : template.type } as MVInputDef);
+let options = $derived(
+	OPTIONS_TYPES[<keyof typeof OPTIONS_TYPES>template.type],
+);
+// svelte-ignore state_referenced_locally
+if (template.type !== "json") template.props ??= {};
+// svelte-ignore state_referenced_locally
+let inputProps = $state<Record<string, FrontMatterValue | null | undefined>>(
+	template.type === "json"
+		? {}
+		: (template.props as Record<string, FrontMatterValue | null | undefined>),
+);
+let valueTemplate = $derived({
+	type: template.type === "json" ? "text" : template.type,
+} as MVInputDef);
 </script>
 
 <div class="mv-content-container">

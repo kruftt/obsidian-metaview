@@ -1,10 +1,10 @@
 <script lang='ts'>
-  import { getStore } from "data/store.svelte";
-  import Select from "../values/SelectValue.svelte";
+import { getStore } from "data/store.svelte";
+import Select from "../values/SelectValue.svelte";
 
-  const store = getStore();
+const store = getStore();
 
-  let { template } : { template: MVLinkDef } = $props();
+let { template }: { template: MVLinkDef } = $props();
 </script>
 
 <div class="mv-content-container">

@@ -1,6 +1,6 @@
-import type { Plugin, PluginManifest } from 'obsidian';
+import type { Plugin, PluginManifest } from "obsidian";
 
-declare module 'obsidian' {
+declare module "obsidian" {
 	interface App {
 		plugins: {
 			enabledPlugins: Set<string>;
@@ -71,6 +71,14 @@ declare module 'obsidian' {
 		setWarning: (warning: boolean) => MenuItem;
 	}
 
+	interface MetadataCache {
+		/**
+		 * @internal Map of every tag in the vault (keys are `#`-prefixed, incl. nested
+		 * `#foo/bar`) to the number of times it occurs.
+		 */
+		getTags(): Record<string, number>;
+	}
+
 	interface Vault {
 		/**
 		 * @internal Get path for file that does not conflict with other existing files
@@ -83,5 +91,3 @@ declare module 'obsidian' {
 		getAbstractFileByPathInsensitive(path: string): TAbstractFile | null;
 	}
 }
-
-export {};

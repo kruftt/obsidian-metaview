@@ -1,13 +1,25 @@
-import { App, Plugin, PluginSettingTab, Setting, TFile, WorkspaceLeaf, debounce, type Debouncer, type FrontMatterCache } from 'obsidian';
-import * as CONST from './const'
-import MetaView from "./MetaView"
-import { MVIndex, type MVSession } from './data/store.svelte'
-import { arrayWrap } from './utils'
+import {
+	type App,
+	type Debouncer,
+	debounce,
+	type FrontMatterCache,
+	Plugin,
+	PluginSettingTab,
+	Setting,
+	TFile,
+	TFolder,
+	type WorkspaceLeaf,
+} from "obsidian";
+import * as CONST from "./const";
+import { MVIndex, type MVSession } from "./data/store.svelte";
+import MetaView from "./MetaView";
+import { TextInputSuggest } from "./TextInputSuggest";
+import { arrayWrap } from "./utils";
 
 const DEFAULT_SETTINGS: MVSettings = {
-	templatesPath: '',
-	typesProperty: 'types',
-}
+	templatesPath: "",
+	typesProperty: "types",
+};
 
 export default class MetaViewPlugin extends Plugin {
 	declare settings: MVSettings;
@@ -35,7 +47,7 @@ export default class MetaViewPlugin extends Plugin {
 		const { workspace } = this.app;
 		const leaves = workspace.getLeavesOfType(CONST.ID);
 		let leaf: WorkspaceLeaf | null = null;
-		
+
 		if (leaves.length > 0) {
 			leaf = leaves[0];
 		} else {
@@ -49,12 +61,25 @@ export default class MetaViewPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		this.index = new MVIndex(this);
-		this.reindex = debounce(() => { this.index.scan(); this.refreshSessions(); }, 500, true);
+		this.reindex = debounce(
+			() => {
+				this.index.scan();
+				this.refreshSessions();
+			},
+			500,
+			true,
+		);
 		this.addSettingTab(new MetaViewSettingTab(this.app, this));
 		this.registerView(CONST.ID, (leaf) => new MetaView(leaf, this));
 
-		const ribbonIconEl = this.addRibbonIcon('info', CONST.NAME, (evt: MouseEvent) => { this.activateView(); });
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
+		const ribbonIconEl = this.addRibbonIcon(
+			"info",
+			CONST.NAME,
+			(_evt: MouseEvent) => {
+				this.activateView();
+			},
+		);
+		ribbonIconEl.addClass("my-plugin-ribbon-class");
 
 		this.app.workspace.onLayoutReady(() => {
 			const app = this.app;
@@ -62,43 +87,56 @@ export default class MetaViewPlugin extends Plugin {
 			const index = this.index;
 			index.scan();
 
-			this.registerEvent(workspace.on('file-open', (file) => {
-				for (const s of this.sessions) s.onActiveFile(file);
-			}));
+			this.registerEvent(
+				workspace.on("file-open", (file) => {
+					for (const s of this.sessions) s.onActiveFile(file);
+				}),
+			);
 
-			this.registerEvent(metadataCache.on('changed', (file, data, cache) => {
-				if (file.extension !== 'md') return;
-				const isTemplate = index.isTemplate(file.path);
+			this.registerEvent(
+				metadataCache.on("changed", (file, _data, cache) => {
+					if (file.extension !== "md") return;
+					const isTemplate = index.isTemplate(file.path);
 
-				if (isTemplate) index.addTemplate(file);
-				else index.reindexNote(file);
+					if (isTemplate) index.addTemplate(file);
+					else index.reindexNote(file);
 
-				const fm = cache.frontmatter || {};
-				for (const s of this.sessions) s.onMetadataChanged(file, fm, isTemplate);
-			}));
+					const fm = cache.frontmatter || {};
+					for (const s of this.sessions)
+						s.onMetadataChanged(file, fm, isTemplate);
+				}),
+			);
 
-			this.registerEvent(metadataCache.on('deleted', (file, prevCache) => {
-				if (index.isTemplate(file.path)) {
-					index.removeTemplate(file.path);
-				} else {
-					index.removeNote(file, this.getTypes(prevCache?.frontmatter || {}))
-				}
-				for (const s of this.sessions) s.onFileDeleted(file);
-			}));
-
-			this.registerEvent(app.vault.on('rename', (file, oldPath) => {
-				if (file instanceof TFile) {
-					if (oldPath.endsWith('.md')) {
-						if (index.isTemplate(oldPath)) index.removeTemplate(oldPath);
-						else index.removeNote(file, this.getTypes(this.getFrontMatter(file)));
+			this.registerEvent(
+				metadataCache.on("deleted", (file, prevCache) => {
+					if (index.isTemplate(file.path)) {
+						index.removeTemplate(file.path);
+					} else {
+						index.removeNote(file, this.getTypes(prevCache?.frontmatter || {}));
 					}
-					if (file.path.endsWith('.md')) {
-						if (index.isTemplate(file.path)) index.addTemplate(file);
-						else index.addNote(file);
+					for (const s of this.sessions) s.onFileDeleted(file);
+				}),
+			);
+
+			this.registerEvent(
+				app.vault.on("rename", (file, oldPath) => {
+					if (file instanceof TFile) {
+						if (oldPath.endsWith(".md")) {
+							if (index.isTemplate(oldPath)) index.removeTemplate(oldPath);
+							else
+								index.removeNote(
+									file,
+									this.getTypes(this.getFrontMatter(file)),
+								);
+						}
+						if (file.path.endsWith(".md")) {
+							if (index.isTemplate(file.path)) index.addTemplate(file);
+							else index.addNote(file);
+						}
+						for (const s of this.sessions) s.onFileRenamed(file, oldPath);
 					}
-					for (const s of this.sessions) s.onFileRenamed(file, oldPath);
-				}
-			}));
+				}),
+			);
 
 			this.refreshSessions();
 		});
@@ -138,30 +176,54 @@ class MetaViewSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Types Property')
+			.setName("Types Property")
 			.setDesc("Metadata property to specify a note's types.")
-			.addText(text => text
-				.setPlaceholder('types')
-				.setValue(this.plugin.settings.typesProperty)
-				.onChange(async (value) => {
-					this.plugin.settings.typesProperty = value;
-					await this.plugin.saveSettings();
-				}));
+			.addText((text) =>
+				text
+					.setPlaceholder("types")
+					.setValue(this.plugin.settings.typesProperty)
+					.onChange(async (value) => {
+						this.plugin.settings.typesProperty = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 
 		new Setting(containerEl)
-			.setName('Templates Directory')
-			// .setClass(typeof(TFolder)) // ? doesnt seem to work
-			.setDesc('All files in this directory are parsed as templates.')
-			.addText(text => text
-				.setPlaceholder('')
-				.setValue(this.plugin.settings.templatesPath)
-				.onChange(async (value) => {
-					this.plugin.settings.templatesPath = value;
-					await this.plugin.saveSettings();
-				}));
+			.setName("Templates Directory")
+			.setDesc("All files in this directory are parsed as templates.")
+			.addText((text) => {
+				text
+					.setPlaceholder("")
+					.setValue(this.plugin.settings.templatesPath)
+					.onChange(async (value) => {
+						this.plugin.settings.templatesPath = value;
+						await this.plugin.saveSettings();
+					});
+				new TextInputSuggest(
+					this.app,
+					text.inputEl,
+					(query) => this.getFolderPaths(query),
+					(folder) => {
+						text.setValue(folder);
+						this.plugin.settings.templatesPath = folder;
+						this.plugin.saveSettings();
+					},
+				);
+			});
+	}
+
+	/** Folder paths matching `query`, for the templates-directory autocomplete. */
+	private getFolderPaths(query: string): string[] {
+		const q = query.toLowerCase();
+		return this.app.vault
+			.getAllLoadedFiles()
+			.filter((f): f is TFolder => f instanceof TFolder && f.path !== "/")
+			.map((f) => f.path)
+			.filter((p) => p.toLowerCase().includes(q))
+			.slice(0, 20);
 	}
 }

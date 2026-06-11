@@ -1,17 +1,22 @@
 <script lang='ts'>
-  import NoteProp from "../NoteProp.svelte";
-  import { createValue } from "utils";
-  import { getStore } from 'data/store.svelte';
+import NoteProp from "../NoteProp.svelte";
+import { createValue } from "utils";
+import { getStore } from "data/store.svelte";
 
-  const store = getStore();
+const store = getStore();
 
-  let { data = $bindable([]), template } : {
-    data: FrontMatterValue[]
-    template?: MVArrayDef | MVJsonDef
-  } = $props();
+let {
+	data = $bindable([]),
+	template,
+}: {
+	data: FrontMatterValue[];
+	template?: MVArrayDef | MVJsonDef;
+} = $props();
 
-  if (!data || !(data instanceof Array)) data = [];
-  const elementType = template?.type !== 'json' ? template?.elementType : template;
+if (!data || !Array.isArray(data)) data = [];
+let elementType = $derived(
+	template?.type !== "json" ? template?.elementType : template,
+);
 </script>
 
 <div class="mv-content-container">
@@ -24,9 +29,11 @@
     />
   {/each}
   <div class="metadata-property">
-    <div class="mv-add-element" onclick={() => { (data || (data = [])).push(createValue(elementType)); store.commit(); }}>
-      <div>[+] Add Element</div>
-    </div>
+    <button
+      type="button"
+      class="mv-add-element mv-text-button"
+      onclick={() => { (data || (data = [])).push(createValue(elementType)); store.commit(); }}
+    >[+] Add Element</button>
   </div>
 </div>
 

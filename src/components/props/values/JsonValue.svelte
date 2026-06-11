@@ -1,33 +1,39 @@
 <script lang="ts">
-  import { blurOnEnter } from '../events';
-  import { getStore } from 'data/store.svelte';
+import { blurOnEnter } from "../events";
+import { getStore } from "data/store.svelte";
 
-  const store = getStore();
+const store = getStore();
 
-  let { name, template, value = $bindable()} : {
-    name: string
-    template?: MVJsonDef | MVCollectionDef | MVSelectMultiDef
-    value: any
-  } = $props();
-  
-  let stringifiedValue = $derived(JSON.stringify(value || '').replace(/^"|"$/g, ''));
-  let editable = $derived(!template || template.type === 'json');
+let {
+	name,
+	template,
+	value = $bindable(),
+}: {
+	name: string;
+	template?: MVJsonDef | MVCollectionDef | MVSelectMultiDef;
+	value: FrontMatterValue;
+} = $props();
 
-  function updateValue(e: FocusEvent) {
-    const target = <HTMLInputElement>e.target;
-    const text = target.value;
-    
-    try {
-      const newValue = JSON.parse(text);
-      value = newValue;
-    } catch (e) {
-      if (e instanceof SyntaxError) {
-        value = text;
-      } else throw(e);
-    }
-    target.value = stringifiedValue;
-    store.commit();
-  }
+let stringifiedValue = $derived(
+	JSON.stringify(value || "").replace(/^"|"$/g, ""),
+);
+let editable = $derived(!template || template.type === "json");
+
+function updateValue(e: FocusEvent) {
+	const target = <HTMLInputElement>e.target;
+	const text = target.value;
+
+	try {
+		const newValue = JSON.parse(text);
+		value = newValue;
+	} catch (e) {
+		if (e instanceof SyntaxError) {
+			value = text;
+		} else throw e;
+	}
+	target.value = stringifiedValue;
+	store.commit();
+}
 </script>
 
 {#if editable}

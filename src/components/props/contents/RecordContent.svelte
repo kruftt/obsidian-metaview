@@ -1,12 +1,15 @@
 <script lang='ts'>
-  import NoteProp from "../NoteProp.svelte";
-  let { data = $bindable(), template } : {
-    data: Record<string, FrontMatterValue>
-    template: MVRecordDef
-  } = $props();
+import NoteProp from "../NoteProp.svelte";
+let {
+	data = $bindable(),
+	template,
+}: {
+	data: Record<string, FrontMatterValue>;
+	template: MVRecordDef;
+} = $props();
 
-  if (!data || typeof data !== 'object') data = {};
-  const entries = template.entries;  
+if (!data || typeof data !== "object") data = {};
+let entries = $derived(template.entries);
 </script>
 
 <div class="mv-content-container">

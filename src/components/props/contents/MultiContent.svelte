@@ -1,27 +1,31 @@
 <script lang='ts'>
-  import { getStore } from 'data/store.svelte';
+import { getStore } from "data/store.svelte";
 
-  const store = getStore();
+const store = getStore();
 
-  let { data = $bindable(), template } : {
-    data: unknown
-    template: MVSelectMultiDef
-  } = $props();
+let {
+	data = $bindable(),
+	template,
+}: {
+	data: unknown;
+	template: MVSelectMultiDef;
+} = $props();
 
-  if (!(data instanceof Array)) data = [];
+if (!Array.isArray(data)) data = [];
 
-  function toggleSelected (this: HTMLOptionElement, e: Event) {
-    e.preventDefault();
-    const value = this.value;
-    const selected = this.selected = !this.selected;
-    if (selected) {
-      ;(<string[]>data).push(value);
-    } else {
-      const index = (<string[]>data).indexOf(value);
-      if (index !== -1) (<string[]>data).splice(index, 1);
-    }
-    store.commit();
-  };
+function toggleSelected(this: HTMLOptionElement, e: Event) {
+	e.preventDefault();
+	const value = this.value;
+	this.selected = !this.selected;
+	const selected = this.selected;
+	if (selected) {
+		(<string[]>data).push(value);
+	} else {
+		const index = (<string[]>data).indexOf(value);
+		if (index !== -1) (<string[]>data).splice(index, 1);
+	}
+	store.commit();
+}
 </script>
 
 <div class="mv-content-container">

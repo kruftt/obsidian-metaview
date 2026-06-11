@@ -1,45 +1,56 @@
 <script lang="ts">
-  import { setIcon } from 'obsidian';
-  import { onMount } from 'svelte'
+import { setIcon } from "obsidian";
+import { onMount } from "svelte";
 
-  import { type MVSession, setStore } from '../data/store.svelte';
-  import TemplateData from 'data/TemplateData.svelte';
-  import NoteData from 'data/NoteData.svelte';
+import { activateOnKey } from "./props/events";
+import { type MVSession, setStore } from "../data/store.svelte";
+import TemplateData from "data/TemplateData.svelte";
+import NoteData from "data/NoteData.svelte";
 
-  import FileProp from "./props/FileProp.svelte";
-  import NoteProp from './props/NoteProp.svelte';
-  import TemplateProp from './props/TemplateProp.svelte';
-  import NewKey from './props/keys/NewKey.svelte';
-  import createExpand from './expand.svelte';
+import FileProp from "./props/FileProp.svelte";
+import NoteProp from "./props/NoteProp.svelte";
+import TemplateProp from "./props/TemplateProp.svelte";
+import NewKey from "./props/keys/NewKey.svelte";
+import createExpand from "./expand.svelte";
 
-  let { store }: { store: MVSession } = $props();
-  setStore(store);
+let { store }: { store: MVSession } = $props();
+// svelte-ignore state_referenced_locally
+setStore(store);
 
-  let data = $derived(store.data);
-  let filename = $derived(store.filename);
-  const freeTemplate = { type: 'json', default: '' };
-  const expand = createExpand();
+let data = $derived(store.data);
+let filename = $derived(store.filename);
+const freeTemplate = { type: "json", default: "" };
+const expand = createExpand();
 
-  let pinIcon: HTMLElement;
-  $effect(() => { if (pinIcon) setIcon(pinIcon, 'pin'); });
+let pinIcon = $state<HTMLElement>();
+$effect(() => {
+	if (pinIcon) setIcon(pinIcon, "pin");
+});
 
-  function addTemplateProp(key: string, target: HTMLInputElement) {
-    data!.props[key] = { type: 'text' };
-  }
+function addTemplateProp(key: string, _target: HTMLInputElement) {
+	if (data) data.props[key] = { type: "text" };
+}
 </script>
 
 <div class="metadata-container">
   {#if data !== null}
-    <div class="mv-filename" onclick={expand.toggle}>
+    <div
+      class="mv-filename"
+      role="button"
+      tabindex="0"
+      onclick={expand.toggle}
+      onkeydown={activateOnKey(expand.toggle)}
+    >
       <span class="metadata-property-icon" bind:this={expand.icon}></span>
       <span class="mv-filename-text">{filename}</span>
-      <div
+      <button
+        type="button"
         class="mv-pin clickable-icon"
         class:mv-pinned={store.pinned}
         aria-label={store.pinned ? 'Unpin' : 'Pin to this file'}
         bind:this={pinIcon}
         onclick={(e) => { e.stopPropagation(); store.togglePin(); }}
-      ></div>
+      ></button>
     </div>
 
     <div class="mv-metadata-file-props">

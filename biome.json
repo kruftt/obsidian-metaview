@@ -2,7 +2,24 @@
   "$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
   "overrides": [
     {
+      "includes": ["src/types.ts"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["**/*.svelte", "**/*.astro", "**/*.vue"],
+      "assist": {
+        "actions": {
+          "source": {
+            "organizeImports": "off"
+          }
+        }
+      },
       "linter": {
         "rules": {
           "style": {

@@ -1,7 +1,15 @@
-import { VALID_TYPES } from './const';
+import { Notice } from "obsidian";
+import { VALID_TYPES } from "./const";
 
-export const arrayWrap = (v: unknown) => Array.isArray(v) ? v : (v === undefined) ? [] : [v];
-export const truthy = (v: any) => v;
+export const arrayWrap = (v: unknown) =>
+	Array.isArray(v) ? v : v === undefined ? [] : [v];
+export const truthy = (v: unknown) => v;
+
+/** Surface a user-facing input error. Central seam so all inputs report errors
+ *  the same way (and we can later add prefixing, dedupe, timeouts, etc.). */
+export function notifyError(message: string): void {
+	new Notice(message);
+}
 
 /**
  * Deterministic JSON serialization with recursively sorted object keys, so two
@@ -10,147 +18,148 @@ export const truthy = (v: any) => v;
  * our own write echoed back or a genuine external edit.
  */
 export function stableStringify(value: unknown): string {
-  return JSON.stringify(value, (_key, v) => {
-    if (v && typeof v === 'object' && !Array.isArray(v)) {
-      return Object.keys(v).sort().reduce((sorted: Record<string, unknown>, k) => {
-        sorted[k] = (v as Record<string, unknown>)[k];
-        return sorted;
-      }, {});
-    }
-    return v;
-  });
+	return JSON.stringify(value, (_key, v) => {
+		if (v && typeof v === "object" && !Array.isArray(v)) {
+			return Object.keys(v)
+				.sort()
+				.reduce((sorted: Record<string, unknown>, k) => {
+					sorted[k] = (v as Record<string, unknown>)[k];
+					return sorted;
+				}, {});
+		}
+		return v;
+	});
 }
 
 export function makePropTemplate(v: FrontMatterValue): MVPropDef | null {
-  let t = typeof v;
-  switch(t) {
-    case 'boolean':
-    case 'number':
-    case 'string':
-      return {
-        type: (t === 'string') ? 'text' : t,
-        default: <any>v,
-      };
-    
-    case 'object':
-      return parseObject(v as Record<string, FrontMatterValue>);
+	const t = typeof v;
+	switch (t) {
+		case "boolean":
+		case "number":
+		case "string":
+			return {
+				type: t === "string" ? "text" : t,
+				default: v,
+			} as MVPropDef;
 
-    default:
-      return null;
-  }
+		case "object":
+			return parseObject(v as Record<string, FrontMatterValue>);
+
+		default:
+			return null;
+	}
 }
 
 function parseObject(v: Record<string, FrontMatterValue>): MVPropDef | null {
-  if (v === null || !('type' in v)) return null;
-  
-  const type = v.type;
-  if (typeof type !== 'string' || !VALID_TYPES[type]) return null;
-  let config;
-  
-  switch (type) {
-    case 'select':
-    case 'multi':
-      if (v.options instanceof Array) {
-        return {
-          type,
-          options: v.options.reduce(
-            (opts: Array<string>, v) => {
-              const t = typeof v;
-              if (t === 'string')
-                opts.push(<string>v);
-              return opts;
-            }, []
-          ),
-        };
-      } else {
-        return {
-          type,
-          options: []
-        };
-      }
+	if (v === null || !("type" in v)) return null;
 
-    case 'array':
-      config = makePropTemplate(v.elementType);
-      return {
-        type,
-        elementType: config || { type:'text' },
-      };
+	const type = v.type;
+	if (typeof type !== "string" || !VALID_TYPES[type]) return null;
+	let config: MVPropDef | MVPropDef[] | Record<string, MVPropDef> | null;
 
-    case 'tuple':
-      let types = v.elementTypes;
-      if (!(types instanceof Array)) types = [];
-      config = [];
+	switch (type) {
+		case "select":
+		case "multi":
+			if (Array.isArray(v.options)) {
+				return {
+					type,
+					options: v.options.reduce((opts: Array<string>, v) => {
+						const t = typeof v;
+						if (t === "string") opts.push(<string>v);
+						return opts;
+					}, []),
+				};
+			} else {
+				return {
+					type,
+					options: [],
+				};
+			}
 
-      for (let t of types) {
-        let c = makePropTemplate(t);
-        if (c) config.push(c);
-      }
+		case "array":
+			config = makePropTemplate(v.elementType);
+			return {
+				type,
+				elementType: config || { type: "text" },
+			};
 
-      return {
-        type,
-        elementTypes: config,
-      };
+		case "tuple": {
+			let types = v.elementTypes;
+			if (!Array.isArray(types)) types = [];
+			config = [];
 
-    case 'map':
-      config = makePropTemplate(v.elementType);
-      return {
-        type,
-        elementType: config || { type: 'text' },
-      };
+			for (const t of types) {
+				const c = makePropTemplate(t);
+				if (c) config.push(c);
+			}
 
-    case 'record':
-      let configs = v.entries;
-      if (typeof configs !== 'object') configs = {};
-      config = <Record<string, MVPropDef>>{};
-      
-      for (let [key, value] of Object.entries(<FrontMatter>configs)) {
-        let c = makePropTemplate(value);
-        if (c) config[key] = c;
-      }
+			return {
+				type,
+				elementTypes: config,
+			};
+		}
 
-      return {
-        type,
-        entries: config,
-      };
+		case "map":
+			config = makePropTemplate(v.elementType);
+			return {
+				type,
+				elementType: config || { type: "text" },
+			};
 
-    default:
-      return <MVPropDef><unknown>v;
-  }
+		case "record": {
+			let configs = v.entries;
+			if (typeof configs !== "object") configs = {};
+			config = <Record<string, MVPropDef>>{};
+
+			for (const [key, value] of Object.entries(<FrontMatter>configs)) {
+				const c = makePropTemplate(value);
+				if (c) config[key] = c;
+			}
+
+			return {
+				type,
+				entries: config,
+			};
+		}
+
+		default:
+			return <MVPropDef>(<unknown>v);
+	}
 }
 
-export function createValue(template: MVPropDef = { type: 'json' }) {
-  switch (template.type) {
-    case 'boolean':
-      return template.default || false;
-    case 'number':
-      return template.default || 0;
-    case 'text':
-      return template.default || '';
-    case 'date':
-      return template.default || '';
-    case 'datetime-local':
-      return template.default || '';
-    case 'time':
-      return template.default || '';
-    case 'month':
-      return template.default || '';
-    case 'select':
-      return '';
-    case 'multi':
-      return [];
-    case 'link':
-      return null;
-    case 'array':
-      return [];
-    case 'tuple':
-      return [];
-    case 'map':
-      return {};
-    case 'record':
-      return {};
-    case 'json':
-      return template.default || '';
-    default:
-      return null;
-  }
+export function createValue(template: MVPropDef = { type: "json" }) {
+	switch (template.type) {
+		case "boolean":
+			return template.default || false;
+		case "number":
+			return template.default || 0;
+		case "text":
+			return template.default || "";
+		case "date":
+			return template.default || "";
+		case "datetime-local":
+			return template.default || "";
+		case "time":
+			return template.default || "";
+		case "month":
+			return template.default || "";
+		case "select":
+			return "";
+		case "multi":
+			return [];
+		case "link":
+			return null;
+		case "array":
+			return [];
+		case "tuple":
+			return [];
+		case "map":
+			return {};
+		case "record":
+			return {};
+		case "json":
+			return template.default || "";
+		default:
+			return null;
+	}
 }

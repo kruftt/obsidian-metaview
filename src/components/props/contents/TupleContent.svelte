@@ -1,13 +1,15 @@
 <script lang='ts'>
-  import NoteProp from "../NoteProp.svelte";
-  let { data = $bindable(), template } : {
-    data: FrontMatterValue[]
-    template: MVTupleDef
-  } = $props();
+import NoteProp from "../NoteProp.svelte";
+let {
+	data = $bindable(),
+	template,
+}: {
+	data: FrontMatterValue[];
+	template: MVTupleDef;
+} = $props();
 
-  
-  if (!data || !(data instanceof Array)) data = [];
-  const types = template.elementTypes;
+if (!data || !Array.isArray(data)) data = [];
+let types = $derived(template.elementTypes);
 </script>
 
 <div class="mv-content-container">

@@ -1,11 +1,11 @@
 <script lang='ts'>
-  import TemplateProp from "../TemplateProp.svelte";
-  import NewKey from "../keys/NewKey.svelte";
-  import { getStore } from 'data/store.svelte';
+import TemplateProp from "../TemplateProp.svelte";
+import NewKey from "../keys/NewKey.svelte";
+import { getStore } from "data/store.svelte";
 
-  const store = getStore();
+const store = getStore();
 
-  let { template } : { template: MVCollectionDef } = $props();
+let { template }: { template: MVCollectionDef } = $props();
 </script>
 
 <div class="mv-content-container">
@@ -24,7 +24,11 @@
           />
         {/each}
         <div class="metadata-property">
-          <div class="metadata-property-key" onclick={() => { template.elementTypes.push({ type: 'text' }); store.commit(); }}>Add Entry</div>
+          <button
+            type="button"
+            class="metadata-property-key mv-text-button"
+            onclick={() => { template.elementTypes.push({ type: 'text' }); store.commit(); }}
+          >Add Entry</button>
         </div>
       {:else}
         {#each Object.keys(template.entries) as key}

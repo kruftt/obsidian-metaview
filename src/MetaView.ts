@@ -1,9 +1,14 @@
-import { ItemView, TFile, type ViewStateResult, type WorkspaceLeaf } from "obsidian";
+import {
+	ItemView,
+	TFile,
+	type ViewStateResult,
+	type WorkspaceLeaf,
+} from "obsidian";
 import { mount, unmount } from "svelte";
 import Component from "./components/MetaView.svelte";
+import * as CONST from "./const";
 import { MVSession } from "./data/store.svelte";
 import type MetaViewPlugin from "./Plugin";
-import * as CONST from "./const";
 
 export default class MetaView extends ItemView {
 	component: ReturnType<typeof mount>;
@@ -30,11 +35,16 @@ export default class MetaView extends ItemView {
 		this.plugin.registerSession(this.session);
 		// Mirror the leaf's native pin into the session (the tab's "Pin" menu and our header
 		// toggle both flow through here).
-		this.registerEvent(this.leaf.on("pinned-change", (pinned) => this.session.setPinned(pinned)));
+		this.registerEvent(
+			this.leaf.on("pinned-change", (pinned) => this.session.setPinned(pinned)),
+		);
 		// Follow the active file unless we are (or are being restored) pinned; setState restores
 		// the pinned file.
 		this.session.onActiveFile(this.app.workspace.getActiveFile());
-		this.component = mount(Component, { target: this.contentEl, props: { store: this.session } });
+		this.component = mount(Component, {
+			target: this.contentEl,
+			props: { store: this.session },
+		});
 	}
 
 	async onClose() {

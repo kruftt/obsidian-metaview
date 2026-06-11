@@ -1,15 +1,18 @@
 <script lang='ts'>
-  import NoteProp from "../NoteProp.svelte";
-  import { createValue } from "utils";
-  import NewKey from "../keys/NewKey.svelte"
+import NoteProp from "../NoteProp.svelte";
+import { createValue } from "utils";
+import NewKey from "../keys/NewKey.svelte";
 
-  let { data = $bindable(), template } : {
-    data: Record<string, FrontMatterValue>
-    template?: MVMapDef
-  } = $props();
+let {
+	data = $bindable(),
+	template,
+}: {
+	data: Record<string, FrontMatterValue>;
+	template?: MVMapDef;
+} = $props();
 
-  if (!data || typeof data !== 'object') data = {};
-  const elementType = template?.elementType;
+if (!data || typeof data !== "object") data = {};
+let elementType = $derived(template?.elementType);
 </script>
 
 <div class="mv-content-container">

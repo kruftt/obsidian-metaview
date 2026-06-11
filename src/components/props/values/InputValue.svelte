@@ -1,27 +1,36 @@
 <script lang="ts">
-  import { blurOnEnter } from '../events';
-  import { getStore } from 'data/store.svelte';
+import { blurOnEnter } from "../events";
+import { getStore } from "data/store.svelte";
+import { notifyError } from "utils";
 
-  const store = getStore();
+const store = getStore();
 
-  let { name, template, value = $bindable() } : {
-    name?: string,
-    template: MVInputDef
-    value: any,
-  } = $props();
-  
-  let type = $derived(template.type); 
-  let inputProps = $derived(template.props || {});
+let {
+	name,
+	template,
+	value = $bindable(),
+}: {
+	name?: string;
+	template: MVInputDef;
+	// biome-ignore lint/suspicious/noExplicitAny: bound to both checkbox `checked` (boolean) and text input `value` (string/number)
+	value: any;
+} = $props();
 
-  function syncValue (e: Event) {
-    const target = <HTMLInputElement>e.target;
-    const valid = target.validity.valid;
-    if (valid) {
-      if (type === "number") value = parseFloat(target.value);
-      else value = target.value;
-      store.commit();
-    }
-  }
+let type = $derived(template.type);
+let inputProps = $derived(template.props || {});
+
+function syncValue(e: Event) {
+	const target = <HTMLInputElement>e.target;
+	// Invalid input (e.g. out of min/max range, step mismatch, pattern mismatch)
+	// stays in the box with the :invalid red border; the value is left unchanged.
+	if (!target.validity.valid) {
+		notifyError(target.validationMessage);
+		return;
+	}
+	if (type === "number") value = parseFloat(target.value);
+	else value = target.value;
+	store.commit();
+}
 </script>
 
 {#if type === "boolean"}
