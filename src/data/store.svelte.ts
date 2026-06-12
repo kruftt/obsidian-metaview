@@ -9,7 +9,7 @@ import {
 	type WorkspaceLeaf,
 } from "obsidian";
 import { getContext, setContext } from "svelte";
-import { arrayWrap, stableStringify } from "../utils";
+import { stableStringify } from "../utils";
 import NoteData from "./NoteData.svelte";
 import TemplateData from "./TemplateData.svelte";
 
@@ -129,6 +129,17 @@ export class MVIndex {
 		const files = (type && this.notes[type]) || [];
 		return files.map((v) => v.path.replace(/\.md$/, ""));
 	}
+
+	/**
+	 * Distinct frontmatter values for `prop` across the vault, via Obsidian's own
+	 * property-value index (the one behind the native property autocomplete / Bases
+	 * filters) — already maintained incrementally, so no scan or cache of our own.
+	 */
+	public getPropertyValues(prop: string): string[] {
+		return this.plugin.app.metadataCache.getFrontmatterPropertyValuesForKey(
+			prop,
+		);
+	}
 }
 
 /**
@@ -165,6 +176,11 @@ export class MVSession {
 		return this.plugin.app;
 	}
 
+	/** The configurable frontmatter key that holds a note's types. */
+	public get typesProperty(): string {
+		return this.plugin.settings.typesProperty;
+	}
+
 	public get templates() {
 		return this.index.templates;
 	}
@@ -182,7 +198,12 @@ export class MVSession {
 
 	/** CSS classes used anywhere in the vault (from notes' `cssclasses` frontmatter). */
 	public getCssClasses(): string[] {
-		return this.collectFrontmatterValues("cssclasses");
+		return this.index.getPropertyValues("cssclasses");
+	}
+
+	/** Distinct values of `prop` across the vault (e.g. taxonomy term autocomplete). */
+	public getPropertyValues(prop: string): string[] {
+		return this.index.getPropertyValues(prop);
 	}
 
 	/** Known note types: every defined template name plus every type already in use. */
@@ -193,20 +214,6 @@ export class MVSession {
 				// ...Object.keys(this.index.notes),
 			]),
 		];
-	}
-
-	/** Unique string values of `prop` across every markdown file's frontmatter. */
-	private collectFrontmatterValues(prop: string): string[] {
-		const cache = this.plugin.app.metadataCache;
-		const values = new Set<string>();
-		for (const file of this.plugin.app.vault.getMarkdownFiles()) {
-			const fm = cache.getFileCache(file)?.frontmatter;
-			if (!fm) continue;
-			for (const v of arrayWrap(fm[prop])) {
-				if (typeof v === "string" && v) values.add(v);
-			}
-		}
-		return [...values];
 	}
 
 	// --- file loading ---

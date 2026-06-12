@@ -16,7 +16,16 @@ export class TextInputSuggest extends AbstractInputSuggest<string> {
 	}
 
 	protected getSuggestions(query: string): string[] {
-		return this.getItems(query);
+		return this.getItems(query.trim());
+	}
+
+	/**
+	 * The native popover hides itself when the query is empty. Returning a
+	 * non-empty sentinel for an empty field keeps it open so clearing the input
+	 * shows all candidates (the sentinel is trimmed away in `getSuggestions`).
+	 */
+	getValue(): string {
+		return super.getValue() || " ";
 	}
 
 	renderSuggestion(value: string, el: HTMLElement): void {

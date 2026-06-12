@@ -1,5 +1,5 @@
 <script lang='ts'>
-import { blurOnSpace } from "../events";
+import { blurOnEnter } from "../events";
 import ListItem from "./ListItem.svelte";
 import { getStore } from "data/store.svelte";
 import { TextInputSuggest } from "TextInputSuggest";
@@ -10,12 +10,15 @@ let {
 	editable,
 	entries,
 	suggestions,
+	onAdd,
 }: {
 	editable: boolean;
 	entries: string[];
 	/** Optional autocomplete: maps the current query (+ already-used entries to
 	 *  exclude) to a list of candidate completions. Omit for plain free text. */
 	suggestions?: (query: string, exclude: string[]) => string[];
+	/** Fired after an entry is added, before commit (e.g. to seed related entries). */
+	onAdd?: (entry: string) => void;
 } = $props();
 
 let input!: HTMLDivElement;
@@ -24,6 +27,7 @@ function addEntry(entry: string) {
 	entry = entry.trim();
 	if (entry && !entries.includes(entry)) {
 		entries.push(entry);
+		onAdd?.(entry);
 		store.commit();
 	}
 	input.textContent = "";
@@ -63,7 +67,7 @@ $effect(() => {
       aria-label="Add entry"
       contenteditable
       bind:this={input}
-      onkeypress={blurOnSpace}
+      onkeypress={blurOnEnter}
       onblur={createEntry}
     ></div>
   </div>

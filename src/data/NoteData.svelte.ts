@@ -40,13 +40,12 @@ export default class NoteData {
 		delete freeProps.tags;
 
 		const templates = this.index.templates;
-		const seen = new Set<string>(); // guards against cycles / diamond repeats
-		const claimed = new Set<string>(); // prop keys already provided by a more-derived type
+		const seen = new Set<string>(); // dedupe repeated type listings
+		const claimed = new Set<string>(); // prop keys already provided by an earlier type
 
-		// Walk the type graph depth-first starting from the note's own types, so a derived type's
-		// props take precedence over (and suppress) the same key declared by its ancestors.
-		const queue = [...this.types].reverse();
-		for (let type = queue.pop(); type !== undefined; type = queue.pop()) {
+		// Composition: a note's effective schema is the union of its declared types' props.
+		// No type graph — types are flat, and an earlier-listed type wins a key conflict.
+		for (const type of this.types) {
 			if (seen.has(type)) continue;
 			seen.add(type);
 			const templateData = templates[type];
@@ -54,15 +53,12 @@ export default class NoteData {
 
 			const owned: Record<string, MVPropDef> = {};
 			for (const [key, def] of Object.entries(templateData.props)) {
-				if (claimed.has(key)) continue; // overridden by a more-derived type already processed
+				if (claimed.has(key)) continue; // already provided by an earlier-listed type
 				claimed.add(key);
 				owned[key] = def;
 				delete freeProps[key];
 			}
 			if (Object.keys(owned).length > 0) typeData[type] = owned;
-
-			// Enqueue parents, reversed so their declared order is preserved under the LIFO pop().
-			queue.push(...[...templateData.types].reverse());
 		}
 
 		this.typeData = typeData;

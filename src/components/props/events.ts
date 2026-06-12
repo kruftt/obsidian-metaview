@@ -8,13 +8,6 @@ export function blurOnEnter(e: KeyboardEvent) {
 	}
 }
 
-export function blurOnSpace(e: KeyboardEvent) {
-	if (e.key === "Enter" || e.key === " ") {
-		e.preventDefault();
-		(<HTMLDivElement>e.target).blur();
-	}
-}
-
 /**
  * Keyboard counterpart to a click handler for elements that must remain a
  * `<div role="button">` (e.g. a clickable row that already contains a button).

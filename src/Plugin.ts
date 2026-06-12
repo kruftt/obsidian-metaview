@@ -18,7 +18,7 @@ import { arrayWrap } from "./utils";
 
 const DEFAULT_SETTINGS: MVSettings = {
 	templatesPath: "",
-	typesProperty: "types",
+	typesProperty: "notetypes",
 };
 
 export default class MetaViewPlugin extends Plugin {
@@ -184,7 +184,7 @@ class MetaViewSettingTab extends PluginSettingTab {
 			.setDesc("Metadata property to specify a note's types.")
 			.addText((text) =>
 				text
-					.setPlaceholder("types")
+					.setPlaceholder(DEFAULT_SETTINGS.typesProperty)
 					.setValue(this.plugin.settings.typesProperty)
 					.onChange(async (value) => {
 						this.plugin.settings.typesProperty = value;

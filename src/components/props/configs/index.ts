@@ -1,4 +1,5 @@
 import CollectionConfig from "./CollectionConfig.svelte";
+import EmptyConfig from "./EmptyConfig.svelte";
 import InputConfig from "./InputConfig.svelte";
 import LinkConfig from "./LinkConfig.svelte";
 import SelectConfig from "./SelectConfig.svelte";
@@ -14,6 +15,9 @@ export default {
 	month: InputConfig,
 
 	link: LinkConfig,
+	multilink: LinkConfig,
+
+	taxonomy: EmptyConfig,
 
 	select: SelectConfig,
 	multi: SelectConfig,

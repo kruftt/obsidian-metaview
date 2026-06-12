@@ -1,7 +1,7 @@
 <script lang='ts'>
 import { on } from "svelte/events";
 import { setIcon } from "obsidian";
-import { activateOnKey, blurOnSpace } from "../events";
+import { activateOnKey, blurOnEnter } from "../events";
 import { getStore } from "data/store.svelte";
 
 const store = getStore();
@@ -56,7 +56,7 @@ function stopProp(el: HTMLElement) {
     tabindex="0"
     contenteditable
     use:stopProp
-    onkeypress={blurOnSpace}
+    onkeypress={blurOnEnter}
     onfocusout={editEntry}
   >{entry}</div>
 {:else}
@@ -85,6 +85,7 @@ function stopProp(el: HTMLElement) {
 <style lang='sass'>
   .multi-select-input
     background-color: var(--metadata-input-background-active)
-    // border-radius: var(--input-radius)
-    // margin: var(--size-4-1)
+  
+  .multi-select-pill
+    padding: 0 6px
 </style>

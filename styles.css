@@ -112,6 +112,57 @@
 	text-align: inherit;
 }
 
+/* --- Single link ---------------------------------------------------------
+
+   No pill: the value shows as an internal link; clicking it edits the field
+   (the editor is a contenteditable that gets the note suggester). */
+
+.mv-view .mv-link {
+	display: flex;
+	align-items: center;
+}
+
+.mv-view .mv-link-input {
+	width: 100%;
+}
+
+.mv-view .mv-link-input:empty::before {
+	content: "Select a note...";
+	color: var(--text-faint);
+	pointer-events: none;
+}
+
+/* --- File prop pins ------------------------------------------------------
+
+   Each file prop (aliases/cssclasses/types/tags) gets a pin to its left; a
+   pinned prop stays visible when the section is collapsed. */
+
+.mv-view .mv-file-prop {
+	display: flex;
+	align-items: center;
+}
+
+.mv-view .mv-file-prop > .metadata-property {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.mv-view .mv-fileprop-pin {
+	flex: 0 0 auto;
+	margin: 0 var(--size-4-1);
+	color: var(--text-muted);
+	opacity: 0.45;
+}
+
+.mv-view .mv-fileprop-pin:hover {
+	opacity: 1;
+}
+
+.mv-view .mv-fileprop-pin.mv-pinned {
+	color: var(--text-normal);
+	opacity: 1;
+}
+
 /* --- Layout helpers ------------------------------------------------------ */
 
 .mv-view {
@@ -130,8 +181,19 @@
 }
 
 .mv-properties-title {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
 	margin: 1.4em 0 0.4em 0.5em;
 	font-weight: 700;
+}
+
+.mv-view .mv-fill-defaults {
+	color: var(--text-muted);
+}
+
+.mv-view .mv-fill-defaults:hover {
+	color: var(--text-normal);
 }
 
 .mv-view .mv-content-container {

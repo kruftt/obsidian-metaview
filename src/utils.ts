@@ -149,6 +149,10 @@ export function createValue(template: MVPropDef = { type: "json" }) {
 			return [];
 		case "link":
 			return null;
+		case "multilink":
+			return [];
+		case "taxonomy":
+			return [];
 		case "array":
 			return [];
 		case "tuple":

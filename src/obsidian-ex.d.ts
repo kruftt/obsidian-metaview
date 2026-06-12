@@ -77,6 +77,13 @@ declare module "obsidian" {
 		 * `#foo/bar`) to the number of times it occurs.
 		 */
 		getTags(): Record<string, number>;
+
+		/**
+		 * @internal Distinct frontmatter values used for property `key` across the
+		 * vault (the index behind the native property-value autocomplete and Bases
+		 * filter dropdowns). List-valued properties are flattened to their elements.
+		 */
+		getFrontmatterPropertyValuesForKey(key: string): string[];
 	}
 
 	interface Vault {

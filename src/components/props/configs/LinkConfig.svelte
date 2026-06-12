@@ -4,7 +4,7 @@ import Select from "../values/SelectValue.svelte";
 
 const store = getStore();
 
-let { template }: { template: MVLinkDef } = $props();
+let { template }: { template: MVLinkDef | MVMultiLinkDef } = $props();
 </script>
 
 <div class="mv-content-container">

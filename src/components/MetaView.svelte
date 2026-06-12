@@ -1,10 +1,8 @@
 <script lang="ts">
 import { setIcon } from "obsidian";
-import { onMount } from "svelte";
 
 import { activateOnKey } from "./props/events";
 import { type MVSession, setStore } from "../data/store.svelte";
-import TemplateData from "data/TemplateData.svelte";
 import NoteData from "data/NoteData.svelte";
 
 import FileProp from "./props/FileProp.svelte";
@@ -12,6 +10,7 @@ import NoteProp from "./props/NoteProp.svelte";
 import TemplateProp from "./props/TemplateProp.svelte";
 import NewKey from "./props/keys/NewKey.svelte";
 import createExpand from "./expand.svelte";
+import { createValue } from "utils";
 
 let { store }: { store: MVSession } = $props();
 // svelte-ignore state_referenced_locally
@@ -19,16 +18,28 @@ setStore(store);
 
 let data = $derived(store.data);
 let filename = $derived(store.filename);
-const freeTemplate = { type: "json", default: "" };
 const expand = createExpand();
+
+const FILE_PROP_KEYS = ["types", "tags", "aliases", "cssclasses"] as const;
+/** Per-prop pin: a pinned file prop stays visible even when the section is collapsed. */
+let pinnedFileProps = $state<Record<string, boolean>>({ "types": true, "tags": true });
+function toggleFilePropPin(key: string) {
+	pinnedFileProps[key] = !pinnedFileProps[key];
+}
 
 let pinIcon = $state<HTMLElement>();
 $effect(() => {
 	if (pinIcon) setIcon(pinIcon, "pin");
 });
 
-function addTemplateProp(key: string, _target: HTMLInputElement) {
-	if (data) data.props[key] = { type: "text" };
+/** Fill in default values for a type's props, leaving any already-present props untouched. */
+function fillDefaults(typeProps: Record<string, MVPropDef>) {
+	if (!(data instanceof NoteData)) return;
+	const props = data.props;
+	for (const [key, template] of Object.entries(typeProps)) {
+		if (!(key in props)) props[key] = createValue(template);
+	}
+	store.commit();
 }
 </script>
 
@@ -54,12 +65,21 @@ function addTemplateProp(key: string, _target: HTMLInputElement) {
     </div>
 
     <div class="mv-metadata-file-props">
-      {#if expand.open}
-        <FileProp key="aliases" context={data.fileProps} />
-        <FileProp key="tags" context={data.fileProps} />
-        <FileProp key="cssclasses" context={data.fileProps} />
-        <FileProp key="types" context={data} />
-      {/if}
+      {#each FILE_PROP_KEYS as key}
+        {#if expand.open || pinnedFileProps[key]}
+          <div class="mv-file-prop">
+            <button
+              type="button"
+              class="mv-icon-button mv-fileprop-pin"
+              class:mv-pinned={pinnedFileProps[key]}
+              aria-label={pinnedFileProps[key] ? 'Unpin property' : 'Pin property'}
+              use:setIcon={'pin'}
+              onclick={() => toggleFilePropPin(key)}
+            ></button>
+            <FileProp {key} context={key === 'types' ? data : data.fileProps} />
+          </div>
+        {/if}
+      {/each}
     </div>
 
     <div class="metadata-content">
@@ -71,7 +91,16 @@ function addTemplateProp(key: string, _target: HTMLInputElement) {
           <NewKey context={data.props} value="''" />
         </div>
         {#each Object.entries(data.typeData) as [name, typeProps]}
-          <div class="mv-properties-title">{name}</div>
+          <div class="mv-properties-title">
+            <span>{name}</span>
+            <button
+              type="button"
+              class="mv-icon-button mv-fill-defaults"
+              aria-label="Fill in default values"
+              use:setIcon={'wand-2'}
+              onclick={() => fillDefaults(typeProps)}
+            ></button>
+          </div>
           {#each Object.entries(typeProps) as [key, template]}
             <NoteProp {key} {template} context={data.props} />
           {/each}

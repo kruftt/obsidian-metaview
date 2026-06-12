@@ -22,6 +22,8 @@ type MVCollectionDef = MVArrayDef | MVTupleDef | MVMapDef | MVRecordDef;
 type MVPropDef =
 	| MVInputDef
 	| MVLinkDef
+	| MVMultiLinkDef
+	| MVTaxonomyDef
 	| MVSelectDef
 	| MVCollectionDef
 	| MVJsonDef;
@@ -100,6 +102,15 @@ interface MVMonthDef {
 interface MVLinkDef {
 	type: "link";
 	target?: string | null;
+}
+
+interface MVMultiLinkDef {
+	type: "multilink";
+	target?: string | null;
+}
+
+interface MVTaxonomyDef {
+	type: "taxonomy";
 }
 
 interface MVSelectSingleDef {

@@ -1,22 +1,21 @@
 <script lang="ts">
-import { Keymap, setIcon } from "obsidian";
+import { Keymap } from "obsidian";
+import { untrack } from "svelte";
 import { getStore } from "data/store.svelte";
 import { TextInputSuggest } from "TextInputSuggest";
-import { activateOnKey } from "../events";
 
 const store = getStore();
 
 let {
-	name,
 	template,
 	value = $bindable(),
 }: {
-	name?: string;
 	template: MVLinkDef;
 	value: FrontMatterValue;
 } = $props();
 
 let input = $state<HTMLDivElement>();
+let editing = $state(false);
 let target = $derived(template.target);
 
 /** Link target stored in `value` (the path inside `[[ ]]`, sans `|alias`/`#heading`). */
@@ -25,7 +24,7 @@ let path = $derived.by(() => {
 	const inner = value.match(/^\[\[(.*)\]\]$/)?.[1] ?? value;
 	return inner.split(/[|#]/)[0].trim();
 });
-/** Short name shown on the pill; the full path stays in `value` for correctness. */
+/** Short name shown for the link; the full path stays in `value` for correctness. */
 let displayName = $derived(path.split("/").pop() ?? path);
 
 /** Store the chosen note as a full-path wikilink so Obsidian renders a real link. */
@@ -34,10 +33,7 @@ function setLink(p: string) {
 	store.commit();
 }
 
-/** Follow the link like a native internal link (mod-click opens in a new tab/split). */
 function follow(e: MouseEvent | KeyboardEvent) {
-	e.preventDefault();
-	e.stopPropagation();
 	store.app.workspace.openLinkText(
 		path,
 		store.file?.path ?? "",
@@ -45,7 +41,16 @@ function follow(e: MouseEvent | KeyboardEvent) {
 	);
 }
 
-// Attach the note suggester to the add-input. Selecting replaces the current link.
+// Clicking the link itself follows it; clicking elsewhere in the field area
+// (the container's onclick) drops into edit mode.
+function onLinkClick(e: MouseEvent) {
+	e.preventDefault();
+	e.stopPropagation();
+	follow(e);
+}
+
+// The input only exists while editing (or while the link is unset). Attach the
+// note suggester to it, and when entering edit mode, focus + preselect the name.
 $effect(() => {
 	if (!input) return;
 	const el = input;
@@ -61,46 +66,42 @@ $effect(() => {
 		},
 		(p) => {
 			el.textContent = "";
+			editing = false;
 			setLink(p);
 		},
 	);
+	if (untrack(() => editing)) {
+		el.textContent = untrack(() => displayName);
+		el.focus();
+		const range = document.createRange();
+		range.selectNodeContents(el);
+		const sel = window.getSelection();
+		sel?.removeAllRanges();
+		sel?.addRange(range);
+	}
 	return () => suggest.close();
 });
 </script>
 
-<div class="metadata-property-value">
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div
-    class="multi-select-container"
-    onclick={() => input?.focus()}
-  >
-    {#if path}
-      <div class="multi-select-pill" data-property-key={name}>
-        <a
-          class="multi-select-pill-content internal-link"
-          href={path}
-          data-href={path}
-          onclick={follow}
-          onkeydown={activateOnKey(follow)}
-        >{displayName}</a>
-        <button
-          type="button"
-          class="multi-select-pill-remove-button mv-icon-button"
-          aria-label="Remove link"
-          use:setIcon={'x'}
-          onclick={(e) => { e.stopPropagation(); setLink(''); }}
-        ></button>
-      </div>
-    {/if}
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="metadata-property-value mv-link" onclick={() => (editing = true)}>
+  {#if path && !editing}
+    <a
+      class="internal-link"
+      href={path}
+      data-href={path}
+      onclick={onLinkClick}
+    >{displayName}</a>
+  {:else}
     <div
-      class="multi-select-input"
+      class="mv-link-input"
       role="textbox"
       tabindex="0"
-      aria-label="Add link"
+      aria-label="Edit link"
       contenteditable
       bind:this={input}
-      onblur={(e) => { (e.currentTarget as HTMLDivElement).textContent = ''; }}
+      onblur={() => (editing = false)}
     ></div>
-  </div>
+  {/if}
 </div>
